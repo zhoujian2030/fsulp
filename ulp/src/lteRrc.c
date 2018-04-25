@@ -28,7 +28,7 @@ void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* p
         return;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
+    LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
     LOG_BUFFER(pData, size);
 
     if (lcId > 0) {
@@ -67,10 +67,12 @@ static void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
             }
         }
     }
+
+    FreeMemory(pData);
 }
 
 // --------------------------------
 static void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 {
-
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, data size = %d\n", __func__, rnti, size);
 }

@@ -11,14 +11,26 @@
 #include "CLogger.h"
 #endif
 
+unsigned int gNumMemAllocated = 0;
+
+typedef struct {
+    unsigned short size;
+    
+} MemoryNode;
+
 // ----------------------------------
 unsigned char* AllocMemory(unsigned int size) 
 {
-    return malloc(size);
+    void* pBuffer = malloc(size);
+    gNumMemAllocated++;
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], gNumMemAllocated = %d, size = %d, pBuffer = %p\n", __func__, gNumMemAllocated, size, pBuffer);
+    return pBuffer;
 }
 
 // ----------------------------------
 void FreeMemory(void* pBuffer) 
 {
+    gNumMemAllocated--;
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], gNumMemAllocated = %d, pBuffer = %p\n", __func__, gNumMemAllocated, pBuffer);
     free(pBuffer);
 }
