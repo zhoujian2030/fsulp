@@ -1,51 +1,31 @@
-# Target  name
-TARGET = ulp
+SUBDIRS = ulp
 
-# Directories
-OBJDIR = obj
-SRCDIR = src
-DEPDIR = dep
-BINDIR = bin
+BUILDDIRS = $(SUBDIRS:%=build-%)
+INSTALLDIRS = $(SUBDIRS:%=install-%)
+CLEANDIRS = $(SUBDIRS:%=clean-%)
 
-# Libraries
-# gtest include
-INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/ulp/inc
-# MUST place libnet.a ahead of libcm.a because libnet depends on libcm.a
-ifeq ($(PLATFORM), x86)
-LIBS = $(PROJBASE)/ulp/lib/libulp.a
-else
-LIBS = $(PROJBASE)/ulp/lib/libulp_arm.a
-endif
+# build target
+all: $(BUILDDIRS)
+$(SUBDIRS): $(BUILDDIRS)
+$(BUILDDIRS):
+	$(MAKE) -C $(@:build-%=%)
 
-# Files and folders
-SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
-OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
+# clean target
+clean: $(CLEANDIRS)
+$(CLEANDIRS): 
+	$(MAKE) -C $(@:clean-%=%) clean
 
-include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX
+# install target
+install: $(INSTALLDIRS) all
+$(INSTALLDIRS):
+	$(MAKE) -C $(@:install-%=%) install
 
-all: $(TARGET)
+.PHONY: subdirs $(SUBDIRS)
+.PHONY: subdirs $(BUILDDIRS)
+.PHONY: subdirs $(INSTALLDIRS)
+.PHONY: subdirs $(CLEANDIRS)
 
-# Targets
-$(TARGET): buildrepo $(OBJS)
-	$(CC) $(OBJS) -o $@ -lrt -pthread $(LIBS)
-	@mv $(TARGET) $(OBJDIR)
+.PHONY: all install clean
 
-clean:
-	rm -rf $(BINDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)
+# specify the dependency here
 
-install:
-	mkdir -p $(BINDIR)
-	cp $(OBJDIR)/$(TARGET) $(BINDIR)
-	
-buildrepo:
-	@$(call make-repo)
-
-# Create obj directory structure
-define make-repo
-	mkdir -p $(OBJDIR)
-	for dir in $(SRCDIRS); \
-	do \
-		mkdir -p $(OBJDIR)/$$dir; \
-	done
-endef

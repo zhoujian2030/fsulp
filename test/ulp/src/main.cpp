@@ -4,13 +4,14 @@
  *  Created on: Apr 16, 2018
  *      Author: j.zh
  */
+#if 0 
 #include "CLogger.h"
 #include "lteMac.h"
 #include "lteMacPhyInterface.h"
 #include <unistd.h>
 #include "lteRlc.h"
 
-unsigned char gLogLevel = 1;
+unsigned char gLogLevel = 2;
 
 unsigned char gMsgBuffer[2048];
 
@@ -125,3 +126,5 @@ void Test_Rlc_SDU_2_Segment()
 
     MacUlSchDataInd(gMsgBuffer, length);
 }
+
+#endif

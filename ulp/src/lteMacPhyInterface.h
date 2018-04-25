@@ -8,6 +8,10 @@
 #ifndef LTE_MAC_PHY_INTERFACE_H
 #define LTE_MAC_PHY_INTERFACE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length);
 
 typedef struct {                   
@@ -25,5 +29,8 @@ typedef struct {
 } UlSchPdu;
 #define UL_SCH_PDU_HEADER_LENGTH	2
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

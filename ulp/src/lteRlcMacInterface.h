@@ -8,6 +8,10 @@
 #ifndef LTE_RLC_MAC_INTERFACE_H
 #define LTE_RLC_MAC_INTERFACE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_NUM_UL_PKTS        106
 
 typedef struct {
@@ -27,5 +31,9 @@ typedef struct {
 } MacUeDataInd_t; 
 
 extern void MacUeDataInd(MacUeDataInd_t* pMacDataInd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

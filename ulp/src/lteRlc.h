@@ -10,6 +10,10 @@
 
 #include "list.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define RLC_MAX_PDU_LENGTH 18844
 
 #define SRB_0_LCID 0
@@ -107,12 +111,16 @@ typedef struct {
 } RlcUeContext;
 
 // -------------------------------
-void InitRlcLayer();
+extern void InitRlcLayer();
 
 extern List gRlcUeContextList;
-RlcUeContext* GetRlcUeContext(unsigned rnti);
-void SaveRlcUeContext(RlcUeContext* pRlcUeCtx);
-void DeleteRlcUeContext(RlcUeContext* pRlcUeCtx);
+extern RlcUeContext* GetRlcUeContext(unsigned rnti);
+extern void SaveRlcUeContext(RlcUeContext* pRlcUeCtx);
+extern void DeleteRlcUeContext(RlcUeContext* pRlcUeCtx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

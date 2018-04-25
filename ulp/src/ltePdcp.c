@@ -8,6 +8,7 @@
 #include "ltePdcp.h"
 #include "baseType.h"
 #include "ltePdcpRlcInterface.h"
+#include "lteRrcPdcpInterface.h"
 #include "mempool.h"
 #ifdef OS_LINUX
 #include "CLogger.h"

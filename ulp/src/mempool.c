@@ -15,7 +15,7 @@ unsigned int gNumMemAllocated = 0;
 
 typedef struct {
     unsigned short size;
-    
+
 } MemoryNode;
 
 // ----------------------------------
@@ -34,3 +34,5 @@ void FreeMemory(void* pBuffer)
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], gNumMemAllocated = %d, pBuffer = %p\n", __func__, gNumMemAllocated, pBuffer);
     free(pBuffer);
 }
+
+// ----------------------------------

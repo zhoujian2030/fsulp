@@ -8,5 +8,13 @@
 #ifndef LTE_RRC_H
 #define LTE_RRC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

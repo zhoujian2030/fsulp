@@ -8,6 +8,10 @@
 #ifndef LTE_MAC_H
 #define LTE_MAC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length);
 
 #define MAX_NUM_CHANNELS      17
@@ -63,5 +67,9 @@ typedef struct {
     unsigned char lchId; /*Logical channel ID*/
     unsigned int  length; /*Data length for this logical channel id*/
 } DemuxDataBase;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

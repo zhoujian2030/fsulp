@@ -10,6 +10,10 @@
 
 #include "sync.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _ListNode_ ListNode;
 typedef struct _List_ List;
 typedef struct _List_ Queue;
@@ -38,5 +42,9 @@ void ListDeleteNode(List *pList, ListNode* pNode);
 
 ListNode* ListGetFirstNode(List *pList);
 ListNode* ListGetNextNode(ListNode* pNode);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
