@@ -59,7 +59,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 }
 
 TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
-    gLogLevel = 1;
+    gLogLevel = 0;
     InitMemPool();
     InitRlcLayer();
 

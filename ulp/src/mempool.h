@@ -78,19 +78,22 @@ typedef struct {
 extern void InitMemPool();
 
 // Allocated a memory from pool
-extern unsigned char* MemoryAlloc(unsigned int length);
+extern unsigned char* MemAlloc(unsigned int length);
 
 // Free the memory back to pool
-extern void MemoryFree(void* pBuffer);
+extern void MemFree(void* pBuffer);
 
 // Get the actual used length of the memory
-extern unsigned int MemoryGetLength(void* pBuffer);
+extern unsigned int MemGetLength(void* pBuffer);
 
 // Get the size of the memory
-extern unsigned int MemoryGetSize(void* pBuffer);
+extern unsigned int MemGetSize(void* pBuffer);
 
 // Join two memory together
-extern unsigned char* MemoryJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer);
+extern unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer);
+
+// Remove some bytes from memory
+extern int MemRemove(unsigned char* pBuffer, unsigned int where, unsigned int count);
 
 #ifdef __cplusplus
 }

@@ -43,7 +43,7 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
 
     // allocated first memory from pool 0
     unsigned int allocatedSize = SIZE_0 - MEM_NODE_SIZE;
-    unsigned char* buffer1 = MemoryAlloc(allocatedSize);
+    unsigned char* buffer1 = MemAlloc(allocatedSize);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0-1);
     ASSERT_TRUE(buffer1 != 0);
 
@@ -56,7 +56,7 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
 
     // allocated second memory from pool 0
     allocatedSize = SIZE_0 - MEM_NODE_SIZE - 10;
-    unsigned char* buffer2 = MemoryAlloc(allocatedSize);
+    unsigned char* buffer2 = MemAlloc(allocatedSize);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0-2);
     ASSERT_TRUE(buffer2 != 0);
 
@@ -69,7 +69,7 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
 
     // allocated 3rd memory from pool 4
     allocatedSize = SIZE_3 - MEM_NODE_SIZE + 1;
-    unsigned char* buffer3 = MemoryAlloc(allocatedSize);
+    unsigned char* buffer3 = MemAlloc(allocatedSize);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[4]), NUM_SIZE_4-1);
     ASSERT_TRUE(buffer3 != 0);
 
@@ -85,11 +85,11 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
     printf("buffer3 = %p\n", buffer3);
 
     // free memory
-    MemoryFree(buffer1);
+    MemFree(buffer1);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 1);
-    MemoryFree(buffer2);
+    MemFree(buffer2);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0);
-    MemoryFree(buffer3);
+    MemFree(buffer3);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[4]), NUM_SIZE_4);
 }
 
@@ -103,13 +103,13 @@ TEST_F(TestMempool, Allocate_Memory_Failure_In_1st_Pool) {
     unsigned char* pBuffer = 0;
     unsigned int size = SIZE_5 - MEM_NODE_SIZE - 1;
     for (i = 0; i<NUM_SIZE_5; i++) {
-        pBuffer = MemoryAlloc(size);
+        pBuffer = MemAlloc(size);
         ASSERT_TRUE(pBuffer != 0);
         EXPECT_EQ(ListCount(&gMemPool.pool[5]), NUM_SIZE_5 - i - 1);
     }
     EXPECT_EQ((int)ListCount(&gMemPool.pool[5]), 0);
 
-    pBuffer = MemoryAlloc(size);
+    pBuffer = MemAlloc(size);
     ASSERT_TRUE(pBuffer != 0);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[6]), NUM_SIZE_6 - 1);
 }
@@ -120,7 +120,7 @@ TEST_F(TestMempool, Allocate_Memory_Failure) {
 
     InitMemPool();
 
-    unsigned char* pBuffer = MemoryAlloc(SIZE_9);
+    unsigned char* pBuffer = MemAlloc(SIZE_9);
     ASSERT_TRUE(pBuffer == 0);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[9]), NUM_SIZE_9);
 }
@@ -134,44 +134,64 @@ TEST_F(TestMempool, Join_Memory) {
     // 
     string str1 = "123456789012345678901234567890";
     string str2 = "abcdefghijklmnopqrstuvwxyz";
-    unsigned char* pBuffer1 = MemoryAlloc(str1.length());
-    unsigned char* pBuffer2 = MemoryAlloc(str2.length());
+    unsigned char* pBuffer1 = MemAlloc(str1.length());
+    unsigned char* pBuffer2 = MemAlloc(str2.length());
     memcpy(pBuffer1, str1.c_str(), str1.length());
     memcpy(pBuffer2, str2.c_str(), str2.length());
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 2);
-    unsigned char* pJoinBuffer = MemoryJoin(pBuffer1, pBuffer2);
+    unsigned char* pJoinBuffer = MemJoin(pBuffer1, pBuffer2);
     ASSERT_TRUE(pJoinBuffer == pBuffer1);
-    EXPECT_EQ(MemoryGetLength(pJoinBuffer), str1.length() + str2.length());
+    EXPECT_EQ(MemGetLength(pJoinBuffer), str1.length() + str2.length());
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 1);
     string expectStr = str1 + str2;
     string joinStr((char*)pJoinBuffer);
     EXPECT_EQ(expectStr, joinStr);
     printf("join string = %s\n", pJoinBuffer);
-    MemoryFree(pJoinBuffer);
+    MemFree(pJoinBuffer);
 
     //
     unsigned int length0 = SIZE_0 - MEM_NODE_SIZE;
     unsigned int length1 = SIZE_1 - MEM_NODE_SIZE - length0;
-    pBuffer1 = MemoryAlloc(length0);
-    pBuffer2 = MemoryAlloc(length1);
+    pBuffer1 = MemAlloc(length0);
+    pBuffer2 = MemAlloc(length1);
     memset(pBuffer1, 'a', length0);
     memset(pBuffer2, 'b', length1);
-    unsigned char* pExpectBuffer = MemoryAlloc(length0 + length1);
+    unsigned char* pExpectBuffer = MemAlloc(length0 + length1);
     memcpy(pExpectBuffer, pBuffer1, length0);
     memcpy(pExpectBuffer + length0, pBuffer2, length1);
 
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 1);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[1]), NUM_SIZE_1 - 2);
-    pJoinBuffer = MemoryJoin(pBuffer1, pBuffer2);
+    pJoinBuffer = MemJoin(pBuffer1, pBuffer2);
     ASSERT_TRUE(pJoinBuffer == pBuffer2);
-    EXPECT_EQ(MemoryGetLength(pJoinBuffer), length0 + length1);
+    EXPECT_EQ(MemGetLength(pJoinBuffer), length0 + length1);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[1]), NUM_SIZE_1 - 2);
     EXPECT_EQ(memcmp(pExpectBuffer, pJoinBuffer, length0 + length1), 0);
 
-    MemoryFree(pJoinBuffer);
-    MemoryFree(pExpectBuffer);
+    MemFree(pJoinBuffer);
+    MemFree(pExpectBuffer);
     
     EXPECT_EQ((int)ListCount(&gMemPool.pool[1]), NUM_SIZE_1);
 }
 
+// ------------------------
+TEST_F(TestMempool, Mem_Remove) {
+    gLogLevel = 0;
+
+    InitMemPool();
+
+    unsigned char origData[] = {
+        0xb0, 0x03, 0x02, 0x26, 0x80, 0xf2, 0x4e, 0x80, 0x00, 0x00, 
+        0x00, 0x00
+    };
+    unsigned char expectData[] = {
+        0x02, 0x26, 0x80, 0xf2, 0x4e, 0x80, 0x00, 0x00, 0x00, 0x00
+    };
+
+    unsigned char* pBuffer = MemAlloc(sizeof(origData));
+    memcpy(pBuffer, origData, sizeof(origData));
+    EXPECT_EQ(MemRemove(pBuffer, 0, 2), 2);
+    EXPECT_EQ(MemGetLength(pBuffer), sizeof(expectData));
+    EXPECT_EQ(memcmp(expectData, pBuffer, sizeof(expectData)), 0);
+}

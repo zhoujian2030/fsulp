@@ -45,7 +45,8 @@ static void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size
 
     if (lcId < 2) {
         // remove one byte header and send to RLC
-        memmove(pData, pData+1, size-1);
+        // memmove(pData, pData+1, size-1);
+        MemRemove(pData, 0, 1);
         PdcpUeSrbDataInd(rnti, lcId, pData, size-1);
     } else {
         // data is ciphered

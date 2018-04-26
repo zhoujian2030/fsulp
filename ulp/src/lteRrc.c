@@ -102,7 +102,7 @@ static void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
         }
     }
 
-    MemoryFree(pData);
+    MemFree(pData);
 }
 
 // --------------------------------
