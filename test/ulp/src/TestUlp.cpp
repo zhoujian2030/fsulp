@@ -13,16 +13,18 @@
 #include "TestUlp.h"
 #include "lteMacPhyInterface.h"
 #include "lteRlc.h"
+#include "mempool.h"
 
 using namespace std;
 
-unsigned char gLogLevel = 0;
+extern unsigned char gLogLevel;
 
 unsigned char gMsgBuffer[2048];
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
-
-    void InitRlcLayer();
+    gLogLevel = 1;
+    InitMemPool();
+    InitRlcLayer();
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -57,7 +59,9 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 }
 
 TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
-    void InitRlcLayer();
+    gLogLevel = 1;
+    InitMemPool();
+    InitRlcLayer();
 
     // Identity response, imsi = 460041143702947
     unsigned char macPduRlcSeg1[] = {

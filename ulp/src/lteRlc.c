@@ -98,11 +98,11 @@ void MacUeDataInd(MacUeDataInd_t* pMacDataInd)
         }
 
         // leave this memory released in upper layer
-        // FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        // MemoryFree(pRlcDataInfo->rlcdataBuffer);
     }
 
-    FreeMemory(pRlcData);
-    FreeMemory(pMacDataInd);
+    MemoryFree(pRlcData);
+    MemoryFree(pMacDataInd);
 }
 
 // ---------------------------------
@@ -124,7 +124,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
     if (pRlcDataInfo->lcId > SRB_2_LCID) {
         LOG_WARN(ULP_LOGGER_NAME, "[%s], unsupport lcId = %d, rnti = %d\n", __func__, pRlcDataInfo->lcId, rnti);
-        FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        MemoryFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
 
@@ -132,13 +132,13 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
     if (ret == RLC_FAILURE) {
         LOG_TRACE(ULP_LOGGER_NAME, "[%s], fail to decode AMD, rnti = %d\n", __func__, rnti);
-        FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        MemoryFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
 
     if (!amdHeader.dc) {
         LOG_DBG(ULP_LOGGER_NAME, "[%s], receive RLC status PDU, ignore it, rnti = %d\n", __func__, rnti);
-        FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        MemoryFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
 
@@ -146,7 +146,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     pUeCtx = GetRlcUeContext(rnti);
     if (pUeCtx == 0) {
         LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc ue context, rnti = %d\n", __func__, rnti);
-        pUeCtx = (RlcUeContext*)AllocMemory(sizeof(RlcUeContext));
+        pUeCtx = (RlcUeContext*)MemoryAlloc(sizeof(RlcUeContext));
         memset(pUeCtx, 0, sizeof(RlcUeContext));
         pUeCtx->rnti = rnti;    
         SaveRlcUeContext(pUeCtx);
@@ -156,7 +156,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     pRxAmEntity = pUeCtx->rxAMEntityArray[pRlcDataInfo->lcId];
     if (pRxAmEntity == 0) {        
         LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc AM entity, rnti = %d, lcId = %d\n", __func__, rnti, pRlcDataInfo->lcId);
-        pRxAmEntity = (RxAMEntity*)AllocMemory(sizeof(RxAMEntity));
+        pRxAmEntity = (RxAMEntity*)MemoryAlloc(sizeof(RxAMEntity));
         memset(pRxAmEntity, 0, sizeof(RxAMEntity));
         pUeCtx->rxAMEntityArray[pRlcDataInfo->lcId] = pRxAmEntity;
         pRxAmEntity->rnti = rnti;
@@ -177,7 +177,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     {
         if (pAmdPdu == 0) {
             LOG_DBG(ULP_LOGGER_NAME, "[%s], create AM PDU, rnti = %d\n", __func__, rnti);
-            pAmdPdu = (AmdPdu*)AllocMemory(sizeof(AmdPdu));
+            pAmdPdu = (AmdPdu*)MemoryAlloc(sizeof(AmdPdu));
             pRxAmEntity->amdPduRing.rNodeArray[ringSn].data = (void*)pAmdPdu;
             ListInit(&pAmdPdu->segList, 0);
         }
@@ -204,7 +204,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         if (pAmdPdu == 0) {
             LOG_ERROR(ULP_LOGGER_NAME, "[%s], pAmdPdu is null, could not happen! rnti = %d\n", __func__, rnti);
             // any resource to free?
-            FreeMemory(pRlcDataInfo->rlcdataBuffer);
+            MemoryFree(pRlcDataInfo->rlcdataBuffer);
             return;
         }
 
@@ -221,7 +221,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         }
 
         // todo
-        FreeMemory(pRlcDataInfo->rlcdataBuffer); // temp solution
+        MemoryFree(pRlcDataInfo->rlcdataBuffer); // temp solution
     }
 
     if (ret == RLC_SUCCESS) {
@@ -284,15 +284,15 @@ static BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInf
 
     if (segCount) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], segCount = %d\n", __func__, segCount);
-        FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        MemoryFree(pRlcDataInfo->rlcdataBuffer);
         return RLC_FAILURE;
     }    
 
     // init pdu segment
-    AmdPduSegment* pAmdPduSegment = (AmdPduSegment*)AllocMemory(sizeof(AmdPduSegment));
+    AmdPduSegment* pAmdPduSegment = (AmdPduSegment*)MemoryAlloc(sizeof(AmdPduSegment));
     if (pAmdPduSegment == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], Fail to create AmdPduSegment\n", __func__);
-        FreeMemory(pRlcDataInfo->rlcdataBuffer);
+        MemoryFree(pRlcDataInfo->rlcdataBuffer);
         return RLC_FAILURE;
     }
     memset(pAmdPduSegment, 0, sizeof(AmdPduSegment));
@@ -301,7 +301,7 @@ static BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInf
     pAmdPduSegment->soEnd = 0xFFFF;
 
     if (pAmdHeader->e == 0) {
-        pDfe = (AmdDFE*)AllocMemory(sizeof(AmdDFE));
+        pDfe = (AmdDFE*)MemoryAlloc(sizeof(AmdDFE));
         memset(pDfe, 0, sizeof(AmdDFE));
         pDfe->status = AM_PDU_MAP_SDU_FULL;
         pDfe->buffer.size = size;
@@ -327,7 +327,7 @@ static BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcU
 
     // TODO
 
-    FreeMemory(pRlcDataInfo->rlcdataBuffer);
+    MemoryFree(pRlcDataInfo->rlcdataBuffer);
 
     return ret;
 }
@@ -384,12 +384,12 @@ static void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
                 while (pAmdPduSeg != 0) {
                     RlcReassembleAmdDfeQ(sn, pRxAmEntity, pAmdPduSeg);
                     ListDeInit(&pAmdPduSeg->dfeQ);
-                    FreeMemory(pAmdPduSeg);
+                    MemoryFree(pAmdPduSeg);
                     pAmdPduSeg = (AmdPduSegment*)ListPopNode(&pAmdPdu->segList);
                 }
 
                 ListDeInit(&pAmdPdu->segList);
-                FreeMemory(pAmdPdu);
+                MemoryFree(pAmdPdu);
                 pRing->rNodeArray[ringSn].data = 0;
                 pRing->rNodeArray[ringSn].status = RS_FREE;
             } else {
@@ -417,7 +417,7 @@ static void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegme
         } else {
             RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
         }
-        FreeMemory((void*)pAmdDfe);
+        MemoryFree((void*)pAmdDfe);
         pAmdDfe = (AmdDFE*)ListPopNode(&pAmdPduSeg->dfeQ);
     } 
 }
@@ -437,11 +437,11 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
             {
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], receive last SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
 
-                pTmpBuffer = AllocMemory(pPrevBuffer->size + pCurrBuffer->size);
+                pTmpBuffer = MemoryAlloc(pPrevBuffer->size + pCurrBuffer->size);
                 memcpy(pTmpBuffer, pPrevBuffer->pData, pPrevBuffer->size);
                 memcpy(pTmpBuffer + pPrevBuffer->size, pCurrBuffer->pData, pCurrBuffer->size);
-                FreeMemory(pPrevBuffer->pData);
-                FreeMemory(pCurrBuffer->pData);
+                MemoryFree(pPrevBuffer->pData);
+                MemoryFree(pCurrBuffer->pData);
                 pPrevBuffer->size += pCurrBuffer->size;
                 pPrevBuffer->pData = pTmpBuffer;
 
@@ -457,11 +457,11 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
             {                
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], receive middle SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
 
-                pTmpBuffer = AllocMemory(pPrevBuffer->size + pCurrBuffer->size);
+                pTmpBuffer = MemoryAlloc(pPrevBuffer->size + pCurrBuffer->size);
                 memcpy(pTmpBuffer, pPrevBuffer->pData, pPrevBuffer->size);
                 memcpy(pTmpBuffer + pPrevBuffer->size, pCurrBuffer->pData, pCurrBuffer->size);
-                FreeMemory(pPrevBuffer->pData);
-                FreeMemory(pCurrBuffer->pData);
+                MemoryFree(pPrevBuffer->pData);
+                MemoryFree(pCurrBuffer->pData);
                 pPrevBuffer->size += pCurrBuffer->size;
                 pPrevBuffer->pData = pTmpBuffer;
                 pRawSdu->sn = sn;
@@ -472,7 +472,7 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
             case AM_PDU_MAP_SDU_FULL:
             {
                 LOG_WARN(ULP_LOGGER_NAME, "[%s], receive single SDU, discard previous segments, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
-                FreeMemory(pPrevBuffer->pData);
+                MemoryFree(pPrevBuffer->pData);
                 pPrevBuffer->pData = 0;
                 pPrevBuffer->size = 0;
 
@@ -484,7 +484,7 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
             default:
             {
                 LOG_WARN(ULP_LOGGER_NAME, "[%s], receive first SDU segment, discard previous segments, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
-                FreeMemory(pPrevBuffer->pData);
+                MemoryFree(pPrevBuffer->pData);
                 pPrevBuffer->pData = pCurrBuffer->pData;
                 pPrevBuffer->size = pCurrBuffer->size;
                 pRawSdu->sn = sn;
@@ -495,7 +495,7 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
     } else {
         LOG_WARN(ULP_LOGGER_NAME, "[%s], seq num not consecutive, discard previous received SDU segment, sn = %d, pRawSdu->sn = %d, rnti = %d\n",
             __func__, sn, pRawSdu->sn, pRxAmEntity->rnti);
-        FreeMemory(pRawSdu->rawSdu.pData);
+        MemoryFree(pRawSdu->rawSdu.pData);
         pRawSdu->rawSdu.pData = 0;
         pRawSdu->rawSdu.size = 0;
 
@@ -529,7 +529,7 @@ static void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, Rlc
         default:
         {
             LOG_WARN(ULP_LOGGER_NAME, "[%s], should not come here, status = %d, rnti = %d\n", __func__, pAmdDfe->status, pRxAmEntity->rnti);
-            FreeMemory(pAmdDfe->buffer.pData);
+            MemoryFree(pAmdDfe->buffer.pData);
             break;
         }
     }

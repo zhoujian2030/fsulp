@@ -550,7 +550,7 @@ static void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     UInt8 rlcFlag = FALSE;
     // RlcUlData* pRlcUlData = 0;
     UInt8 ulDataReceivedFlag = FALSE;
-    MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)AllocMemory(sizeof(MacUeDataInd_t));
+    MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)MemoryAlloc(sizeof(MacUeDataInd_t));
     pMacUeDataInd->rnti = recvdRNTI;
     pMacUeDataInd->rlcData = 0;
 
@@ -671,7 +671,7 @@ static void MacDemuxOneToTenLchMsg(UInt32 lchId,
 
         /*data arrrived for RLC*/
         if (0 == *dataToRlc_p) {
-            *dataToRlc_p = (RlcUlData*)AllocMemory(sizeof(RlcUlData));
+            *dataToRlc_p = (RlcUlData*)MemoryAlloc(sizeof(RlcUlData));
         }    
 
         rlcLCIdData_p = &(*dataToRlc_p)->rlcDataArray[*lcIdx];
@@ -679,7 +679,7 @@ static void MacDemuxOneToTenLchMsg(UInt32 lchId,
         (*dataToRlc_p)->numLCInfo = *lcIdx;
 
         /* fill the struct for sending data to RLC*/
-        rlcLCIdData_p->rlcdataBuffer = AllocMemory(length);
+        rlcLCIdData_p->rlcdataBuffer = MemoryAlloc(length);
         memcpy(rlcLCIdData_p->rlcdataBuffer, *dataPtr_p, length);
         rlcLCIdData_p->length = length;
         rlcLCIdData_p->lcId = lchId;
