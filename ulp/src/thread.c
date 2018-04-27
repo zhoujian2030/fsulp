@@ -9,13 +9,13 @@
 #ifdef OS_LINUX
 #include "CLogger.h"
 #else
-
+#include "lteLogger.h"
 #endif
 
 // -------------------------------
 int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pThreadParams)
 {
-#if 1
+#ifdef OS_LINUX
     if (pThreadHandle == 0 || pEntryFunc == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer\n", __func__);
         return 0;
@@ -61,7 +61,7 @@ int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pT
 	taskParams.stackSize = pThreadParams->stackSize;
 	taskParams.stack     = pThreadParams->stack;
 
-	pThreadHandle = Task_create(pEntryFunc, &taskParams, 0);
+	*pThreadHandle = Task_create((ti_sysbios_knl_Task_FuncPtr)pEntryFunc, &taskParams, 0);
 
     return 1;
 

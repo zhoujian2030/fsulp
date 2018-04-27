@@ -10,14 +10,10 @@
 #include "lteMacPhyInterface.h"
 #include "lteRlcMacInterface.h"
 #include "mempool.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#else
+#include "lteLogger.h"
 
-#endif
-
-static void MacProcessUlSchPdu(UlSchPdu* pPdu);
-static void MacProcessMacLcId(UInt8 startPaddingFlag,
+void MacProcessUlSchPdu(UlSchPdu* pPdu);
+void MacProcessMacLcId(UInt8 startPaddingFlag,
     UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength,
@@ -27,7 +23,7 @@ static void MacProcessMacLcId(UInt8 startPaddingFlag,
     UInt32 *pos,
     UInt32 lcId,
     UInt32 *localLength);
-static void MacProcessUlCcchLch(UInt8 startPaddingFlag,
+void MacProcessUlCcchLch(UInt8 startPaddingFlag,
     UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength,
@@ -36,28 +32,28 @@ static void MacProcessUlCcchLch(UInt8 startPaddingFlag,
     UInt8  **dataPtr_p,
     DemuxDataBase *demuxData_p,
     UInt32 *pos);
-static void MacProcessPowerHeadLch(SInt32 *remainingPayloadLength,
+void MacProcessPowerHeadLch(SInt32 *remainingPayloadLength,
     UInt8 *sucessDecodeFlag,
     DemuxDataBase *demuxData_p,
     UInt32 *pos,
     UInt32 *dataPtrPos);
-static void MacProcessCrntiLch(SInt32 *remainingPayloadLength,
+void MacProcessCrntiLch(SInt32 *remainingPayloadLength,
     UInt8  *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
     UInt32 *dataPtrPos);
-static void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
+void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
     UInt8  *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
     UInt32 *dataPtrPos,
     UInt32 lcId);
-static void MacProcessLongBsrLch(SInt32 *remainingPayloadLength,
+void MacProcessLongBsrLch(SInt32 *remainingPayloadLength,
     UInt8  *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
     UInt32 *dataPtrPos);
-static void MacProcessPaddingLch(UInt8 extnFlag,
+void MacProcessPaddingLch(UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength, 
     UInt32 *localLength, 
@@ -65,15 +61,15 @@ static void MacProcessPaddingLch(UInt8 extnFlag,
     UInt32 pos,
     DemuxDataBase *demuxData_p,
     UInt8 *startPaddingFlag);
-static UInt8* MacCalculateSubHeaderLength(UInt8 *headerPtr_p, UInt32 *len_p, UInt32 *dataPtrPos_p);
-static void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
+UInt8* MacCalculateSubHeaderLength(UInt8 *headerPtr_p, UInt32 *len_p, UInt32 *dataPtrPos_p);
+void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     UInt8   *origDataPtr_p,
     UInt8   *dataPtr_p,
     UInt32  length,
     UInt16  recvdRNTI,
     UInt32  pos,
     UInt32  dataPtrPos);
-static void MacDemuxOneToTenLchMsg(UInt32 lchId,
+void MacDemuxOneToTenLchMsg(UInt32 lchId,
     UInt32 *lcIdx,
     UInt8 *rlcFlag,
     UInt32 *dataPtrPos,
@@ -118,7 +114,7 @@ void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length)
 }
 
 // ---------------------------
-static void MacProcessUlSchPdu(UlSchPdu* pPdu)
+void MacProcessUlSchPdu(UlSchPdu* pPdu)
 {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, length = %d\n", __func__, pPdu->rnti, pPdu->length);
     if ((pPdu->buffer == 0) || (pPdu->length == 0)) {
@@ -270,7 +266,7 @@ static void MacProcessUlSchPdu(UlSchPdu* pPdu)
 }
 
 // --------------------------------
-static void MacProcessMacLcId( UInt8 startPaddingFlag,
+void MacProcessMacLcId( UInt8 startPaddingFlag,
     UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength,
@@ -314,7 +310,7 @@ static void MacProcessMacLcId( UInt8 startPaddingFlag,
 }
 
 // --------------------------------
-static void MacProcessUlCcchLch(UInt8 startPaddingFlag,
+void MacProcessUlCcchLch(UInt8 startPaddingFlag,
     UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength,
@@ -360,7 +356,7 @@ static void MacProcessUlCcchLch(UInt8 startPaddingFlag,
 }
 
 // --------------------------------
-static void MacProcessPowerHeadLch(SInt32 *remainingPayloadLength,
+void MacProcessPowerHeadLch(SInt32 *remainingPayloadLength,
     UInt8 *sucessDecodeFlag,
     DemuxDataBase *demuxData_p,
     UInt32 *pos,
@@ -386,7 +382,7 @@ static void MacProcessPowerHeadLch(SInt32 *remainingPayloadLength,
 }
 
 // --------------------------------
-static void MacProcessCrntiLch(SInt32 *remainingPayloadLength,
+void MacProcessCrntiLch(SInt32 *remainingPayloadLength,
     UInt8 *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
@@ -410,7 +406,7 @@ static void MacProcessCrntiLch(SInt32 *remainingPayloadLength,
 }
 
 // --------------------------------
-static void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
+void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
     UInt8 *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
@@ -436,7 +432,7 @@ static void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
 }
 
 // --------------------------------
-static void MacProcessLongBsrLch(SInt32 *remainingPayloadLength,
+void MacProcessLongBsrLch(SInt32 *remainingPayloadLength,
     UInt8 *sucessDecodeFlag,
     UInt32 *pos,
     DemuxDataBase *demuxData_p,
@@ -461,7 +457,7 @@ static void MacProcessLongBsrLch(SInt32 *remainingPayloadLength,
 }
 
 // --------------------------------
-static void MacProcessPaddingLch(UInt8 extnFlag,
+void MacProcessPaddingLch(UInt8 extnFlag,
     UInt32 *dataPtrPos,
     SInt32 *remainingPayloadLength, 
     UInt32 *localLength, 
@@ -510,7 +506,7 @@ static void MacProcessPaddingLch(UInt8 extnFlag,
 }
 
 // --------------------------------
-static UInt8* MacCalculateSubHeaderLength(UInt8 *headerPtr_p, UInt32 *len_p, UInt32 *dataPtrPos_p) 
+UInt8* MacCalculateSubHeaderLength(UInt8 *headerPtr_p, UInt32 *len_p, UInt32 *dataPtrPos_p)
 {
     *len_p = 0;
     
@@ -535,7 +531,7 @@ static UInt8* MacCalculateSubHeaderLength(UInt8 *headerPtr_p, UInt32 *len_p, UIn
 }
 
 // -----------------------------
-static void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
+void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     UInt8   *origDataPtr_p,
     UInt8   *dataPtr_p,
     UInt32  length,
@@ -650,7 +646,7 @@ static void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
 }
 
 // ------------------------------------------------
-static void MacDemuxOneToTenLchMsg(UInt32 lchId,
+void MacDemuxOneToTenLchMsg(UInt32 lchId,
     UInt32 *lcIdx,
     UInt8 *rlcFlag,
     UInt32 *dataPtrPos,

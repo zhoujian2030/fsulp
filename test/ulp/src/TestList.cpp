@@ -17,7 +17,7 @@
 
 using namespace std;
 
-extern unsigned char gLogLevel;
+extern unsigned int gLogLevel;
 
 List gTestList;
 SEM_LOCK gTestLock; 
@@ -81,7 +81,7 @@ TEST_F(TestList, Get_And_Delete_List_Node) {
 
     for (i=0; i<9; i++) {
         ListDeleteNode(&gTestList, pNodeArray[i]);
-        EXPECT_EQ((int)ListCount(&gTestList), 10-i-1);
+        EXPECT_EQ(ListCount(&gTestList), 10-i-1);
         pNode = ListGetFirstNode(&gTestList);
         EXPECT_TRUE(pNode == pNodeArray[i+1]);
     }

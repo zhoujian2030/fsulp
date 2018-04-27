@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#if 1
+#ifdef OS_LINUX
 #include <pthread.h>
 
 typedef pthread_t ThreadHandle;
@@ -30,8 +30,6 @@ typedef struct {
 #include <ti/sysbios/knl/Task.h>
 
 typedef Task_Handle ThreadHandle;
-
-typedef pthread_t ThreadHandle;
 
 typedef struct {
     unsigned int priority;

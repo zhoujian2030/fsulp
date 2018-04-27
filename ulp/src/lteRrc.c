@@ -11,13 +11,11 @@
 #include "lteRrcPdcpInterface.h"
 #include "mempool.h"
 #include "asn1.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#else
+#include "lteLogger.h"
 
+#ifndef OS_LINUX
+#pragma DATA_SECTION(gUlRRcMsgName, ".ulpata");
 #endif
-
-
 UInt8 gUlRRcMsgName[17][50] = {
     "Csfb Params Request CDMA2000",
     "Measurement Report",
@@ -37,8 +35,8 @@ UInt8 gUlRRcMsgName[17][50] = {
     "Spare1",
     "N Items"};
 
-static void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
-static void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
+void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
+void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 
 // --------------------------------
 void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
@@ -59,7 +57,7 @@ void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* p
 }
 
 // --------------------------------
-static void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
+void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], rnti = %d, data size = %d\n", __func__, rnti, size);
 
@@ -106,7 +104,7 @@ static void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 }
 
 // --------------------------------
-static void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
+void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, data size = %d\n", __func__, rnti, size);
 }

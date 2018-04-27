@@ -10,14 +10,10 @@
 #include "ltePdcpRlcInterface.h"
 #include "lteRrcPdcpInterface.h"
 #include "mempool.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#else
+#include "lteLogger.h"
 
-#endif
-
-static void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
-static void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
+void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
+void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
 
 // -----------------------------
 void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
@@ -38,7 +34,7 @@ void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData
 }
 
 // -----------------------------
-static void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
+void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
     UInt16 sn = pData[0] & PDCP_TS_PDU_SRB_SN_MASK;
     LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d, sn = %d\n", __func__, rnti, lcId, size, sn);
@@ -55,7 +51,7 @@ static void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size
 }
 
 // -----------------------------
-static void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
+void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
 }

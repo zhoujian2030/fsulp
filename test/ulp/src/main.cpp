@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include "lteRlc.h"
 
-unsigned char gLogLevel = 2;
+extern unsigned int gLogLevel;
 
 unsigned char gMsgBuffer[2048];
 
@@ -21,6 +21,8 @@ void Test_Rlc_SDU_2_Segment();
 // --------------------------
 int main(int argc, char* argv[]) {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], main entry\n", __func__);
+
+    gLogLevel = 2
 
     void InitRlcLayer();
 

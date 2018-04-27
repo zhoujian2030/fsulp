@@ -13,6 +13,7 @@
 #include <semaphore.h>
 #else
 #include <ti/sysbios/knl/Semaphore.h>
+#include <ti/sysbios/BIOS.h>
 #endif
 
 #ifdef __cplusplus

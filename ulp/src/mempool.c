@@ -8,12 +8,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mempool.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#endif
+#include "lteLogger.h"
 
 unsigned int gNumMemAllocated = 0;
 
+#ifndef OS_LINUX
+#pragma DATA_SECTION(gMemBufSize0, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize1, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize2, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize3, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize4, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize5, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize6, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize7, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize8, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize9, ".ulpata");
+#endif
 unsigned char gMemBufSize0[NUM_SIZE_0][SIZE_0] = {{0}, {0}};
 unsigned char gMemBufSize1[NUM_SIZE_1][SIZE_1] = {{0}, {0}};
 unsigned char gMemBufSize2[NUM_SIZE_2][SIZE_2] = {{0}, {0}};
@@ -26,7 +36,7 @@ unsigned char gMemBufSize8[NUM_SIZE_8][SIZE_8] = {{0}, {0}};
 unsigned char gMemBufSize9[NUM_SIZE_9][SIZE_9] = {{0}, {0}};
 
 
-static MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE] = {
+MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE] = {
     {SIZE_0 - MEM_NODE_SIZE, NUM_SIZE_0, &gMemBufSize0[0][0]},
     {SIZE_1 - MEM_NODE_SIZE, NUM_SIZE_1, &gMemBufSize1[0][0]},
     {SIZE_2 - MEM_NODE_SIZE, NUM_SIZE_2, &gMemBufSize2[0][0]},
@@ -41,8 +51,8 @@ static MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE] = {
 
 MemPool gMemPool;
 
-static inline MemNode* CheckNode(void* pBuffer);
-static inline int findMatchPool(unsigned int size);
+inline MemNode* CheckNode(void* pBuffer);
+inline int findMatchPool(unsigned int size);
 
 // ----------------------------------
 void InitMemPool()
@@ -72,7 +82,7 @@ void InitMemPool()
     gNumMemAllocated = 0;
 }
 
-static inline int findMatchPool(unsigned int size) {
+inline int findMatchPool(unsigned int size) {
     unsigned int i = 0;
     for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
         if (size <= gMemPoolConfig[i].size) {
@@ -119,14 +129,14 @@ unsigned char* MemAlloc(unsigned int length)
 }
 
 // ---------------------------
-static inline MemNode* CheckNode(void* pBuffer)
+inline MemNode* CheckNode(void* pBuffer)
 {
     if (pBuffer == 0) {
          LOG_ERROR(ULP_LOGGER_NAME, "[%s], pBuffer is null\n", __func__);
          return 0;
     }
 
-    MemNode* pNode = (MemNode*)(pBuffer - MEM_NODE_SIZE);
+    MemNode* pNode = (MemNode*)((unsigned char*)pBuffer - MEM_NODE_SIZE);
     if ((pNode == 0) || (pNode->magicNo != MAGIC_NUMBER) || (pNode->poolId >= MAX_NUM_POOL_SIZE)) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid MemNode  = %p\n", __func__, pNode);
         return 0;

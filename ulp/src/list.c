@@ -6,9 +6,7 @@
  */
 
 #include "list.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#endif
+#include "lteLogger.h"
 
 static void PushTail(List* pList, ListNode* pNode);
 static ListNode* PopHead(List* pList);

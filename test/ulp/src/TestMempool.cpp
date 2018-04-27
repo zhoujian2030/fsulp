@@ -31,7 +31,7 @@ extern unsigned char gMemBufSize9[NUM_SIZE_9][SIZE_9];
 
 extern MemPool gMemPool;
 
-extern unsigned char gLogLevel;
+extern unsigned int gLogLevel;
 
 // ------------------------
 TEST_F(TestMempool, Allocate_Memory_Success) {

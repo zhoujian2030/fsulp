@@ -6,9 +6,7 @@
  */
 
 #include "sync.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#endif
+#include "lteLogger.h"
 
 #ifdef OS_LINUX
 // --------------------------------
@@ -47,7 +45,60 @@ int SemPost(SEM_LOCK* pSem)
 }
 
 #else
+// --------------------------------
+int SemInit(SEM_LOCK* pSem, unsigned int value)
+{
+	ti_sysbios_knl_Semaphore_Params semParams;
+	semParams.mode 	= ti_sysbios_knl_Semaphore_Mode_BINARY;
+	Semaphore_Params_init(&semParams);
+	*pSem = Semaphore_create(value, &semParams, NULL);
+    if (*pSem == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], Semaphore_create failed\n", __func__);
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
+// --------------------------------
+int SemDestroy(SEM_LOCK* pSem)
+{
+	LOG_TRACE(ULP_LOGGER_NAME, "[%s], pSem = %p\n", __func__, pSem);
+	if (0 == *pSem) {
+		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		return 0;
+	}
+
+	Semaphore_delete(pSem);
+	return 1;
+}
+
+// --------------------------------
+int SemWait(SEM_LOCK* pSem)
+{
+	if (0 == *pSem) {
+		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		return 0;
+	}
+	if(Semaphore_pend(*pSem, BIOS_WAIT_FOREVER)) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+// --------------------------------
+int SemPost(SEM_LOCK* pSem)
+{
+	if (0 == *pSem) {
+		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		return 0;
+	}
+
+	Semaphore_post(*pSem);
+	return 1;
+}
 
 #endif
 

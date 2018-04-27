@@ -17,7 +17,7 @@
 
 using namespace std;
 
-extern unsigned char gLogLevel;
+extern unsigned int gLogLevel;
 
 unsigned char gMsgBuffer[2048];
 

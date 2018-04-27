@@ -10,23 +10,19 @@
 #include "lteRlcMacInterface.h"
 #include "ltePdcpRlcInterface.h"
 #include "mempool.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#else
+#include "lteLogger.h"
 
-#endif
-
-static BOOL isSNEqual(UInt16 x, UInt16 y);
-static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti);
-static BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader);
-static BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo);
-static BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo);
-static void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, AmdDFE* pAmdDfe);
-static void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity);
-static void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg);
-static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
-static void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
-static void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer);
+BOOL isSNEqual(UInt16 x, UInt16 y);
+void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti);
+BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader);
+BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo);
+BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo);
+void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, AmdDFE* pAmdDfe);
+void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity);
+void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg);
+void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
+void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
+void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer);
 
 List gRlcUeContextList;
 
@@ -106,13 +102,13 @@ void MacUeDataInd(MacUeDataInd_t* pMacDataInd)
 }
 
 // ---------------------------------
-static BOOL isSNEqual(UInt16 x, UInt16 y)
+BOOL isSNEqual(UInt16 x, UInt16 y)
 {
     return ((x & 1023) == (y & 1023));
 }
 
 // ---------------------------------
-static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti) 
+void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 {
     BOOL ret = RLC_FAILURE;
     AmdHeader amdHeader = {0};
@@ -230,7 +226,7 @@ static void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 }
  
 // ---------------------------------
-static BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader) 
+BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
 {
     if (pRlcDataInfo->rlcdataBuffer == 0) {
         return FALSE;
@@ -272,7 +268,7 @@ static BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeade
 }
 
 // ---------------------------------
-static BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo) 
+BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo)
 {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], sn = %d, fi = %d, e = %d, length = %d\n", 
         __func__, pAmdHeader->sn, pAmdHeader->fi, pAmdHeader->e, pRlcDataInfo->length);
@@ -322,7 +318,7 @@ static BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInf
 }
 
 // ---------------------------------
-static BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo)
+BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo)
 {
     BOOL ret = RLC_FAILURE;
 
@@ -334,7 +330,7 @@ static BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcU
 }
 
 // ---------------------------------
-static void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, AmdDFE* pAmdDfe)
+void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, AmdDFE* pAmdDfe)
 {
     if ( pAmdHeader->rf == 0x01 &&  pAmdHeader->lsf == 0x00) {
          pAmdPdu->status = PDU_AM_SEGMENT; 
@@ -363,7 +359,7 @@ static void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, Amd
 }
 
 // --------------------------------
-static void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
+void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
 {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, lcId = %d\n", __func__, sn, pRxAmEntity->rnti, pRxAmEntity->lcId);
 
@@ -405,7 +401,7 @@ static void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
 }
 
 // --------------------------------
-static void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg)
+void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg)
 {
     LOG_DBG(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdPduSeg = %p\n", __func__, sn, pRxAmEntity->rnti, pAmdPduSeg);
 
@@ -424,7 +420,7 @@ static void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegme
 }
 
 // --------------------------------
-static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
+void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdDfe->status = %d\n", __func__, sn, pRxAmEntity->rnti, pAmdDfe->status);
 
@@ -515,7 +511,7 @@ static void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRaw
 }
 
 // --------------------------------
-static void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
+void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdDfe->status = %d\n", __func__, sn, pRxAmEntity->rnti, pAmdDfe->status);
 
@@ -547,7 +543,7 @@ static void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, Rlc
 }
 
 // --------------------------------
-static void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer)
+void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->size);
     RlcUeDataInd(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size);
