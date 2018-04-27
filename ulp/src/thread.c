@@ -1,0 +1,69 @@
+/*
+ * thread.c
+ *
+ *  Created on: Apr 27, 2018
+ *      Author: j.zh
+ */
+
+#include "thread.h"
+#ifdef OS_LINUX
+#include "CLogger.h"
+#else
+
+#endif
+
+// -------------------------------
+int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pThreadParams)
+{
+#if 1
+    if (pThreadHandle == 0 || pEntryFunc == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer\n", __func__);
+        return 0;
+    }
+
+    pthread_attr_t attr;
+    int ret = pthread_attr_init(&attr);
+    if (ret != 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pthread_attr_init failure\n", __func__);
+        return 0;
+    }
+    
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+
+    if (pThreadParams != 0) {
+        if (pThreadParams->stackSize != 0) {
+            pthread_attr_setstacksize(&attr, pThreadParams->stackSize);
+        }
+
+        // TODO set priority
+    }
+
+    ret = pthread_create(pThreadHandle, &attr, pEntryFunc, 0);
+    if (ret != 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pthread_create failure\n", __func__);
+        return 0;
+    }
+
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pthread_create success\n", __func__);
+
+    return 1;
+
+#else
+
+    if (pThreadParams == 0 || pThreadHandle == 0 || pEntryFunc == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer\n", __func__);
+        return 0;
+    }
+
+	Task_Params taskParams;
+	Task_Params_init(&taskParams);
+	taskParams.priority  = pThreadParams->priority;
+	taskParams.stackSize = pThreadParams->stackSize;
+	taskParams.stack     = pThreadParams->stack;
+
+	pThreadHandle = Task_create(pEntryFunc, &taskParams, 0);
+
+    return 1;
+
+#endif
+}

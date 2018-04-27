@@ -5,8 +5,8 @@
  *      Author: j.zh
  */
  
-#ifndef TEST_MEMPOOL
-#define TEST_MEMPOOL
+#ifndef TEST_MEMPOOL_H
+#define TEST_MEMPOOL_H
 
 #include "TestSuite.h"
 
