@@ -11,6 +11,7 @@
 #include "lteRrcPdcpInterface.h"
 #include "mempool.h"
 #include "lteLogger.h"
+#include "lteIntegrationPoint.h"
 
 void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
 void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
@@ -43,6 +44,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
         // remove one byte header and send to RLC
         // memmove(pData, pData+1, size-1);
         MemRemove(pData, 0, 1);
+        IP_PDCP_SRB_DATA_IND(rnti, lcId, pData, size-1);
         PdcpUeSrbDataInd(rnti, lcId, pData, size-1);
     } else {
         // data is ciphered

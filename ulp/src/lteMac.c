@@ -11,6 +11,7 @@
 #include "lteRlcMacInterface.h"
 #include "mempool.h"
 #include "lteLogger.h"
+#include "lteIntegrationPoint.h"
 
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
 void MacProcessMacLcId(UInt8 startPaddingFlag,
@@ -85,7 +86,7 @@ void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length)
         return;
     }
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d\n", __func__, length);
-    LOG_BUFFER(pBuffer, length);
+    // LOG_BUFFER(pBuffer, length);
 
     unsigned short tempLen = 0;
     unsigned char  numPdu = 0;
@@ -685,6 +686,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
         }
     }
 
+    IP_MAC_DATA_IND(pMacUeDataInd);
     MacUeDataInd(pMacUeDataInd);
 }
 

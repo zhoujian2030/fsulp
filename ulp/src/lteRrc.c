@@ -12,6 +12,7 @@
 #include "mempool.h"
 #include "asn1.h"
 #include "lteLogger.h"
+#include "lteIntegrationPoint.h"
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gUlRRcMsgName, ".ulpata");
@@ -74,7 +75,9 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 
     if (RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER == rrcMsgType) {
         if (ASN1_SUCCES == parseUlDTMsg(pData, size, &nasMsgType, &idResp)) {
-            
+
+            IP_RRC_DECODE_RESULT(rnti, rrcMsgType, nasMsgType, &idResp);
+
             if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
                 LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Identity Response (RNTI: %d)\n", __func__, rnti);
                 if (LIBLTE_MME_MOBILE_ID_TYPE_IMSI == idResp.mobile_id.type_of_id) {
@@ -95,9 +98,11 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
             } else {
                 LOG_INFO(ULP_LOGGER_NAME, "[%s], nasMsgType = 0x%x\n", __func__, nasMsgType);
             }
-
-
+        } else {
+            IP_RRC_DECODE_RESULT(rnti, rrcMsgType, 0xff, 0);
         }
+    } else {
+        IP_RRC_DECODE_RESULT(rnti, rrcMsgType, 0xff, 0);
     }
 
     MemFree(pData);

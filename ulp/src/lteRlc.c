@@ -11,6 +11,7 @@
 #include "ltePdcpRlcInterface.h"
 #include "mempool.h"
 #include "lteLogger.h"
+#include "lteIntegrationPoint.h"
 
 BOOL isSNEqual(UInt16 x, UInt16 y);
 void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti);
@@ -546,6 +547,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->size);
+    IP_RLC_DATA_IND(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size);
     RlcUeDataInd(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size);
 
     pAmBuffer->pData = 0;
