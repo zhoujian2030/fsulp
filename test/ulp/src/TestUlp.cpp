@@ -22,7 +22,7 @@ extern unsigned int gLogLevel;
 unsigned char gMsgBuffer[2048];
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
-    gLogLevel = 1;
+    gLogLevel = 0;
     InitMemPool();
     InitRlcLayer();
 
@@ -41,6 +41,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 
     unsigned short length = 0;
 
+#ifdef MAC_PHY_INTF_NEW
     RxUlSchInd* pRxUlSchInd = (RxUlSchInd*)gMsgBuffer;
     pRxUlSchInd->sfn = 501;
     pRxUlSchInd->sf = 7;
@@ -54,6 +55,26 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 
     memcpy(pUlSchPdu->buffer, macPdu, pUlSchPdu->length);
     length += pUlSchPdu->length;
+#else
+    S_PhyHlMsgHead* pPhyMsgHead = (S_PhyHlMsgHead*)gMsgBuffer;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    S_UlIndHead* pUlIndHead = (S_UlIndHead*)(gMsgBuffer + length);
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 501;
+    pUlIndHead->sf = 7;
+    pUlIndHead->numOfPDUs = 1;
+
+    S_RxUlschIndHeadPdu* pUlSchPduHead = (S_RxUlschIndHeadPdu*)(gMsgBuffer + length);
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = 124;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPdu) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPdu) << 3;
+    memcpy(gMsgBuffer + length, macPdu, sizeof(macPdu));    
+    length += (pUlSchPduHead->wordLen << 2);
+#endif
 
     MacUlSchDataInd(gMsgBuffer, length);
 }
@@ -72,9 +93,11 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
         0x3F, 0x3E, 0x01, 0x00, 0x00, 0x00, 0xB0, 0x03, 0x02, 0x26, 
         0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 0x00
     };   
-    
-    // send segment 1
+
     unsigned short length = 0;
+
+#ifdef MAC_PHY_INTF_NEW
+    // send segment 1
     RxUlSchInd* pRxUlSchInd = (RxUlSchInd*)gMsgBuffer;
     pRxUlSchInd->sfn = 501;
     pRxUlSchInd->sf = 7;
@@ -89,10 +112,32 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     memcpy(pUlSchPdu->buffer, macPduRlcSeg1, pUlSchPdu->length);
     length += pUlSchPdu->length;
 
+#else 
+    S_PhyHlMsgHead* pPhyMsgHead = (S_PhyHlMsgHead*)gMsgBuffer;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    S_UlIndHead* pUlIndHead = (S_UlIndHead*)(gMsgBuffer + length);
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 501;
+    pUlIndHead->sf = 7;
+    pUlIndHead->numOfPDUs = 1;
+
+    S_RxUlschIndHeadPdu* pUlSchPduHead = (S_RxUlschIndHeadPdu*)(gMsgBuffer + length);
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = 124;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPduRlcSeg1) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPduRlcSeg1) << 3;
+    memcpy(gMsgBuffer + length, macPduRlcSeg1, sizeof(macPduRlcSeg1));
+    length += (pUlSchPduHead->wordLen << 2);
+#endif
+
     MacUlSchDataInd(gMsgBuffer, length);
 
     usleep(5000);
 
+#ifdef MAC_PHY_INTF_NEW
     // send segment 2
     length = 0;
     pRxUlSchInd->sfn = 502;
@@ -107,6 +152,24 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
 
     memcpy(pUlSchPdu->buffer, macPduRlcSeg2, pUlSchPdu->length);
     length += pUlSchPdu->length;
+#else 
+    length = 0;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 502;
+    pUlIndHead->sf = 2;
+    pUlIndHead->numOfPDUs = 1;
+
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = 124;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPduRlcSeg2) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPduRlcSeg2) << 3;
+    memcpy(gMsgBuffer + length, macPduRlcSeg2, sizeof(macPduRlcSeg2));
+    length += (pUlSchPduHead->wordLen << 2);
+#endif
 
     MacUlSchDataInd(gMsgBuffer, length);
 }

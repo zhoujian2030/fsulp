@@ -24,6 +24,7 @@ SEM_LOCK gTestLock;
 
 // ------------------------
 TEST_F(TestList, Basic_Push_Pop) {
+    gLogLevel = 0;
     ListInit(&gTestList, 0);
 
     EXPECT_EQ(gTestList.mtFlag, 0);
@@ -61,6 +62,7 @@ TEST_F(TestList, Basic_Push_Pop) {
 
 // ------------------------
 TEST_F(TestList, Get_And_Delete_List_Node) {
+    gLogLevel = 0;
     ListInit(&gTestList, 0);
     EXPECT_EQ(gTestList.mtFlag, 0);
     ListNode* pNodeArray[10];
@@ -149,6 +151,7 @@ void* TestEntryFunc3(void* p)
 
 // ------------------------
 TEST_F(TestList, Multi_Thread_2_Thread_Push_1_Thread_Pop) {
+    gLogLevel = 0;
     ListInit(&gTestList, 1);
 
     EXPECT_EQ(gTestList.mtFlag, 1);
@@ -174,6 +177,7 @@ TEST_F(TestList, Multi_Thread_2_Thread_Push_1_Thread_Pop) {
 
 // ------------------------
 TEST_F(TestList, Multi_Thread_1_Thread_Push_2_Thread_Pop) {
+    gLogLevel = 0;
     ListInit(&gTestList, 1);
 
     EXPECT_EQ(gTestList.mtFlag, 1);

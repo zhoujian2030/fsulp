@@ -85,10 +85,12 @@ void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length)
         return;
     }
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d\n", __func__, length);
-    // LOG_BUFFER(pBuffer, length);
+    LOG_BUFFER(pBuffer, length);
 
     unsigned short tempLen = 0;
     unsigned char  numPdu = 0;
+    
+#ifdef MAC_PHY_INTF_NEW
     // unsigned char* pTmpBuffer = pBuffer;
     UlSchPdu *pUlSchPdu;
     RxUlSchInd *pRxUlSchInd = (RxUlSchInd*)(pBuffer + tempLen);
@@ -111,6 +113,47 @@ void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length)
         MacProcessUlSchPdu(pUlSchPdu);
         numPdu++;
     }
+#else
+    S_PhyHlMsgHead* pMsgHead = (S_PhyHlMsgHead*)pBuffer;
+	tempLen += sizeof(S_PhyHlMsgHead);
+    S_UlIndHead *pUlIndHead;
+    S_RxUlschIndHeadPdu *pUlSchPduHead;
+    UlSchPdu ulSchPdu;
+
+    if (pMsgHead->opc == RX_ULSCH_INDICATION) {
+    	pUlIndHead = (S_UlIndHead*)(pBuffer + tempLen);
+    	tempLen += sizeof(S_UlIndHead);
+        LOG_TRACE(ULP_LOGGER_NAME, "[%s], sfn = %d, sf = %d, numOfPDUs = %d\n", __func__, pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs);
+
+		while ((tempLen < length) && (numPdu < pUlIndHead->numOfPDUs)) {
+			pUlSchPduHead = (S_RxUlschIndHeadPdu*)(pBuffer + tempLen);
+			tempLen += sizeof(S_RxUlschIndHeadPdu);
+
+			// check if PDU length valid
+			if (tempLen > length) {
+				LOG_ERROR(ULP_LOGGER_NAME, "[%s], length = %d, tempLen = %d\n", __func__, length, tempLen);
+				break;
+			}
+
+			// only handle crc correct data
+			if (pUlSchPduHead->CRCFlag == 1) {
+				ulSchPdu.rnti = pUlSchPduHead->RNTI;
+				ulSchPdu.length = (pUlSchPduHead->bitLen + 7) >> 3;
+				ulSchPdu.buffer = pBuffer + tempLen;
+
+				MacProcessUlSchPdu(&ulSchPdu);
+			} else {
+		    	LOG_ERROR(ULP_LOGGER_NAME, "[%s], crc error, ignore it, rnti = %d\n", __func__, pUlSchPduHead->RNTI);
+			}
+
+			tempLen += (pUlSchPduHead->wordLen << 2);
+			numPdu++;
+		}
+
+    } else {
+    	LOG_ERROR(ULP_LOGGER_NAME, "[%s], unsupported opc = %d\n", __func__, pMsgHead->opc);
+    }
+#endif
 }
 
 // ---------------------------

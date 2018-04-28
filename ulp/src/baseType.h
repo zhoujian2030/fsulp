@@ -18,9 +18,12 @@ typedef unsigned long long   UInt64;
 typedef unsigned long    ULong32;
 typedef unsigned char   UChar8;
 typedef signed char   	SInt8;
+typedef signed char   	Int8;
 typedef char            Char8;
 typedef signed short    SInt16;
 typedef signed int      SInt32;
+typedef signed short    Int16;
+typedef signed int      Int32;
 typedef unsigned char   BOOL;
 
 #endif
