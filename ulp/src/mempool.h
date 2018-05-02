@@ -95,6 +95,10 @@ extern unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuff
 // Remove some bytes from memory
 extern int MemRemove(unsigned char* pBuffer, unsigned int where, unsigned int count);
 
+// Get mempool status
+extern unsigned int MemGetNumMemBlock();
+extern unsigned int MemGetAvailableMemBlock();
+
 #ifdef __cplusplus
 }
 #endif

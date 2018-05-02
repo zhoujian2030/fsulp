@@ -16,8 +16,6 @@
 
 using namespace std;
 
-extern unsigned int gNumMemAllocated;
-
 extern unsigned char gMemBufSize0[NUM_SIZE_0][SIZE_0]; 
 extern unsigned char gMemBufSize1[NUM_SIZE_1][SIZE_1];
 extern unsigned char gMemBufSize2[NUM_SIZE_2][SIZE_2];
@@ -85,6 +83,7 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
     printf("buffer3 = %p\n", buffer3);
 
     // free memory
+    EXPECT_EQ(MemGetNumMemBlock() - 3, MemGetAvailableMemBlock());
     MemFree(buffer1);
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 1);
     MemFree(buffer2);

@@ -15,6 +15,7 @@
 #include "lteRlc.h"
 #include "mempool.h"
 #include "UlpTestCommon.h"
+#include "lteUlpMgr.h"
 
 using namespace std;
 
@@ -22,8 +23,7 @@ extern unsigned int gLogLevel;
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     gLogLevel = 2;
-    InitMemPool();
-    InitRlcLayer();
+    InitUlpLayer();
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -150,8 +150,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 
 TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     gLogLevel = 1;
-    InitMemPool();
-    InitRlcLayer();
+    InitUlpLayer();
 
     // Identity response, imsi = 460041143702947
     unsigned char macPduRlcSeg1[] = {

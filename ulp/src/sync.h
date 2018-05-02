@@ -8,16 +8,16 @@
 #ifndef SYNC_H
 #define SYNC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef OS_LINUX
 #include <pthread.h>
 #include <semaphore.h>
 #else
 #include <ti/sysbios/knl/Semaphore.h>
 #include <ti/sysbios/BIOS.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 #ifdef OS_LINUX

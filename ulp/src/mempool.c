@@ -10,8 +10,6 @@
 #include "mempool.h"
 #include "lteLogger.h"
 
-unsigned int gNumMemAllocated = 0;
-
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gMemBufSize0, ".ulpata");
 #pragma DATA_SECTION(gMemBufSize1, ".ulpata");
@@ -23,6 +21,9 @@ unsigned int gNumMemAllocated = 0;
 #pragma DATA_SECTION(gMemBufSize7, ".ulpata");
 #pragma DATA_SECTION(gMemBufSize8, ".ulpata");
 #pragma DATA_SECTION(gMemBufSize9, ".ulpata");
+#pragma DATA_SECTION(gMemPoolConfig, ".ulpata");
+#pragma DATA_SECTION(gMemPool, ".ulpata");
+#pragma DATA_SECTION(NUM_MEM_BLOCK, ".ulpata");
 #endif
 unsigned char gMemBufSize0[NUM_SIZE_0][SIZE_0] = {{0}, {0}};
 unsigned char gMemBufSize1[NUM_SIZE_1][SIZE_1] = {{0}, {0}};
@@ -34,7 +35,6 @@ unsigned char gMemBufSize6[NUM_SIZE_6][SIZE_6] = {{0}, {0}};
 unsigned char gMemBufSize7[NUM_SIZE_7][SIZE_7] = {{0}, {0}};
 unsigned char gMemBufSize8[NUM_SIZE_8][SIZE_8] = {{0}, {0}};
 unsigned char gMemBufSize9[NUM_SIZE_9][SIZE_9] = {{0}, {0}};
-
 
 MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE] = {
     {SIZE_0 - MEM_NODE_SIZE, NUM_SIZE_0, &gMemBufSize0[0][0]},
@@ -51,13 +51,14 @@ MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE] = {
 
 MemPool gMemPool;
 
+unsigned int NUM_MEM_BLOCK = 0;
+
 inline MemNode* CheckNode(void* pBuffer);
 inline int findMatchPool(unsigned int size);
 
 // ----------------------------------
 void InitMemPool()
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], Entry\n", __func__); 
     unsigned int i = 0;
     unsigned int j = 0;
     unsigned int length;
@@ -77,11 +78,30 @@ void InitMemPool()
 
             ListPushNode(&gMemPool.pool[i], &pMem->node);
         }
+        NUM_MEM_BLOCK += gMemPoolConfig[i].num;
     }
 
-    gNumMemAllocated = 0;
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], NUM_MEM_BLOCK = %d\n", __func__, NUM_MEM_BLOCK); 
 }
 
+// --------------------------------
+unsigned int MemGetNumMemBlock()
+{
+    return NUM_MEM_BLOCK;
+}
+
+// --------------------------------
+extern unsigned int MemGetAvailableMemBlock()
+{
+    unsigned int count = 0, i;
+    for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
+        count += ListCount(&gMemPool.pool[i]);
+    }
+
+    return count;
+}
+
+// --------------------------------
 inline int findMatchPool(unsigned int size) {
     unsigned int i = 0;
     for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
@@ -117,9 +137,8 @@ unsigned char* MemAlloc(unsigned int length)
     }   
 
     if (pNode != 0) {
-        gNumMemAllocated++;
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], gNumMemAllocated = %d, length = %d, pBuffer = %p, mem size = %d\n", 
-            __func__, gNumMemAllocated, length, pNode->pData, pNode->size);
+        LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d, pBuffer = %p, mem size = %d\n", 
+            __func__, length, pNode->pData, pNode->size);
         pNode->length = length;
         return pNode->pData;
     } else {
@@ -151,9 +170,8 @@ void MemFree(void* pBuffer)
 {
     MemNode* pNode = CheckNode(pBuffer);
     if (pNode) {
-        gNumMemAllocated--;
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], free memory, length = %d, poolId = %d, gNumMemAllocated = %d\n", 
-            __func__, pNode->length, pNode->poolId, gNumMemAllocated);
+        LOG_TRACE(ULP_LOGGER_NAME, "[%s], free memory, length = %d, poolId = %d\n", 
+            __func__, pNode->length, pNode->poolId);
         pNode->length = 0;
         ListPushNode(&gMemPool.pool[pNode->poolId], &pNode->node);
     }

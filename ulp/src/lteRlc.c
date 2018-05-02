@@ -12,6 +12,7 @@
 #include "mempool.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
+#include "lteKpi.h"
 
 BOOL isSNEqual(UInt16 x, UInt16 y);
 void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti);
@@ -25,6 +26,9 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
 void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer);
 
+#ifndef OS_LINUX
+#pragma DATA_SECTION(gRlcUeContextList, ".ulpata");
+#endif
 List gRlcUeContextList;
 
 // -----------------------------------
@@ -34,7 +38,7 @@ void InitRlcLayer()
 }
 
 // -----------------------------------
-RlcUeContext* GetRlcUeContext(unsigned rnti)
+RlcUeContext* GetRlcUeContext(unsigned short rnti)
 {
     RlcUeContext* pUeCtx = (RlcUeContext*)ListGetFirstNode(&gRlcUeContextList);
     while (pUeCtx != 0) {
@@ -50,19 +54,26 @@ RlcUeContext* GetRlcUeContext(unsigned rnti)
 }
 
 // -----------------------------------
-void SaveRlcUeContext(RlcUeContext* pRlcUeCtx)
+RlcUeContext* CreateRlcUeContext(unsigned short rnti)
 {
-    if (pRlcUeCtx != 0) {
-        ListPushNode(&gRlcUeContextList, &pRlcUeCtx->node);
-    } else {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pRlcUeCtx null\n", __func__);
+    RlcUeContext* pUeCtx = (RlcUeContext*)MemAlloc(sizeof(RlcUeContext));
+    if (pUeCtx == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for rlc ue context\n", __func__);
+        return 0;
     }
+    memset(pUeCtx, 0, sizeof(RlcUeContext));
+    pUeCtx->rnti = rnti; 
+    ListPushNode(&gRlcUeContextList, &pUeCtx->node);
+    KpiCountRlcUeCtx(TRUE);
+
+    return pUeCtx;
 }
 
 // -----------------------------------
 void DeleteRlcUeContext(RlcUeContext* pRlcUeCtx)
 {
     if (pRlcUeCtx != 0) {
+        KpiCountRlcUeCtx(FALSE);
         ListDeleteNode(&gRlcUeContextList, &pRlcUeCtx->node);
     }
 }
@@ -92,10 +103,9 @@ void MacUeDataInd(MacUeDataInd_t* pMacDataInd)
 
         if (pRlcDataInfo->lcId <= SRB_2_LCID) {
             RlcProcessAMRxPacket(pRlcDataInfo, pMacDataInd->rnti);            
-        }
-
-        // leave this memory released in upper layer
-        // MemFree(pRlcDataInfo->rlcdataBuffer);
+        } else {
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+        }        
     }
 
     MemFree(pRlcData);
@@ -142,11 +152,13 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     // create UE context if not exists
     pUeCtx = GetRlcUeContext(rnti);
     if (pUeCtx == 0) {
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc ue context, rnti = %d\n", __func__, rnti);
-        pUeCtx = (RlcUeContext*)MemAlloc(sizeof(RlcUeContext));
-        memset(pUeCtx, 0, sizeof(RlcUeContext));
-        pUeCtx->rnti = rnti;    
-        SaveRlcUeContext(pUeCtx);
+        pUeCtx = CreateRlcUeContext(rnti);
+        if (pUeCtx == 0) {      
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            return;
+        } else {
+            LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc ue context, rnti = %d, pUeCtx = %p\n", __func__, rnti, pUeCtx);
+        }
     }
 
     // create RX AM entity if not exists
@@ -154,6 +166,11 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     if (pRxAmEntity == 0) {        
         LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc AM entity, rnti = %d, lcId = %d\n", __func__, rnti, pRlcDataInfo->lcId);
         pRxAmEntity = (RxAMEntity*)MemAlloc(sizeof(RxAMEntity));
+        if (pRxAmEntity == 0) {
+            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for RxAMEntity, rnti = %d, lcId = %d\n", __func__, rnti, pRlcDataInfo->lcId);
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            return;
+        }
         memset(pRxAmEntity, 0, sizeof(RxAMEntity));
         pUeCtx->rxAMEntityArray[pRlcDataInfo->lcId] = pRxAmEntity;
         pRxAmEntity->rnti = rnti;
@@ -173,8 +190,13 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     if (pRxAmEntity->amdPduRing.rNodeArray[ringSn].status == RS_FREE) 
     {
         if (pAmdPdu == 0) {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], create AM PDU, rnti = %d\n", __func__, rnti);
             pAmdPdu = (AmdPdu*)MemAlloc(sizeof(AmdPdu));
+            if (pAmdPdu == 0) {
+                LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for AM PDU, rnti = %d\n", __func__, rnti);
+                MemFree(pRlcDataInfo->rlcdataBuffer);
+                return;
+            }
+            LOG_DBG(ULP_LOGGER_NAME, "[%s], create AM PDU, rnti = %d\n", __func__, rnti);
             pRxAmEntity->amdPduRing.rNodeArray[ringSn].data = (void*)pAmdPdu;
             ListInit(&pAmdPdu->segList, 0);
         }
@@ -299,6 +321,14 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
 
     if (pAmdHeader->e == 0) {
         pDfe = (AmdDFE*)MemAlloc(sizeof(AmdDFE));
+        if (pDfe == 0) {            
+            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for AmdDFE\n", __func__);
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            MemFree(pAmdPduSegment);
+            ListDeInit(&pAmdPduSegment->dfeQ);
+            return RLC_FAILURE;
+        }
+        
         memset(pDfe, 0, sizeof(AmdDFE));
         pDfe->status = AM_PDU_MAP_SDU_FULL;
         pDfe->buffer.size = size;
@@ -435,14 +465,6 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             {
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], receive last SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
 
-                // pTmpBuffer = MemAlloc(pPrevBuffer->size + pCurrBuffer->size);
-                // memcpy(pTmpBuffer, pPrevBuffer->pData, pPrevBuffer->size);
-                // memcpy(pTmpBuffer + pPrevBuffer->size, pCurrBuffer->pData, pCurrBuffer->size);
-                // MemFree(pPrevBuffer->pData);
-                // MemFree(pCurrBuffer->pData);
-                // pPrevBuffer->size += pCurrBuffer->size;
-                // pPrevBuffer->pData = pTmpBuffer;
-
                 pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
                 if (pTmpBuffer == 0) {
                     LOG_ERROR(ULP_LOGGER_NAME, "[%s], MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
@@ -465,11 +487,12 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             {                
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], receive middle SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
 
-                pTmpBuffer = MemAlloc(pPrevBuffer->size + pCurrBuffer->size);
-                memcpy(pTmpBuffer, pPrevBuffer->pData, pPrevBuffer->size);
-                memcpy(pTmpBuffer + pPrevBuffer->size, pCurrBuffer->pData, pCurrBuffer->size);
-                MemFree(pPrevBuffer->pData);
-                MemFree(pCurrBuffer->pData);
+                pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
+                if (pTmpBuffer == 0) {
+                    LOG_ERROR(ULP_LOGGER_NAME, "[%s], AM_PDU_MAP_SDU_MID MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
+                        __func__, pPrevBuffer->pData, pCurrBuffer->pData);
+                    return;
+                }
                 pPrevBuffer->size += pCurrBuffer->size;
                 pPrevBuffer->pData = pTmpBuffer;
                 pRawSdu->sn = sn;

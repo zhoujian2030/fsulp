@@ -8,9 +8,9 @@
 #include "list.h"
 #include "lteLogger.h"
 
-static void PushTail(List* pList, ListNode* pNode);
-static ListNode* PopHead(List* pList);
-static unsigned int DeleteNode(List* pList, ListNode* pNode);
+void PushTail(List* pList, ListNode* pNode);
+ListNode* PopHead(List* pList);
+unsigned int DeleteNode(List* pList, ListNode* pNode);
 
 // ----------------------------------
 void ListInit(List* pList, unsigned char mtFlag) 
@@ -140,7 +140,7 @@ ListNode* ListGetNextNode(ListNode* pNode)
 }
 
 // ----------------------------------
-static void PushTail(List* pList, ListNode* pNode)
+void PushTail(List* pList, ListNode* pNode)
 {
     if(( pList->node.next == 0 )||(pList->count == 0)||( pList->node.prev == 0 )) {
         pList->node.next = pNode;
@@ -158,7 +158,7 @@ static void PushTail(List* pList, ListNode* pNode)
 }
 
 // -----------------------------------
-static ListNode* PopHead(List* pList)
+ListNode* PopHead(List* pList)
 {
 	ListNode* pNode = 0;
 
@@ -171,7 +171,7 @@ static ListNode* PopHead(List* pList)
 }
 
 // -----------------------------------
-static unsigned int DeleteNode(List* pList, ListNode* pNode)
+unsigned int DeleteNode(List* pList, ListNode* pNode)
 {
     unsigned int ret = 0;
 

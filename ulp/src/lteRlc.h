@@ -114,8 +114,8 @@ typedef struct {
 extern void InitRlcLayer();
 
 extern List gRlcUeContextList;
-extern RlcUeContext* GetRlcUeContext(unsigned rnti);
-extern void SaveRlcUeContext(RlcUeContext* pRlcUeCtx);
+extern RlcUeContext* GetRlcUeContext(unsigned short rnti);
+extern RlcUeContext* CreateRlcUeContext(unsigned short rnti);
 extern void DeleteRlcUeContext(RlcUeContext* pRlcUeCtx);
 
 #ifdef __cplusplus
