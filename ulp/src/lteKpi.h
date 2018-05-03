@@ -8,6 +8,10 @@
 #ifndef LTE_KPI_H
 #define LTE_KPI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct 
 {
     unsigned int semLock;
@@ -23,7 +27,15 @@ typedef struct
 
 extern LteKpi gLteKpi;
 
+extern void KpiInit();
+extern void KpiShow();
+extern void KpiRefresh();
+
 extern void KpiCountSem(unsigned char createFlag);
 extern void KpiCountRlcUeCtx(unsigned char createFlag);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif 

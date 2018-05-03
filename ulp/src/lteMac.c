@@ -686,7 +686,9 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
         }
     }
 
-    IP_MAC_DATA_IND(pMacUeDataInd);
+    if(!IP_MAC_DATA_IND(pMacUeDataInd)) {
+        return;
+    }
     MacUeDataInd(pMacUeDataInd);
 }
 

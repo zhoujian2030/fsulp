@@ -63,6 +63,7 @@ void InitMemPool()
     unsigned int j = 0;
     unsigned int length;
     MemNode* pMem = 0;
+    NUM_MEM_BLOCK = 0;
     for (i=0; i<MAX_NUM_POOL_SIZE; i++) {
         ListInit(&gMemPool.pool[i], 1);
         length = 0;

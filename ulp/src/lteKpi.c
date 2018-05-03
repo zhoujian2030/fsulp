@@ -5,6 +5,7 @@
  *      Author: J.ZH
  */
 
+#include <string.h>
 #include "lteKpi.h"
 #include "lteLogger.h"
 #include "mempool.h"
@@ -17,15 +18,27 @@ LteKpi gLteKpi = {0};
 #define LTE_KPI
 
 // ----------------------------
+void KpiInit() 
+{
+    memset((void*)&gLteKpi, 0, sizeof(LteKpi));
+}
+
+// ----------------------------
 void ShowKpi()
 {
-    gLteKpi.mem = MemGetNumMemBlock() - MemGetAvailableMemBlock();
+    KpiRefresh();
     LOG_DBG(ULP_LOGGER_NAME, "semLock = %d, mem = %d, activeRlcCtx = %d, macInd = %d\n", 
         gLteKpi.semLock, gLteKpi.mem, gLteKpi.activeRlcCtx, gLteKpi.macInd);
     LOG_DBG(ULP_LOGGER_NAME, "lcId0 = %d, idResp = %d, imsi = %d, rlcInd = %d, pdcpInd = %d\n",     
         gLteKpi.lcIdArray[0], gLteKpi.idResp, gLteKpi.imsi, gLteKpi.rlcInd, gLteKpi.pdcpInd);
     LOG_DBG(ULP_LOGGER_NAME, "lcId1 = %d, lcId2 = %d, lcId3 = %d, lcId4 = %d, lcId5 = %d\n",     
         gLteKpi.lcIdArray[1], gLteKpi.lcIdArray[2], gLteKpi.lcIdArray[3], gLteKpi.lcIdArray[4], gLteKpi.lcIdArray[5]);
+}
+
+// ----------------------------
+void KpiRefresh()
+{
+    gLteKpi.mem = MemGetNumMemBlock() - MemGetAvailableMemBlock();
 }
 
 // ----------------------------

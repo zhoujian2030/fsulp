@@ -9,6 +9,7 @@
 #include "lteLogger.h"
 #include "mempool.h"
 #include "lteRlc.h"
+#include "lteKpi.h"
 
 // -------------------------
 void InitUlpLayer()

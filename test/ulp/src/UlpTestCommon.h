@@ -56,6 +56,11 @@ extern RlcPdcpUeDataInd_Test_Array gRlcUeDataInd;
 extern RlcPdcpUeDataInd_Test_Array gPdcpUeDataInd;
 extern RrcUeDataInd_Test_Array gRrcUeDataInd;
 
+extern unsigned int gCallMacDataInd;
+extern unsigned int gCallRlcDataInd;
+extern unsigned int gCallPdcpDataInd;
+extern unsigned int gCallRrcDataInd;
+
 #endif
 
 // #ifdef __cplusplus

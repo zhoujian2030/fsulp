@@ -22,7 +22,11 @@ using namespace std;
 extern unsigned int gLogLevel;
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
-    gLogLevel = 2;
+    gLogLevel = 1;
+    gCallMacDataInd = 1;
+    gCallRlcDataInd = 1;
+    gCallPdcpDataInd = 1;
+    gCallRrcDataInd = 1;
     InitUlpLayer();
 
     // Identity Response, imsi = 460041143702947
@@ -149,6 +153,10 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 }
 
 TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
+    gCallMacDataInd = 1;
+    gCallRlcDataInd = 1;
+    gCallPdcpDataInd = 1;
+    gCallRrcDataInd = 1;
     gLogLevel = 1;
     InitUlpLayer();
 
