@@ -52,8 +52,8 @@ typedef enum {
 typedef enum {
     AM_PDU_MAP_SDU_FULL = 0 ,
     AM_PDU_MAP_SDU_START,
-    AM_PDU_MAP_SDU_MID,
-    AM_PDU_MAP_SDU_END
+    AM_PDU_MAP_SDU_END,
+    AM_PDU_MAP_SDU_MID
 } RlcSduStatus; 
 
 typedef struct {
@@ -113,7 +113,7 @@ typedef struct {
 // -------------------------------
 extern void InitRlcLayer();
 
-extern List gRlcUeContextList;
+// extern List gRlcUeContextList;
 extern RlcUeContext* RlcGetUeContext(unsigned short rnti);
 extern RlcUeContext* RlcCreateUeContext(unsigned short rnti);
 extern void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx);

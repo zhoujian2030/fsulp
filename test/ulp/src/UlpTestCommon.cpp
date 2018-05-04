@@ -36,7 +36,7 @@ extern "C" {
 // ----------------------
 int IP_Call_Mac_Data_Ind(void* pData)
 {
-    printf("IP_Call_Mac_Data_Ind, pMacDataInd = %p\n", pData);
+    // printf("IP_Call_Mac_Data_Ind, pMacDataInd = %p\n", pData);
 
     MacUeDataInd_t* pMacDataInd = (MacUeDataInd_t*)pData;
     if (pMacDataInd == 0 || pMacDataInd->rlcData == 0) {
@@ -67,7 +67,7 @@ int IP_Call_Mac_Data_Ind(void* pData)
 // -----------------------
 int IP_Call_Rlc_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
 {
-    printf("IP_Call_Rlc_Data_Ind, rnti = %d, lcId = %d, pData = %p, size = %d\n", rnti, lcId, pData, size);
+    // printf("IP_Call_Rlc_Data_Ind, rnti = %d, lcId = %d, pData = %p, size = %d\n", rnti, lcId, pData, size);
 
     if (pData == 0) {
         return gCallRlcDataInd;
@@ -87,7 +87,7 @@ int IP_Call_Rlc_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char
 // -----------------------
 int IP_Call_Pdcp_Srb_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
 {
-    printf("IP_Call_Pdcp_Srb_Data_Ind, rnti = %d, lcId = %d, pData = %p, size = %d\n", rnti, lcId, pData, size);
+    // printf("IP_Call_Pdcp_Srb_Data_Ind, rnti = %d, lcId = %d, pData = %p, size = %d\n", rnti, lcId, pData, size);
     if (pData == 0) {
         return gCallPdcpDataInd;
     }
@@ -106,7 +106,7 @@ int IP_Call_Pdcp_Srb_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned
 // -----------------------
 int IP_Rrc_Decode_Result(unsigned short rnti, unsigned char rrcMsgType, unsigned char nasMsgType, void* pData)
 {
-    printf("IP_Rrc_Decode_Result, rnti = %d, rrcMsgType = 0x%02x, nasMsgType = 0x%02x, pData = %p\n", rnti, rrcMsgType, nasMsgType, pData);
+    // printf("IP_Rrc_Decode_Result, rnti = %d, rrcMsgType = 0x%02x, nasMsgType = 0x%02x, pData = %p\n", rnti, rrcMsgType, nasMsgType, pData);
 
     RrcUeDataInd_test* pRrcUeInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[gRrcUeDataInd.numUe];
     gRrcUeDataInd.numUe++;
