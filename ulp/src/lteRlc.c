@@ -415,8 +415,8 @@ BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
         pAmdHeader->e  =  (data[i] >> 2 ) & 0x01U;
         pAmdHeader->sn = ( ( (data[i] & 0x03U) << 8 )| (data[i + 1] & 0xFFU) );
 
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], p = %d, sn = %d, e = %d, rf = %d, fi = %d\n",
-            __func__, pAmdHeader->p, pAmdHeader->sn, pAmdHeader->e, pAmdHeader->rf, pAmdHeader->fi);
+        LOG_TRACE(ULP_LOGGER_NAME, "[%s], p = %d, sn = %d, e = %d, fi = %d\n",
+            __func__, pAmdHeader->p, pAmdHeader->sn, pAmdHeader->e, pAmdHeader->fi);
 
         /*Decode AMD PDU Segment*/    
         if ( pAmdHeader->rf ) {

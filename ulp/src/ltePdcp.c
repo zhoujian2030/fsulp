@@ -51,11 +51,19 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
     } else {
         // data is ciphered
         LOG_TRACE(ULP_LOGGER_NAME, "[%s], TODO, data is ciphered ??\n", __func__);
+        if (pData != 0) {
+            MemFree(pData);
+        }
     }
 }
 
 // -----------------------------
 void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
+    LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
+
+
+    if (pData != 0) {
+        MemFree(pData);
+    }
 }

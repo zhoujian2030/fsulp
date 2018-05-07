@@ -143,7 +143,10 @@ TEST_F(TestMempool, Join_Memory) {
     EXPECT_EQ(MemGetLength(pJoinBuffer), str1.length() + str2.length());
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0 - 1);
     string expectStr = str1 + str2;
-    string joinStr((char*)pJoinBuffer);
+    char* tempBuff = new char[MemGetLength(pJoinBuffer) + 1];
+    memcpy(tempBuff, pJoinBuffer, MemGetLength(pJoinBuffer));
+    tempBuff[MemGetLength(pJoinBuffer)] = '\0';
+    string joinStr(tempBuff);
     EXPECT_EQ(expectStr, joinStr);
     printf("join string = %s\n", pJoinBuffer);
     MemFree(pJoinBuffer);

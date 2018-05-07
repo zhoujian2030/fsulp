@@ -111,5 +111,9 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 // --------------------------------
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, data size = %d\n", __func__, rnti, size);
+    LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, data size = %d\n", __func__, rnti, size);
+
+    if (pData != 0) {
+        MemFree(pData);
+    }
 }

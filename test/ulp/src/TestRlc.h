@@ -5,8 +5,8 @@
  *      Author: j.zh
  */
  
-#ifndef TEST_RLC
-#define TEST_RLC
+#ifndef TEST_RLC_H
+#define TEST_RLC_H
 
 #include "TestSuite.h"
 

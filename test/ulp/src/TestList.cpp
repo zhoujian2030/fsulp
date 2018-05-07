@@ -105,9 +105,11 @@ void* TestEntryFunc1(void* p)
             ListPushNode(&gTestList, pNode);
             // cout << pthread_self() << " : ListPushNode ListCount = " << ListCount(&gTestList) << endl;
             count--;
-        }
 
-        usleep(1);
+            usleep(1);
+            continue;
+        }
+        break;        
     }
 
     return 0;
@@ -191,7 +193,7 @@ TEST_F(TestList, Multi_Thread_1_Thread_Push_2_Thread_Pop) {
     ThreadCreate((void*)TestEntryFunc3, &threadHandle3, 0);
     cout << "threadHandle1 = " << threadHandle1 << ", threadHandle2 = " << threadHandle2 << ", threadHandle3 = " << threadHandle3 << endl;
 
-    usleep(1000000);
+    sleep(5);
     EXPECT_EQ((int)ListCount(&gTestList), 0);
 
     ListDeInit(&gTestList);    
