@@ -8,11 +8,12 @@
 #ifndef LTE_RLC_H
 #define LTE_RLC_H
 
-#include "list.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "list.h"
+#include "sync.h"
 
 #define RLC_MAX_PDU_LENGTH 18844
 
@@ -106,6 +107,8 @@ typedef struct {
 
 typedef struct {
     ListNode node;
+    unsigned int idleCount;
+    SEM_LOCK lockOfCount;
     unsigned short rnti;
     RxAMEntity* rxAMEntityArray[MAX_LC_ID]; 
 } RlcUeContext;
@@ -117,6 +120,8 @@ extern void InitRlcLayer();
 extern RlcUeContext* RlcGetUeContext(unsigned short rnti);
 extern RlcUeContext* RlcCreateUeContext(unsigned short rnti);
 extern void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx);
+extern int RlcGetUeContextCount();
+extern void RlcChangeUeContextCount(RlcUeContext* pRlcUeCtx, unsigned int value);
 
 #ifdef __cplusplus
 }

@@ -18,14 +18,14 @@ int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pT
 #ifdef OS_LINUX
     if (pThreadHandle == 0 || pEntryFunc == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer\n", __func__);
-        return 0;
+        return 1;
     }
 
     pthread_attr_t attr;
     int ret = pthread_attr_init(&attr);
     if (ret != 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pthread_attr_init failure\n", __func__);
-        return 0;
+        return 1;
     }
     
     pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
@@ -41,18 +41,18 @@ int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pT
     ret = pthread_create(pThreadHandle, &attr, pEntryFunc, 0);
     if (ret != 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pthread_create failure\n", __func__);
-        return 0;
+        return 1;
     }
 
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], pthread_create success\n", __func__);
 
-    return 1;
+    return 0;
 
 #else
 
     if (pThreadParams == 0 || pThreadHandle == 0 || pEntryFunc == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer\n", __func__);
-        return 0;
+        return 1;
     }
 
 	Task_Params taskParams;
@@ -63,7 +63,7 @@ int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pT
 
 	*pThreadHandle = Task_create((ti_sysbios_knl_Task_FuncPtr)pEntryFunc, &taskParams, 0);
 
-    return 1;
+    return 0;
 
 #endif
 }

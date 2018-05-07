@@ -13,6 +13,7 @@
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
+#include "sync.h"
 
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId);
 RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId);
@@ -81,6 +82,8 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
     LOG_INFO(ULP_LOGGER_NAME, "[%s], pUeCtx = %p, rnti = %d\n", __func__, pUeCtx, rnti);
     memset(pUeCtx, 0, sizeof(RlcUeContext));
     pUeCtx->rnti = rnti; 
+    SemInit(&pUeCtx->lockOfCount, 1);
+    pUeCtx->idleCount = 0;
     ListPushNode(&gRlcUeContextList, &pUeCtx->node);
     KpiCountRlcUeCtx(TRUE);
 
@@ -98,14 +101,36 @@ void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx)
             RlcDeleteRxAmEntity(pRlcUeCtx->rxAMEntityArray[i]);
             pRlcUeCtx->rxAMEntityArray[i] = 0;
         }
+        SemDestroy(&pRlcUeCtx->lockOfCount);
         ListDeleteNode(&gRlcUeContextList, &pRlcUeCtx->node);
         MemFree(pRlcUeCtx);
     }
 }
 
 // -----------------------------------
+int RlcGetUeContextCount()
+{
+    return ListCount(&gRlcUeContextList);
+}
+
+// -----------------------------------
+void RlcChangeUeContextCount(RlcUeContext* pRlcUeCtx, unsigned int value)
+{
+    if (pRlcUeCtx != 0) {
+        SemWait(&pRlcUeCtx->lockOfCount);
+        if (value == 0) {
+            pRlcUeCtx->idleCount = 0;
+        } else {
+            pRlcUeCtx->idleCount += value;
+        }
+        SemPost(&pRlcUeCtx->lockOfCount);
+    }
+}
+
+// -----------------------------------
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
     if (pUeCtx != 0 && lcId <MAX_LC_ID) {
+        RlcChangeUeContextCount(pUeCtx, 0);
         return pUeCtx->rxAMEntityArray[lcId];
     }
 
@@ -134,6 +159,8 @@ RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
             RLC_SET_RX_AMD_PDU_STATUS(pRxAmEntity, i, RS_FREE);
             RLC_SET_RX_AMD_PDU(pRxAmEntity, i, 0);
         }
+
+        RlcChangeUeContextCount(pUeCtx, 0);
     }
 
     return pRxAmEntity;
