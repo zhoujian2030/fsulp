@@ -22,9 +22,10 @@ typedef struct {
 } Event;
 
 #else 
-
+#include <ti/sysbios/knl/Semaphore.h>
+#include <ti/sysbios/BIOS.h>
 typedef struct {
-
+	Semaphore_Handle sem;
 } Event;
 
 #endif

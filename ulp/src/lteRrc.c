@@ -13,6 +13,7 @@
 #include "asn1.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
+#include "lteKpi.h"
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gUlRRcMsgName, ".ulpata");
@@ -80,7 +81,9 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 
             if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
                 LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Identity Response (RNTI: %d)\n", __func__, rnti);
+                gLteKpi.idResp++;
                 if (LIBLTE_MME_MOBILE_ID_TYPE_IMSI == idResp.mobile_id.type_of_id) {
+                    gLteKpi.imsi++;
                     for (i = 0; i < 15; i++) {
                         imsi[i] = idResp.mobile_id.imsi[i] + 0x30;
                     }

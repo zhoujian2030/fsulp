@@ -11,12 +11,21 @@
 #include "lteRlc.h"
 #include "lteResCleaner.h"
 #include "lteKpi.h"
+#include "lteMac.h"
 
 // -------------------------
-void InitUlpLayer()
+void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
 {
+    KpiInit();
     InitMemPool();
+    InitMacLayer(standloneMacFlag);
     InitRlcLayer();
-    InitResCleaner();
+    InitResCleaner(startResCleanerFlag);
 }
 
+// -------------------------
+void UlpOneMilliSecondIsr()
+{
+	NotifyMacHandler();
+	NotifyResCleaner();
+}

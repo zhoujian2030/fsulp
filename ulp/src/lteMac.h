@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-// void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length);
+// void PhyUlDataInd(unsigned char* pBuffer, unsigned short length);
 
 #define MAX_NUM_CHANNELS      17
 
@@ -67,6 +67,9 @@ typedef struct {
     unsigned char lchId; /*Logical channel ID*/
     unsigned int  length; /*Data length for this logical channel id*/
 } DemuxDataBase;
+
+void InitMacLayer(unsigned char standloneFlag);
+void NotifyMacHandler();
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,12 @@
 #include "mempool.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
+#include "lteKpi.h"
+#include "list.h"
+#include "event.h"
+#include "thread.h"
 
+void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length); 
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
 void MacProcessMacLcId(UInt8 startPaddingFlag,
     UInt8 extnFlag,
@@ -79,14 +84,109 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
     RlcUlData **dataToRlc_p,
     UInt8 *ulDataReceivedFlag);
 
+// ----------------------------------------
+// standlone configurations
+unsigned char gMacStandloneFlag = FALSE;
+List gMacRecvdPhyDataList;
+Event gMacHandlerEvent;
+void* MacHandlerEntryFunc(void* p);
+
+typedef struct {
+    ListNode node;
+    UInt32 length;
+    UInt8* pBuffer;
+} PhyDataIndNode;
+
+#ifndef OS_LINUX
+#define TASK_MAC_HANDLER_PRIORITY		3
+#define TASK_MAC_HANDLER_STACK_SIZE	(128*1024)
+#pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpata");
+UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
+#endif
+// -----------------------------------------
+
 // ---------------------------
-void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length) 
+void InitMacLayer(unsigned char standloneFlag)
+{
+    gMacStandloneFlag = standloneFlag;
+    if (gMacStandloneFlag) {
+        ListInit(&gMacRecvdPhyDataList, 1);
+        EventInit(&gMacHandlerEvent);
+
+#ifdef OS_LINUX 
+        ThreadHandle threadHandle;
+        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, 0);
+        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create mac handler task\n", __func__);
+#else 
+        ThreadHandle threadHandle;
+        ThreadParams threadParams;
+        threadParams.stackSize = TASK_MAC_HANDLER_STACK_SIZE;
+        threadParams.stack = gTaskMacHandlerStack;
+        threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
+        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
+        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create mac handler task\n", __func__);
+#endif 
+    }
+}
+
+// ---------------------------
+void* MacHandlerEntryFunc(void* p)
+{
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], Entry\n", __func__);
+    UInt32 count;
+    PhyDataIndNode* pPhyDataNode;
+
+    while (1) {
+        EventWait(&gMacHandlerEvent);
+
+        count = ListCount(&gMacRecvdPhyDataList);
+        if (count == 0) {
+            continue;
+        }
+        pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
+        while (pPhyDataNode != 0) {
+            MacProcessPhyDataInd(pPhyDataNode->pBuffer, pPhyDataNode->length);
+            MemFree(pPhyDataNode->pBuffer);
+            MemFree(pPhyDataNode);
+            pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
+        }
+
+    }
+}
+
+// ---------------------------
+void NotifyMacHandler() {
+    if (gMacStandloneFlag) {
+        EventSend(&gMacHandlerEvent);
+    }
+}
+
+// ---------------------------
+void PhyUlDataInd(unsigned char* pBuffer, unsigned short length) 
 {
     if (pBuffer == 0) {
         return;
     }
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d\n", __func__, length);
     // LOG_BUFFER(pBuffer, length);
+
+    if (gMacStandloneFlag) {
+        PhyDataIndNode* pPhyDataInd = (PhyDataIndNode*)MemAlloc(sizeof(PhyDataIndNode));
+        pPhyDataInd->length = length;
+        pPhyDataInd->pBuffer = MemAlloc(length);
+        memcpy(pPhyDataInd->pBuffer, pBuffer, length);
+        ListPushNode(&gMacRecvdPhyDataList, &pPhyDataInd->node);
+    } else {
+        MacProcessPhyDataInd(pBuffer, length);
+    }
+}
+
+// ---------------------------
+void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
+{
+    if (pBuffer == 0) {
+        return;
+    }
 
     unsigned short tempLen = 0;
     unsigned char  numPdu = 0;
@@ -607,6 +707,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
             case MAC_UL_CCCH_LCH:
             {
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], TODO, MAC_UL_CCCH_LCH\n", __func__);
+                gLteKpi.lcIdArray[lchId]++;
                 return;
             }
 
@@ -629,6 +730,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                     &dataPtr_p,
                     &pMacUeDataInd->rlcData,
                     &ulDataReceivedFlag);
+                gLteKpi.lcIdArray[lchId]++;
                 break;
             }
 

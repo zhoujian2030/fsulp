@@ -27,7 +27,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     gCallRlcDataInd = 1;
     gCallPdcpDataInd = 1;
     gCallRrcDataInd = 1;
-    InitUlpLayer();
+    InitUlpLayer(0, 0);
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -79,7 +79,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     length += (pUlSchPduHead->wordLen << 2);
 #endif
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 
     // check MAC to RLC indication
     unsigned char expectRlcPdu1[] = {0x00, 0x04};
@@ -158,7 +158,7 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     gCallPdcpDataInd = 1;
     gCallRrcDataInd = 1;
     gLogLevel = 1;
-    InitUlpLayer();
+    InitUlpLayer(0, 0);
 
     // Identity response, imsi = 460041143702947
     unsigned char macPduRlcSeg1[] = {
@@ -209,7 +209,7 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     length += (pUlSchPduHead->wordLen << 2);
 #endif
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 
     // check MAC to RLC indication
     unsigned char expectRlcStatusPdu[] = {0x00, 0x04};
@@ -277,7 +277,7 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     length += (pUlSchPduHead->wordLen << 2);
 #endif
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 
     // check MAC to RLC indication
     unsigned char expectRlcSeg2Pdu[] = {

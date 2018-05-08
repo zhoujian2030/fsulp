@@ -28,23 +28,25 @@ UInt8 gTaskResCleanerStack[TASK_RESOURCE_CLEANER_STACK_SIZE];
 #endif
 
 // ---------------------------------
-void InitResCleaner()
+void InitResCleaner(unsigned char startResCleanerFlag)
 {
-    EventInit(&gCleanupEvent);
-    gIntializedFlag = TRUE;
+    if (startResCleanerFlag) {
+        EventInit(&gCleanupEvent);
+        gIntializedFlag = TRUE;
 
 #ifdef OS_LINUX 
-    ThreadHandle threadHandle;
-    ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, 0);
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], Create resource cleaner task\n", __func__);
+        ThreadHandle threadHandle;
+        ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, 0);
+        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create resource cleaner task\n", __func__);
 #else 
-    ThreadHandle threadHandle;
-    ThreadParams threadParams;
-    threadParams.stackSize = TASK_RESOURCE_CLEANER_STACK_SIZE;
-    threadParams.stack = gTaskResCleanerStack;
-    threadParams.priority = TASK_RESOURCE_CLEANER_PRIORITY;
-    ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, &threadParams);
+        ThreadHandle threadHandle;
+        ThreadParams threadParams;
+        threadParams.stackSize = TASK_RESOURCE_CLEANER_STACK_SIZE;
+        threadParams.stack = gTaskResCleanerStack;
+        threadParams.priority = TASK_RESOURCE_CLEANER_PRIORITY;
+        ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, &threadParams);
 #endif
+    }
 }
 
 // ---------------------------------

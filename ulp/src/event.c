@@ -11,12 +11,12 @@
 // ----------------------------------
 int EventInit(Event* pEvent)
 {
-#ifdef OS_LINUX
     if (pEvent == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
         return 1;
     }
 
+#ifdef OS_LINUX
     int result = pthread_mutex_init(&pEvent->mutex, 0);
     if (result == 0) {
         result = pthread_cond_init(&pEvent->condition, 0);
@@ -32,6 +32,11 @@ int EventInit(Event* pEvent)
 
     pEvent->setFlag = 0;
 
+#else
+    Semaphore_Params semParams;
+    Semaphore_Params_init(&semParams);
+	semParams.mode 	= Semaphore_Mode_BINARY;
+	pEvent->sem = Semaphore_create(0, &semParams, 0);
 #endif
 
     return 0;
@@ -40,28 +45,31 @@ int EventInit(Event* pEvent)
 // ----------------------------------
 void EventDeInit(Event* pEvent)
 {
-#ifdef OS_LINUX
     if (pEvent == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
         return;
     }
 
+#ifdef OS_LINUX
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p, setFlag = %d\n", __func__, pEvent, pEvent->setFlag); 
 
     pthread_mutex_destroy(&pEvent->mutex);
-    pthread_cond_destroy(&pEvent->condition);      
+    pthread_cond_destroy(&pEvent->condition);
+
+#else
+    Semaphore_delete(&pEvent->sem);
 #endif
 }
 
 // ----------------------------------
 int EventWait(Event* pEvent)
 {
-#ifdef OS_LINUX
     if (pEvent == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
         return 1;
     }
 
+#ifdef OS_LINUX
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p, setFlag = %d\n", __func__, pEvent, pEvent->setFlag); 
 
     int result = pthread_mutex_lock(&pEvent->mutex);
@@ -81,6 +89,9 @@ int EventWait(Event* pEvent)
 
     pEvent->setFlag = 0;
     pthread_mutex_unlock(&pEvent->mutex);   
+
+#else
+    Semaphore_pend(pEvent->sem, BIOS_WAIT_FOREVER);
 #endif 
 
     return 0; 
@@ -89,14 +100,13 @@ int EventWait(Event* pEvent)
 // ----------------------------------
 int EventSend(Event* pEvent)
 {
-#ifdef OS_LINUX
     if (pEvent == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
         return 1;
     }
-
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p\n", __func__, pEvent);
 
+#ifdef OS_LINUX
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to lock on mutex\n", __func__);
@@ -111,6 +121,9 @@ int EventSend(Event* pEvent)
     }
 
     pthread_mutex_unlock(&pEvent->mutex);
+
+#else
+    Semaphore_post(pEvent->sem);
 #endif 
 
     return 0; 

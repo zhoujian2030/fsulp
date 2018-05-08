@@ -14,7 +14,7 @@ extern "C" {
 
 #define MAC_IDLE_COUNT  10000
 
-void InitResCleaner();
+void InitResCleaner(unsigned char startResCleanerFlag);
 void NotifyResCleaner();
 
 #ifdef __cplusplus

@@ -12,7 +12,8 @@
 extern "C" {
 #endif
 
-extern void InitUlpLayer();
+void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag);
+void UlpOneMilliSecondIsr();
 
 
 #ifdef __cplusplus

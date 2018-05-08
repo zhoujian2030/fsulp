@@ -75,7 +75,7 @@ void Test_Rlc_No_Segment()
     memcpy(pUlSchPdu->buffer, macPdu, pUlSchPdu->length);
     length += pUlSchPdu->length;
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 }
 
 // ----------------------------
@@ -107,7 +107,7 @@ void Test_Rlc_SDU_2_Segment()
     memcpy(pUlSchPdu->buffer, macPduRlcSeg1, pUlSchPdu->length);
     length += pUlSchPdu->length;
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 
     usleep(5000);
 
@@ -126,7 +126,7 @@ void Test_Rlc_SDU_2_Segment()
     memcpy(pUlSchPdu->buffer, macPduRlcSeg2, pUlSchPdu->length);
     length += pUlSchPdu->length;
 
-    MacUlSchDataInd(gMsgBuffer, length);
+    PhyUlDataInd(gMsgBuffer, length);
 }
 
 #endif

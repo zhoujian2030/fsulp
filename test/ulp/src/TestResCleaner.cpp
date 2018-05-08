@@ -26,7 +26,7 @@ extern List gRlcUeContextList;
 // -------------------------------
 TEST_F(TestResCleaner, Basic_Test) {
     gLogLevel = 0;
-    InitUlpLayer();
+    InitUlpLayer(0, 1);
     usleep(10);
     unsigned int i;
     unsigned short rntiStart = 101;

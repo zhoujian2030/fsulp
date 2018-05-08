@@ -14,7 +14,7 @@ extern "C" {
 
 #include "baseType.h" 
 
-extern void MacUlSchDataInd(unsigned char* pBuffer, unsigned short length);
+extern void PhyUlDataInd(unsigned char* pBuffer, unsigned short length);
 
 #ifdef MAC_PHY_INTF_NEW
 typedef struct {                   
