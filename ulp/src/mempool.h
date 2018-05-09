@@ -17,6 +17,18 @@ extern "C" {
 #define MAX_NUM_POOL_SIZE   10
 #define MAGIC_NUMBER    0x86868686
 
+#ifdef __x86_64__
+#define SIZE_0      (128*2)
+#define SIZE_1      (512*2)
+#define SIZE_2      (1024*2)
+#define SIZE_3      (1536*2)
+#define SIZE_4      (3*1024*2)
+#define SIZE_5      (5*1024*2)
+#define SIZE_6      (8*1024*2)
+#define SIZE_7      (10*1024*2)
+#define SIZE_8      (32*1024*2)
+#define SIZE_9      (256*1024*2)
+#else 
 #define SIZE_0      128
 #define SIZE_1      512
 #define SIZE_2      1024
@@ -27,6 +39,7 @@ extern "C" {
 #define SIZE_7      (10*1024)
 #define SIZE_8      (32*1024)
 #define SIZE_9      (256*1024)
+#endif
 
 #define NUM_SIZE_0      (20*1024)
 #define NUM_SIZE_1      (8*1024)
