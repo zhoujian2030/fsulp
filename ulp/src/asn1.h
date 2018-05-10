@@ -114,9 +114,10 @@ typedef enum {
 #define NAS_MSG_TYPE_NOTIFICATION                                                  0xDB
 #define NAS_MSG_TYPE_ESM_STATUS                                                    0xE8
 
-extern int parseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
-extern int parseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
-extern int parseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
-extern int parseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgType, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp);
+extern int Asn1ParseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
+extern int Asn1ParseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
+extern int Asn1ParseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
+extern int Asn1ParseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgType, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp);
+extern int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupCompl);
 
 #endif /* ASN1_H_ */

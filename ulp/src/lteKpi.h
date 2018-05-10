@@ -21,8 +21,11 @@ typedef struct
     unsigned int macInd;
     unsigned int rlcInd;
     unsigned int pdcpInd;
+    unsigned int rrcSetupCompl;
     unsigned int idResp;
+    unsigned int attachReq; 
     unsigned int imsi;
+    unsigned int mTmsi;
 } LteKpi;
 
 extern LteKpi gLteKpi;

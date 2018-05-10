@@ -10,6 +10,6 @@
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gLogLevel, ".ulpata");
 #endif
-unsigned int gLogLevel = 1;
+unsigned int gLogLevel = 2;
 
 

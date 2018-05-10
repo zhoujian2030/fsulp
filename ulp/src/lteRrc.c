@@ -75,7 +75,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
     }
 
     if (RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER == rrcMsgType) {
-        if (ASN1_SUCCES == parseUlDTMsg(pData, size, &nasMsgType, &idResp)) {
+        if (ASN1_SUCCES == Asn1ParseUlDTMsg(pData, size, &nasMsgType, &idResp)) {
 
             IP_RRC_DECODE_RESULT(rnti, rrcMsgType, nasMsgType, &idResp);
 
@@ -104,6 +104,50 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
         } else {
             IP_RRC_DECODE_RESULT(rnti, rrcMsgType, 0xff, 0);
         }
+    } else if (RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE == rrcMsgType) {
+        gLteKpi.rrcSetupCompl++;
+        LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT rrcSetupComplMsg;
+        if (ASN1_SUCCES == Asn1ParseRrcSetupComplMsg(pData, size, &rrcSetupComplMsg)) {
+            UInt8 pd;
+            if (ASN1_SUCCES == liblte_mme_parse_msg_header(&rrcSetupComplMsg.dedicated_info_nas, &pd, &nasMsgType)) {
+                if (NAS_MSG_TYPE_ATTACH_REQUEST == nasMsgType) {
+                    gLteKpi.attachReq++;
+                    LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Attach Request (RNTI: %d)\n", __func__, rnti);
+                    LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT attachReq;
+                    if (ASN1_SUCCES == liblte_mme_unpack_attach_request_msg(&rrcSetupComplMsg.dedicated_info_nas, &attachReq)) {
+                        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == attachReq.eps_mobile_id.type_of_id) {
+                            gLteKpi.mTmsi++;
+                            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", __func__, rnti, 
+                                attachReq.eps_mobile_id.guti.m_tmsi,
+                                attachReq.eps_mobile_id.guti.mcc,
+                                attachReq.eps_mobile_id.guti.mnc);
+                        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == attachReq.eps_mobile_id.type_of_id) {
+                            gLteKpi.imsi++;
+                            for (i = 0; i < 15; i++) {
+                                imsi[i] = attachReq.eps_mobile_id.imsi[i] + 0x30;
+                            }
+                            imsi[15] = '\0';
+                            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
+                        } else {
+                            UInt8 imei[16];
+                            for (i = 0; i < 15; i++) {
+                                imei[i] = attachReq.eps_mobile_id.imei[i] + 0x30;
+                            }
+                            imei[15] = '\0';
+                            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imei = %s\n", __func__, rnti, imei);
+                        }
+                    } else {                        
+                        LOG_ERROR(ULP_LOGGER_NAME, "[%s], liblte_mme_unpack_attach_request_msg error, rnti = %d\n", __func__, rnti);
+                    }
+                } else {
+                    LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: nasMsgType = 0x%02x (RNTI: %d)\n", __func__, nasMsgType, rnti);
+                }
+            }
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "[%s], Asn1ParseRrcSetupComplMsg error, rnti = %d\n", __func__, rnti);
+        }
+
+        IP_RRC_DECODE_RESULT(rnti, rrcMsgType, nasMsgType, 0);
     } else {
         IP_RRC_DECODE_RESULT(rnti, rrcMsgType, 0xff, 0);
     }

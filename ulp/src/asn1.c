@@ -8,8 +8,9 @@
 #include <stddef.h>
 #include "asn1.h"
 #include "asn1Lib.h"
+#include <stdio.h>
 
-int parseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
+int Asn1ParseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
     int err = ASN1_ERROR;
 
     if(msgBuf != NULL && length != 0 && ext != NULL && msgType != NULL)
@@ -24,7 +25,7 @@ int parseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char
     return err;
 }
 
-int parseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
+int Asn1ParseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
 	int err = ASN1_ERROR;
     if(msgBuf != NULL && length != 0 && ext != NULL && msgType != NULL)
     {
@@ -38,7 +39,7 @@ int parseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned ch
     return err;
 }
 
-int parseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
+int Asn1ParseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
 	int err = ASN1_ERROR;
     if(msgBuf != NULL && length != 0 && ext != NULL && msgType != NULL)
     {
@@ -52,7 +53,7 @@ int parseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned ch
     return err;
 }
 
-int parseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgType, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp) {
+int Asn1ParseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgType, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp) {
 	LIBLTE_BIT_MSG_STRUCT msgBitBuf;
 	msgBitBuf.msg = msgBitBuf.buff;
 
@@ -80,5 +81,22 @@ int parseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgT
 	}
 
 	return err;
+}
+
+int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupCompl)
+{
+    LIBLTE_BIT_MSG_STRUCT msgBitBuf;
+	msgBitBuf.msg = msgBitBuf.buff;
+
+	unsigned int bitLen = length << 3;
+
+    convert_bytes_to_bits_vector(msgBitBuf.msg, msgBuf, bitLen);
+	// remove 5 bits RRC msg type
+	msgBitBuf.msg += 5;
+	msgBitBuf.N_bits = bitLen - 5;
+
+    return liblte_rrc_unpack_rrc_connection_setup_complete_msg(&msgBitBuf, pRrcSetupCompl);
+    // printf("mmegi = %d, mmec = %d, mcc = %d, mnc = %d\n", rrcConnSetupComplMsg.registered_mme.mmegi, rrcConnSetupComplMsg.registered_mme.mmec, 
+    //     rrcConnSetupComplMsg.registered_mme.plmn_id.mcc, rrcConnSetupComplMsg.registered_mme.plmn_id.mnc);
 }
 
