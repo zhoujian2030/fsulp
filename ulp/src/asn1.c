@@ -83,11 +83,23 @@ int Asn1ParseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *
 	return err;
 }
 
+int Asn1ParseUlInfoTransMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT* pUlInfoTrans) {
+	LIBLTE_BIT_MSG_STRUCT msgBitBuf;
+	msgBitBuf.msg = msgBitBuf.buff;
+	unsigned int bitLen = length << 3;
+
+	convert_bytes_to_bits_vector(msgBitBuf.msg, msgBuf, bitLen);
+	// remove 5 bits RRC msg type
+	msgBitBuf.msg += 5;
+	msgBitBuf.N_bits = bitLen - 5;
+
+	return liblte_rrc_unpack_ul_information_transfer_msg(&msgBitBuf, pUlInfoTrans);
+}
+
 int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupCompl)
 {
     LIBLTE_BIT_MSG_STRUCT msgBitBuf;
 	msgBitBuf.msg = msgBitBuf.buff;
-
 	unsigned int bitLen = length << 3;
 
     convert_bytes_to_bits_vector(msgBitBuf.msg, msgBuf, bitLen);

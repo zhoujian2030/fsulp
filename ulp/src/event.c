@@ -104,9 +104,10 @@ int EventSend(Event* pEvent)
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
         return 1;
     }
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p\n", __func__, pEvent);
 
 #ifdef OS_LINUX
+    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p\n", __func__, pEvent);
+    
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to lock on mutex\n", __func__);

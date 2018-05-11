@@ -14,6 +14,7 @@
 
 #include "asn1.h"
 #include "lteRlcMacInterface.h"
+#include "lteRrc.h"
 
 typedef struct {
     unsigned short rnti;
@@ -26,7 +27,7 @@ typedef struct {
     unsigned short rnti;
     unsigned char rrcMsgType;
     unsigned char nasMsgType;
-    LIBLTE_MME_ID_RESPONSE_MSG_STRUCT identityResp;
+    RrcUeContext ueContext;
 } RrcUeDataInd_test;
 
 typedef struct {

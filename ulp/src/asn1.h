@@ -118,6 +118,7 @@ extern int Asn1ParseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, un
 extern int Asn1ParseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
 extern int Asn1ParseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
 extern int Asn1ParseUlDTMsg(unsigned char *msgBuf, unsigned int length, unsigned char *msgType, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp);
+extern int Asn1ParseUlInfoTransMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT* pUlInfoTrans);
 extern int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupCompl);
 
 #endif /* ASN1_H_ */

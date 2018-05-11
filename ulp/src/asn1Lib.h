@@ -439,6 +439,17 @@ typedef struct{
     uint8                                                    old_guti_type_present;
 }LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT;
 
+typedef struct{
+    uint8 switch_off;
+    uint8 type_of_detach;
+}LIBLTE_MME_DETACH_TYPE_STRUCT;
+
+typedef struct{
+    LIBLTE_MME_DETACH_TYPE_STRUCT    detach_type;
+    LIBLTE_MME_NAS_KEY_SET_ID_STRUCT nas_ksi;
+    LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
+}LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT; 
+
 extern LIBLTE_ERROR_ENUM liblte_mme_parse_msg_header(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, uint8 *pd, uint8 *msg_type);
 extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT *ul_info_transfer);
 
@@ -456,4 +467,6 @@ extern void liblte_rrc_consume_noncrit_extension(uint8 ext, const char *func_nam
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_identity_response_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_ID_RESPONSE_MSG_STRUCT *id_resp);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_mobile_id_ie(uint8 **ie_ptr, LIBLTE_MME_MOBILE_ID_STRUCT  *mobile_id);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_attach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT *attach_req);
+extern LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT *detach_req);
+
 #endif /* ASN1LIB_H_ */

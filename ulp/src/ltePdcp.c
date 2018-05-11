@@ -41,8 +41,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
     LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d, sn = %d\n", __func__, rnti, lcId, size, sn);
 
     if (lcId < 2) {
-        // remove one byte header and send to RLC
-        // memmove(pData, pData+1, size-1);
+        // remove one byte header and send to RRC
         MemRemove(pData, 0, 1);
         if (!IP_PDCP_SRB_DATA_IND(rnti, lcId, pData, size-1)) {
             return;

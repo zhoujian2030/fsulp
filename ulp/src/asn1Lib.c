@@ -1105,3 +1105,58 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_attach_request_msg(
 
     return(err);
 }
+
+LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_type_ie(uint8                         **ie_ptr,
+                                                   uint8                           bit_offset,
+                                                   LIBLTE_MME_DETACH_TYPE_STRUCT  *detach_type)
+{
+    LIBLTE_ERROR_ENUM err = LIBLTE_ERROR_INVALID_INPUTS;
+
+    if(ie_ptr      != NULL &&
+       detach_type != NULL)
+    {
+        detach_type->switch_off     = ((*ie_ptr)[0] >> (3 + bit_offset)) & 0x01;
+        detach_type->type_of_detach = ((*ie_ptr)[0] >> bit_offset) & 0x07;
+
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);
+}
+
+LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_request_msg(
+    LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg,
+    LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT *detach_req)
+{
+    LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
+    uint8             *msg_ptr = msg->msg;
+    uint8              sec_hdr_type;
+
+    if(msg        != NULL &&
+       detach_req != NULL)
+    {
+        // Security Header Type
+        sec_hdr_type = (msg->msg[0] & 0xF0) >> 4;
+        if(LIBLTE_MME_SECURITY_HDR_TYPE_PLAIN_NAS == sec_hdr_type)
+        {
+            msg_ptr++;
+        }else{
+            msg_ptr += 7;
+        }
+
+        // Skip Message Type
+        msg_ptr++;
+
+        // Detach Type & NAS Key Set Identifier
+        liblte_mme_unpack_detach_type_ie(&msg_ptr, 0, &detach_req->detach_type);
+        liblte_mme_unpack_nas_key_set_id_ie(&msg_ptr, 4, &detach_req->nas_ksi);
+        msg_ptr++;
+
+        // EPS Mobile ID
+        liblte_mme_unpack_eps_mobile_id_ie(&msg_ptr, &detach_req->eps_mobile_id);
+
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);
+}

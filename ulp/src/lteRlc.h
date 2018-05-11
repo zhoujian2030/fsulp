@@ -121,7 +121,7 @@ extern RlcUeContext* RlcGetUeContext(unsigned short rnti);
 extern RlcUeContext* RlcCreateUeContext(unsigned short rnti);
 extern void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx);
 extern int RlcGetUeContextCount();
-extern void RlcChangeUeContextCount(RlcUeContext* pRlcUeCtx, unsigned int value);
+extern void RlcUpdateUeContextTime(RlcUeContext* pRlcUeCtx, unsigned int value);
 
 #ifdef __cplusplus
 }

@@ -114,7 +114,7 @@ int RlcGetUeContextCount()
 }
 
 // -----------------------------------
-void RlcChangeUeContextCount(RlcUeContext* pRlcUeCtx, unsigned int value)
+void RlcUpdateUeContextTime(RlcUeContext* pRlcUeCtx, unsigned int value)
 {
     if (pRlcUeCtx != 0) {
         SemWait(&pRlcUeCtx->lockOfCount);
@@ -130,7 +130,7 @@ void RlcChangeUeContextCount(RlcUeContext* pRlcUeCtx, unsigned int value)
 // -----------------------------------
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
     if (pUeCtx != 0 && lcId <MAX_LC_ID) {
-        RlcChangeUeContextCount(pUeCtx, 0);
+        RlcUpdateUeContextTime(pUeCtx, 0);
         return pUeCtx->rxAMEntityArray[lcId];
     }
 
@@ -160,7 +160,7 @@ RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
             RLC_SET_RX_AMD_PDU(pRxAmEntity, i, 0);
         }
 
-        RlcChangeUeContextCount(pUeCtx, 0);
+        RlcUpdateUeContextTime(pUeCtx, 0);
     }
 
     return pRxAmEntity;

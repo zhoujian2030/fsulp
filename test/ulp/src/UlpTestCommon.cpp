@@ -104,18 +104,27 @@ int IP_Call_Pdcp_Srb_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned
 }
 
 // -----------------------
+int IP_Call_Rrc_Data_Ind(void* pData)
+{
+    printf("IP_Call_Rrc_Data_Ind\n");
+    RrcUeDataInd_test* pRrcUeInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[gRrcUeDataInd.numUe];
+    memcpy((void*)&pRrcUeInd->ueContext, pData, sizeof(RrcUeContext));
+    return gCallRrcDataInd;
+}
+
+// -----------------------
 int IP_Rrc_Decode_Result(unsigned short rnti, unsigned char rrcMsgType, unsigned char nasMsgType, void* pData)
 {
-    // printf("IP_Rrc_Decode_Result, rnti = %d, rrcMsgType = 0x%02x, nasMsgType = 0x%02x, pData = %p\n", rnti, rrcMsgType, nasMsgType, pData);
+    printf("IP_Rrc_Decode_Result, rnti = %d, rrcMsgType = 0x%02x, nasMsgType = 0x%02x, pData = %p\n", rnti, rrcMsgType, nasMsgType, pData);
 
     RrcUeDataInd_test* pRrcUeInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[gRrcUeDataInd.numUe];
     gRrcUeDataInd.numUe++;
     pRrcUeInd->rnti = rnti;
     pRrcUeInd->rrcMsgType = rrcMsgType;
     pRrcUeInd->nasMsgType = nasMsgType;
-    if (pData != 0) {
-        memcpy((void*)&pRrcUeInd->identityResp, pData, sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
-    }
+    // if (pData != 0) {
+    //     memcpy((void*)&pRrcUeInd->identityResp, pData, sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
+    // }
 
     return gCallRrcDataInd;
 }

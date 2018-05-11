@@ -84,7 +84,7 @@ void ExecuteCleanup()
                 LOG_DBG(ULP_LOGGER_NAME, "[%s], clean RLC UE context, rnti = %d\n", __func__, pRlcUeCtx->rnti);
                 RlcDeleteUeContext(pRlcUeCtx);
             } else {
-                RlcChangeUeContextCount(pRlcUeCtx, 1);
+                RlcUpdateUeContextTime(pRlcUeCtx, 1);
             }
 
             pRlcUeCtx = (RlcUeContext*)ListGetNextNode(&pRlcUeCtx->node);

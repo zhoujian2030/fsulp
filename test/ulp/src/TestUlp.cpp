@@ -16,17 +16,21 @@
 #include "mempool.h"
 #include "UlpTestCommon.h"
 #include "lteUlpMgr.h"
+#include "list.h"
+#include "lteRrc.h"
 
 using namespace std;
 
 extern unsigned int gLogLevel;
+
+extern List gRrcUeContextList;
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     gLogLevel = 1;
     gCallMacDataInd = 1;
     gCallRlcDataInd = 1;
     gCallPdcpDataInd = 1;
-    gCallRrcDataInd = 1;
+    gCallRrcDataInd = 0;
     InitUlpLayer(0, 0);
 
     // Identity Response, imsi = 460041143702947
@@ -138,6 +142,7 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
 
     // check RRC decode result
     unsigned char expectImsiStr[] = "460041143702947";
+    RrcUeContext* pRrcUeCtx;
     for (unsigned i=0; i<15; i++) {
         expectImsiStr[i] -= 0x30;
     }
@@ -146,18 +151,26 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     EXPECT_EQ(pRrcUeDataInd->rnti, 124);
     EXPECT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
     EXPECT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
-    EXPECT_EQ(pRrcUeDataInd->identityResp.mobile_id.type_of_id, LIBLTE_MME_MOBILE_ID_TYPE_IMSI);
-    ASSERT_TRUE(memcmp(pRrcUeDataInd->identityResp.mobile_id.imsi, expectImsiStr, 15) == 0);
+    // EXPECT_EQ(pRrcUeDataInd->identityResp.mobile_id.type_of_id, LIBLTE_MME_MOBILE_ID_TYPE_IMSI);
+    // ASSERT_TRUE(memcmp(pRrcUeDataInd->identityResp.mobile_id.imsi, expectImsiStr, 15) == 0);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(124);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr, 15) == 0);
+    RrcDeleteUeContext(pRrcUeCtx);
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
 }
 
 TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     gCallMacDataInd = 1;
     gCallRlcDataInd = 1;
     gCallPdcpDataInd = 1;
-    gCallRrcDataInd = 1;
-    gLogLevel = 1;
+    gCallRrcDataInd = 0;
+    gLogLevel = 0;
     InitUlpLayer(0, 0);
 
     // Identity response, imsi = 460041143702947
@@ -329,6 +342,7 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
 
     // check RRC decode result
     unsigned char expectImsiStr[] = "460041143702947";
+    RrcUeContext* pRrcUeCtx;
     for (unsigned i=0; i<15; i++) {
         expectImsiStr[i] -= 0x30;
     }
@@ -337,8 +351,16 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     EXPECT_EQ(pRrcUeDataInd->rnti, 125);
     EXPECT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
     EXPECT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
-    EXPECT_EQ(pRrcUeDataInd->identityResp.mobile_id.type_of_id, LIBLTE_MME_MOBILE_ID_TYPE_IMSI);
-    ASSERT_TRUE(memcmp(pRrcUeDataInd->identityResp.mobile_id.imsi, expectImsiStr, 15) == 0);
+    // EXPECT_EQ(pRrcUeDataInd->identityResp.mobile_id.type_of_id, LIBLTE_MME_MOBILE_ID_TYPE_IMSI);
+    // ASSERT_TRUE(memcmp(pRrcUeDataInd->identityResp.mobile_id.imsi, expectImsiStr, 15) == 0);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(125);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr, 15) == 0);
+    RrcDeleteUeContext(pRrcUeCtx);
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
 }
