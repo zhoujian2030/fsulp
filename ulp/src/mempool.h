@@ -27,7 +27,7 @@ extern "C" {
 #define SIZE_6      (8*1024*2)
 #define SIZE_7      (10*1024*2)
 #define SIZE_8      (32*1024*2)
-#define SIZE_9      (256*1024*2)
+#define SIZE_9      (128*1024*2)
 #else 
 #define SIZE_0      128
 #define SIZE_1      512
@@ -36,9 +36,9 @@ extern "C" {
 #define SIZE_4      (3*1024)
 #define SIZE_5      (5*1024)
 #define SIZE_6      (8*1024)
-#define SIZE_7      (10*1024)
-#define SIZE_8      (32*1024)
-#define SIZE_9      (256*1024)
+#define SIZE_7      (16*1024)
+#define SIZE_8      (48*1024)
+#define SIZE_9      (128*1024)
 #endif
 
 #define NUM_SIZE_0      (20*1024)
@@ -47,10 +47,10 @@ extern "C" {
 #define NUM_SIZE_3      (2*1024)
 #define NUM_SIZE_4      (2*1024)
 #define NUM_SIZE_5      (2*1024)
-#define NUM_SIZE_6      256
+#define NUM_SIZE_6      128
 #define NUM_SIZE_7      32
 #define NUM_SIZE_8      16
-#define NUM_SIZE_9      16
+#define NUM_SIZE_9      8
 
 typedef struct {
     unsigned short length;  // actual length of data buffer

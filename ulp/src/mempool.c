@@ -107,8 +107,8 @@ inline int findMatchPool(unsigned int size) {
     unsigned int i = 0;
     for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
         if (size <= gMemPoolConfig[i].size) {
-            // LOG_TRACE(ULP_LOGGER_NAME, "[%s], find poolId = %d, pool size = %d, actual size = %d\n", 
-            //     __func__, i, gMemPoolConfig[i].size, size);
+            LOG_TRACE(ULP_LOGGER_NAME, "[%s], find poolId = %d, pool size = %d, actual size = %d\n", 
+                __func__, i, gMemPoolConfig[i].size, size);
             return i;
         }
     }

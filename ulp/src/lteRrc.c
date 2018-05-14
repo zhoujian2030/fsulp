@@ -134,24 +134,36 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
     }
 
     if (RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER == rrcMsgType) {
-        LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT ulInfoTransMsg;
-        if (ASN1_SUCCES == Asn1ParseUlInfoTransMsg(pData, size, &ulInfoTransMsg)) {
-            if (ulInfoTransMsg.dedicated_info_type == LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS) {
-                nasMsgType = RrcParseNasMsg(rnti, &ulInfoTransMsg.dedicated_info);
+        LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT* pUlInfoTransMsg = 
+            (LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT));
+        if (pUlInfoTransMsg != 0) {
+            if (ASN1_SUCCES == Asn1ParseUlInfoTransMsg(pData, size, pUlInfoTransMsg)) {
+                if (pUlInfoTransMsg->dedicated_info_type == LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS) {
+                    nasMsgType = RrcParseNasMsg(rnti, &pUlInfoTransMsg->dedicated_info);
+                } else {
+                    LOG_WARN(ULP_LOGGER_NAME, "[%s], dedicated_info_type = %d, rnti = %d\n", __func__, pUlInfoTransMsg->dedicated_info_type, rnti);
+                }
             } else {
-                LOG_WARN(ULP_LOGGER_NAME, "[%s], dedicated_info_type = %d, rnti = %d\n", __func__, ulInfoTransMsg.dedicated_info_type, rnti);
+                LOG_ERROR(ULP_LOGGER_NAME, "[%s], Asn1ParseUlInfoTransMsg error, rnti = %d\n", __func__, rnti);
             }
-         } else {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], Asn1ParseUlInfoTransMsg error, rnti = %d\n", __func__, rnti);
+            MemFree(pUlInfoTransMsg);
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to alloc memory for LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT, rnti = %d\n", __func__, rnti);
         }
     } else if (RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE == rrcMsgType) {
         gLteKpi.rrcSetupCompl++;
-        LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT rrcSetupComplMsg;
-        if (ASN1_SUCCES == Asn1ParseRrcSetupComplMsg(pData, size, &rrcSetupComplMsg)) {
-            nasMsgType = RrcParseNasMsg(rnti, &rrcSetupComplMsg.dedicated_info_nas);
+        LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupComplMsg = 
+            (LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT));
+        if (pRrcSetupComplMsg != 0) {
+            if (ASN1_SUCCES == Asn1ParseRrcSetupComplMsg(pData, size, pRrcSetupComplMsg)) {
+                nasMsgType = RrcParseNasMsg(rnti, &pRrcSetupComplMsg->dedicated_info_nas);
+            } else {
+                LOG_ERROR(ULP_LOGGER_NAME, "[%s], Asn1ParseRrcSetupComplMsg error, rnti = %d\n", __func__, rnti);
+            }  
+            MemFree(pRrcSetupComplMsg);   
         } else {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], Asn1ParseRrcSetupComplMsg error, rnti = %d\n", __func__, rnti);
-        }        
+            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to alloc memory for LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT, rnti = %d\n", __func__, rnti);
+        }  
     }
     
     IP_RRC_DECODE_RESULT(rnti, rrcMsgType, nasMsgType, 0);
@@ -173,20 +185,25 @@ void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Identity Response (RNTI: %d)\n", __func__, rnti);
-    LIBLTE_MME_ID_RESPONSE_MSG_STRUCT idResp;
     RrcUeContext* pUeCtx;
     UInt8 imsi[16];
     UInt32 i;
+    LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp = (LIBLTE_MME_ID_RESPONSE_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
+    if (pIdResp == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to alloc memory for LIBLTE_MME_ID_RESPONSE_MSG_STRUCT, rnti = %d\n", __func__, rnti);
+        return;
+    }
 
-    if (ASN1_SUCCES == liblte_mme_unpack_identity_response_msg(pNasMsgBuff, &idResp)) {
+    if (ASN1_SUCCES == liblte_mme_unpack_identity_response_msg(pNasMsgBuff, pIdResp)) {
         gLteKpi.idResp++;
 
-        if (LIBLTE_MME_MOBILE_ID_TYPE_IMSI == idResp.mobile_id.type_of_id) {
+        if (LIBLTE_MME_MOBILE_ID_TYPE_IMSI == pIdResp->mobile_id.type_of_id) {
             pUeCtx = RrcGetUeContext(rnti);
             if (pUeCtx == 0) {
                 pUeCtx = RrcCreateUeContext(rnti);
                 if (pUeCtx == 0) {
                     LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to create ue context, rnti = %d\n", __func__, rnti);
+                    MemFree(pIdResp);
                     return;
                 }
             }
@@ -196,11 +213,11 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, idResp.mobile_id.imsi, 15);
+            memcpy(pUeCtx->ueIdentity.imsi, pIdResp->mobile_id.imsi, 15);
 
             // for print test
             for (i = 0; i < 15; i++) {
-                imsi[i] = idResp.mobile_id.imsi[i] + 0x30;
+                imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0'; 
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
@@ -215,23 +232,29 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             // send to OAM ??
             RrcUeDataInd(pUeCtx);
         } else {
-            LOG_INFO(ULP_LOGGER_NAME, "[%s], idResp.mobile_id.type_of_id = %d, rnti = %d\n", __func__, idResp.mobile_id.type_of_id, rnti);
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], pIdResp->mobile_id.type_of_id = %d, rnti = %d\n", __func__, pIdResp->mobile_id.type_of_id, rnti);
         }
     } else {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], liblte_mme_unpack_identity_response_msg error, rnti = %d\n", __func__, rnti);
     }
+
+    MemFree(pIdResp);
 }
 
 // --------------------------------
 void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Attach Request (RNTI: %d)\n", __func__, rnti);
-    LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT attachReq;
     RrcUeContext* pUeCtx;
     UInt8 imsi[16];    
     UInt32 i;
+    LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT* pAttachReq = (LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT));
+    if (pAttachReq == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to alloc memory for LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT, rnti = %d\n", __func__, rnti);
+        return;
+    }
 
-    if (ASN1_SUCCES == liblte_mme_unpack_attach_request_msg(pNasMsgBuff, &attachReq)) {gLteKpi.attachReq++;
+    if (ASN1_SUCCES == liblte_mme_unpack_attach_request_msg(pNasMsgBuff, pAttachReq)) {
         gLteKpi.attachReq++;
 
         pUeCtx = RrcGetUeContext(rnti);
@@ -239,43 +262,44 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             pUeCtx = RrcCreateUeContext(rnti);
             if (pUeCtx == 0) {
                 LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to create ue context, rnti = %d\n", __func__, rnti);
+                MemFree(pAttachReq);
                 return;
             }
         }
 
-        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == attachReq.eps_mobile_id.type_of_id) {
+        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pAttachReq->eps_mobile_id.type_of_id) {
             gLteKpi.mTmsi++;
             if (pUeCtx->ueIdentity.mTmsiPresent) {
                 LOG_WARN(ULP_LOGGER_NAME, "[%s], update M-TMSI, rnti = %d\n", __func__, rnti);
             } else {
                 pUeCtx->ueIdentity.mTmsiPresent = TRUE;
             }
-            pUeCtx->ueIdentity.mTmsi = attachReq.eps_mobile_id.guti.m_tmsi;
+            pUeCtx->ueIdentity.mTmsi = pAttachReq->eps_mobile_id.guti.m_tmsi;
 
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", __func__, rnti, 
-                attachReq.eps_mobile_id.guti.m_tmsi,
-                attachReq.eps_mobile_id.guti.mcc,
-                attachReq.eps_mobile_id.guti.mnc);
+                pAttachReq->eps_mobile_id.guti.m_tmsi,
+                pAttachReq->eps_mobile_id.guti.mcc,
+                pAttachReq->eps_mobile_id.guti.mnc);
             
-        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == attachReq.eps_mobile_id.type_of_id) {
+        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pAttachReq->eps_mobile_id.type_of_id) {
             gLteKpi.imsi++;
             if (pUeCtx->ueIdentity.imsiPresent) {
                 LOG_WARN(ULP_LOGGER_NAME, "[%s], update imsi, rnti = %d\n", __func__, rnti);
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, attachReq.eps_mobile_id.imsi, 15);
+            memcpy(pUeCtx->ueIdentity.imsi, pAttachReq->eps_mobile_id.imsi, 15);
 
             // for test print
             for (i = 0; i < 15; i++) {
-                imsi[i] = attachReq.eps_mobile_id.imsi[i] + 0x30;
+                imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
         } else {
             UInt8 imei[16];
             for (i = 0; i < 15; i++) {
-                imei[i] = attachReq.eps_mobile_id.imei[i] + 0x30;
+                imei[i] = pAttachReq->eps_mobile_id.imei[i] + 0x30;
             }
             imei[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, imei = %s\n", __func__, rnti, imei);
@@ -286,18 +310,24 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
     } else {                        
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], liblte_mme_unpack_attach_request_msg error, rnti = %d\n", __func__, rnti);
     }
+
+    MemFree(pAttachReq);
 }
 
 // --------------------------------
 void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Detach Request (RNTI: %d)\n", __func__, rnti);
-    LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT detachReq;
     RrcUeContext* pUeCtx;
     UInt8 imsi[16];    
+    LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT* pDetachReq = (LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT));
     UInt32 i;
+    if (pDetachReq == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to alloc memory for LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT, rnti = %d\n", __func__, rnti);
+        return;
+    }
 
-    if (ASN1_SUCCES == liblte_mme_unpack_detach_request_msg(pNasMsgBuff, &detachReq)) {
+    if (ASN1_SUCCES == liblte_mme_unpack_detach_request_msg(pNasMsgBuff, pDetachReq)) {
         gLteKpi.detachReq++;
 
         pUeCtx = RrcGetUeContext(rnti);
@@ -305,49 +335,50 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             pUeCtx = RrcCreateUeContext(rnti);
             if (pUeCtx == 0) {
                 LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to create ue context, rnti = %d\n", __func__, rnti);
+                MemFree(pDetachReq);
                 return;
             }
         }
 
         pUeCtx->ueIdentity.detachFlag = TRUE;
 
-        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == detachReq.eps_mobile_id.type_of_id) {
+        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pDetachReq->eps_mobile_id.type_of_id) {
             gLteKpi.mTmsi++;
             if (pUeCtx->ueIdentity.mTmsiPresent) {
-                if (pUeCtx->ueIdentity.mTmsi != detachReq.eps_mobile_id.guti.m_tmsi) {
+                if (pUeCtx->ueIdentity.mTmsi != pDetachReq->eps_mobile_id.guti.m_tmsi) {
                     LOG_WARN(ULP_LOGGER_NAME, "[%s], update M-TMSI, rnti = %d\n", __func__, rnti);
                 }
             } else {
                 pUeCtx->ueIdentity.mTmsiPresent = TRUE;
             }
-            pUeCtx->ueIdentity.mTmsi = detachReq.eps_mobile_id.guti.m_tmsi;
+            pUeCtx->ueIdentity.mTmsi = pDetachReq->eps_mobile_id.guti.m_tmsi;
 
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", __func__, rnti, 
-                detachReq.eps_mobile_id.guti.m_tmsi,
-                detachReq.eps_mobile_id.guti.mcc,
-                detachReq.eps_mobile_id.guti.mnc);
+                pDetachReq->eps_mobile_id.guti.m_tmsi,
+                pDetachReq->eps_mobile_id.guti.mcc,
+                pDetachReq->eps_mobile_id.guti.mnc);
             
-        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == detachReq.eps_mobile_id.type_of_id) {
+        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pDetachReq->eps_mobile_id.type_of_id) {
             gLteKpi.imsi++;
             if (pUeCtx->ueIdentity.imsiPresent) {
-                if (memcmp(pUeCtx->ueIdentity.imsi, detachReq.eps_mobile_id.imsi, 15) != 0) {
+                if (memcmp(pUeCtx->ueIdentity.imsi, pDetachReq->eps_mobile_id.imsi, 15) != 0) {
                     LOG_WARN(ULP_LOGGER_NAME, "[%s], update imsi, rnti = %d\n", __func__, rnti);
                 }
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, detachReq.eps_mobile_id.imsi, 15);
+            memcpy(pUeCtx->ueIdentity.imsi, pDetachReq->eps_mobile_id.imsi, 15);
 
             // for test print
             for (i = 0; i < 15; i++) {
-                imsi[i] = detachReq.eps_mobile_id.imsi[i] + 0x30;
+                imsi[i] = pDetachReq->eps_mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
         } else {
             UInt8 imei[16];
             for (i = 0; i < 15; i++) {
-                imei[i] = detachReq.eps_mobile_id.imei[i] + 0x30;
+                imei[i] = pDetachReq->eps_mobile_id.imei[i] + 0x30;
             }
             imei[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, imei = %s\n", __func__, rnti, imei);
@@ -357,6 +388,8 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
     } else {
         LOG_ERROR(ULP_LOGGER_NAME, "[%s], liblte_mme_unpack_detach_request_msg error, rnti = %d\n", __func__, rnti);
     }
+
+    MemFree(pDetachReq);
 }
 
 // --------------------------------
