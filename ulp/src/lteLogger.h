@@ -8,16 +8,21 @@
 #ifndef LTELOGGER_H_
 #define LTELOGGER_H_
 
-#ifdef OS_LINUX
+#define RUN_ON_STANDALONE_CORE
+
+#if defined OS_LINUX
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
-#else
+#elif !defined RUN_ON_STANDALONE_CORE
 #include "system.h"
+#else
+#include "logger.h"
 #endif
 
+#ifdef OS_LINUX
 extern unsigned int gLogLevel;
 
 typedef enum
@@ -28,8 +33,6 @@ typedef enum
 	LOG_LEVEL_WARN  = 3,
 	LOG_LEVEL_ERROR = 4
 }E_LogLevel;
-
-#ifdef OS_LINUX
 
 #define ULP_LOGGER_NAME "ULP"
 #define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
@@ -110,7 +113,17 @@ typedef enum
             }\
             printf("\n");\
         } }
-#else
+#elif !defined RUN_ON_STANDALONE_CORE
+extern unsigned int gLogLevel;
+
+typedef enum
+{
+	LOG_LEVEL_TRACE = 0,
+	LOG_LEVEL_DBG   = 1,
+	LOG_LEVEL_INFO  = 2,
+	LOG_LEVEL_WARN  = 3,
+	LOG_LEVEL_ERROR = 4
+}E_LogLevel;
 
 #define ULP_LOGGER_NAME gLogPrintfTypePtr
 
@@ -157,6 +170,13 @@ typedef enum
 		}\
 	}
 
+#else
+#define ULP_LOGGER_NAME MODULE_ID_LAYER_MGR
+extern UInt32 gPrintfLevel;
+
+#define LOG_INFO(moduleId,fmt,args...){\
+		if((UInt32)LOG_LEVEL_INFO >= gPrintfLevel)\
+			writeLog(moduleId,LOG_LEVEL_INFO, fmt, ##args);}
 #endif
 
 

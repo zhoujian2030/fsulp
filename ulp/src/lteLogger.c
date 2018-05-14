@@ -7,9 +7,11 @@
 
 #include "lteLogger.h"
 
+#ifndef RUN_ON_STANDALONE_CORE
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gLogLevel, ".ulpata");
 #endif
 unsigned int gLogLevel = 2;
+#endif
 
 
