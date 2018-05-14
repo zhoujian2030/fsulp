@@ -18,7 +18,8 @@ extern "C" {
 typedef struct {
     BOOL   imsiPresent;
     BOOL   mTmsiPresent;
-    UInt16 spare;
+    BOOL   detachFlag;
+    UInt8  spare;
     UInt32 mTmsi;
     UInt8  imsi[16]; // only 15 bytes data are valid
 } RrcUeIdentity;

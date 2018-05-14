@@ -292,6 +292,71 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "[%s], UE ---> NB: Detach Request (RNTI: %d)\n", __func__, rnti);
+    LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT detachReq;
+    RrcUeContext* pUeCtx;
+    UInt8 imsi[16];    
+    UInt32 i;
+
+    if (ASN1_SUCCES == liblte_mme_unpack_detach_request_msg(pNasMsgBuff, &detachReq)) {
+        gLteKpi.detachReq++;
+
+        pUeCtx = RrcGetUeContext(rnti);
+        if (pUeCtx == 0) {
+            pUeCtx = RrcCreateUeContext(rnti);
+            if (pUeCtx == 0) {
+                LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to create ue context, rnti = %d\n", __func__, rnti);
+                return;
+            }
+        }
+
+        pUeCtx->ueIdentity.detachFlag = TRUE;
+
+        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == detachReq.eps_mobile_id.type_of_id) {
+            gLteKpi.mTmsi++;
+            if (pUeCtx->ueIdentity.mTmsiPresent) {
+                if (pUeCtx->ueIdentity.mTmsi != detachReq.eps_mobile_id.guti.m_tmsi) {
+                    LOG_WARN(ULP_LOGGER_NAME, "[%s], update M-TMSI, rnti = %d\n", __func__, rnti);
+                }
+            } else {
+                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
+            }
+            pUeCtx->ueIdentity.mTmsi = detachReq.eps_mobile_id.guti.m_tmsi;
+
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", __func__, rnti, 
+                detachReq.eps_mobile_id.guti.m_tmsi,
+                detachReq.eps_mobile_id.guti.mcc,
+                detachReq.eps_mobile_id.guti.mnc);
+            
+        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == detachReq.eps_mobile_id.type_of_id) {
+            gLteKpi.imsi++;
+            if (pUeCtx->ueIdentity.imsiPresent) {
+                if (memcmp(pUeCtx->ueIdentity.imsi, detachReq.eps_mobile_id.imsi, 15) != 0) {
+                    LOG_WARN(ULP_LOGGER_NAME, "[%s], update imsi, rnti = %d\n", __func__, rnti);
+                }
+            } else {
+                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            }
+            memcpy(pUeCtx->ueIdentity.imsi, detachReq.eps_mobile_id.imsi, 15);
+
+            // for test print
+            for (i = 0; i < 15; i++) {
+                imsi[i] = detachReq.eps_mobile_id.imsi[i] + 0x30;
+            }
+            imsi[15] = '\0';
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
+        } else {
+            UInt8 imei[16];
+            for (i = 0; i < 15; i++) {
+                imei[i] = detachReq.eps_mobile_id.imei[i] + 0x30;
+            }
+            imei[15] = '\0';
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, imei = %s\n", __func__, rnti, imei);
+        }
+
+        RrcUeDataInd(pUeCtx);
+    } else {
+        LOG_ERROR(ULP_LOGGER_NAME, "[%s], liblte_mme_unpack_detach_request_msg error, rnti = %d\n", __func__, rnti);
+    }
 }
 
 // --------------------------------
@@ -357,10 +422,11 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         return;
     }
 
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], imsiPresent = %d, mTmsiPresent = %d, rnti = %d\n", 
-        __func__, pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, pRrcUeCtx->rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "[%s], imsiPresent = %d, mTmsiPresent = %d, detachFlag = %d, rnti = %d\n", 
+        __func__, pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, 
+        pRrcUeCtx->ueIdentity.detachFlag, pRrcUeCtx->rnti);
     
-    if (!IP_Call_Rrc_Data_Ind(pRrcUeCtx)) {
+    if (!IP_RRC_DATA_IND(pRrcUeCtx)) {
         return;
     }
 

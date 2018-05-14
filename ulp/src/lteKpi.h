@@ -24,6 +24,7 @@ typedef struct
     unsigned int rrcSetupCompl;
     unsigned int idResp;
     unsigned int attachReq; 
+    unsigned int detachReq; 
     unsigned int imsi;
     unsigned int mTmsi;
 } LteKpi;

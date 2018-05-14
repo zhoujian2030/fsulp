@@ -77,6 +77,92 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
 }
 
 // -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Detach) {
+    gLogLevel = 0;
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    // ULInformationTransfer
+    //     Type: UL_DCCH
+    //     Direction: Uplink
+    //     Computer Timestamp: 17:05:45.860
+    //     UE Timestamp: 26202026 (ms)
+    //     Radio Technology: LTE
+    //     UL-DCCH-Message
+    //         message
+    //         c1
+    //             ulInformationTransfer
+    //             criticalExtensions
+    //                 c1
+    //                 ulInformationTransfer-r8
+    //                     dedicatedInfoType
+    //                     dedicatedInfoNAS: 0x271CC08127080745090BF664F0000362CCF922F43B
+    //     Detach Request
+    //         Security header type: (2) Integrity protected and ciphered 
+    //         protocol_discriminator: EPS Mobility Management
+    //         Message authentication code: 0x1cc08127 
+    //         Sequence number: 8 
+    //         Security header type: (0) Plain NAS message, not security protected 
+    //         protocol_discriminator: (7) EPS mobility management messages 
+    //         NAS EPS Mobility Management Message Type: (0x45) Detach request 
+    //         Type of security context flag (TSC): (0) Native security context 
+    //         NAS key set identifier: (0) 
+    //         Switch off: (1) Switch off 
+    //         Detach Type: (1) EPS detach 
+    //         EPS mobile identity - GUTI or IMSI
+    //         Length: 11 octets
+    //         odd/even indic: 0
+    //         Type of identity: (6) GUTI 
+    //         Mobile Country Code (MCC): (460) China (People's Republic of) 
+    //         Mobile Network Code (MNC): (00) China Mobile  
+    //         MME Group ID: 866
+    //         MME Code: 204
+    //         M-TMSI: 0xf922f43b
+    unsigned char rrcMsg[] = {
+        0x48, 0x02, 0xa4, 0xe3, 0x98, 0x10, 0x24, 0xe1, 0x00, 0xe8,
+        0xa1, 0x21, 0x7e, 0xcc, 0x9e, 0x00, 0x00, 0x6c, 0x59, 0x9f,
+        0x24, 0x5e, 0x87, 0x60
+    };
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+    RrcUeContext* pRrcUeCtx;
+
+    unsigned short dataSize = sizeof(rrcMsg);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);  
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_DETACH_REQUEST);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.detachFlag, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsi, 0xf922f43b);
+    RrcDeleteUeContext(pRrcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+}
+
+// -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
     gLogLevel = 0;
     gCallRrcDataInd = 0;
