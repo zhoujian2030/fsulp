@@ -8,8 +8,6 @@
 #ifndef LTELOGGER_H_
 #define LTELOGGER_H_
 
-#define RUN_ON_STANDALONE_CORE
-
 #if defined OS_LINUX
 #include <stdio.h>
 #include <string.h>

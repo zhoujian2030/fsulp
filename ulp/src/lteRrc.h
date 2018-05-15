@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 #include "list.h"
-#include "baseType.h"
+#include "lteCommon.h"
 
 typedef struct {
     BOOL   imsiPresent;

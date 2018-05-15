@@ -6,7 +6,7 @@
  */
 
 #include "lteRlc.h"
-#include "baseType.h"
+#include "lteCommon.h"
 #include "lteRlcMacInterface.h"
 #include "ltePdcpRlcInterface.h"
 #include "mempool.h"
@@ -45,7 +45,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer);
 
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gRlcUeContextList, ".ulpata");
+#pragma DATA_SECTION(gRlcUeContextList, ".ulpdata");
 #endif
 List gRlcUeContextList;
 

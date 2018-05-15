@@ -6,7 +6,7 @@
  */
 
 #include "lteMac.h"
-#include "baseType.h"
+#include "lteCommon.h"
 #include "lteMacPhyInterface.h"
 #include "lteRlcMacInterface.h"
 #include "mempool.h"
@@ -100,7 +100,7 @@ typedef struct {
 #ifndef OS_LINUX
 #define TASK_MAC_HANDLER_PRIORITY		3
 #define TASK_MAC_HANDLER_STACK_SIZE	(128*1024)
-#pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpata");
+#pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
 UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
 #endif
 // -----------------------------------------

@@ -9,7 +9,7 @@
 
 #ifndef RUN_ON_STANDALONE_CORE
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gLogLevel, ".ulpata");
+#pragma DATA_SECTION(gLogLevel, ".ulpdata");
 #endif
 unsigned int gLogLevel = 2;
 #endif

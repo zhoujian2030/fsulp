@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#include "baseType.h" 
+#include "lteCommon.h" 
 
 extern void PhyUlDataInd(unsigned char* pBuffer, unsigned short length);
 

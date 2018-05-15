@@ -7,7 +7,7 @@
 
 #include "lteResCleaner.h"
 #include "lteLogger.h"
-#include "baseType.h"
+#include "lteCommon.h"
 #include "lteRlc.h"
 #include "thread.h"
 #include "event.h"
@@ -23,7 +23,7 @@ void ExecuteCleanup();
 #ifndef OS_LINUX
 #define TASK_RESOURCE_CLEANER_PRIORITY		2
 #define TASK_RESOURCE_CLEANER_STACK_SIZE	(32*1024)
-#pragma DATA_SECTION(gTaskResCleanerStack, ".ulpata");
+#pragma DATA_SECTION(gTaskResCleanerStack, ".ulpdata");
 UInt8 gTaskResCleanerStack[TASK_RESOURCE_CLEANER_STACK_SIZE];
 #endif
 

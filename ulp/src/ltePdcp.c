@@ -6,7 +6,7 @@
  */
 
 #include "ltePdcp.h"
-#include "baseType.h"
+#include "lteCommon.h"
 #include "ltePdcpRlcInterface.h"
 #include "lteRrcPdcpInterface.h"
 #include "mempool.h"

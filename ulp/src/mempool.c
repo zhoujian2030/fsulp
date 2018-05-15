@@ -11,19 +11,19 @@
 #include "lteLogger.h"
 
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gMemBufSize0, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize1, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize2, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize3, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize4, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize5, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize6, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize7, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize8, ".ulpata");
-#pragma DATA_SECTION(gMemBufSize9, ".ulpata");
-#pragma DATA_SECTION(gMemPoolConfig, ".ulpata");
-#pragma DATA_SECTION(gMemPool, ".ulpata");
-#pragma DATA_SECTION(NUM_MEM_BLOCK, ".ulpata");
+#pragma DATA_SECTION(gMemBufSize0, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize1, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize2, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize3, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize4, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize5, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize6, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize7, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize8, ".ulpdata");
+#pragma DATA_SECTION(gMemBufSize9, ".ulpdata");
+#pragma DATA_SECTION(gMemPoolConfig, ".ulpdata");
+#pragma DATA_SECTION(gMemPool, ".ulpdata");
+#pragma DATA_SECTION(NUM_MEM_BLOCK, ".ulpdata");
 #endif
 unsigned char gMemBufSize0[NUM_SIZE_0][SIZE_0] = {{0}, {0}};
 unsigned char gMemBufSize1[NUM_SIZE_1][SIZE_1] = {{0}, {0}};

@@ -11,7 +11,7 @@
 #include "mempool.h"
 
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gLteKpi, ".ulpata");
+#pragma DATA_SECTION(gLteKpi, ".ulpdata");
 #endif
 LteKpi gLteKpi = {0};
 

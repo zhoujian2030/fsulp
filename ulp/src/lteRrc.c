@@ -7,7 +7,7 @@
 
 #include <string.h>
 #include "lteRrc.h"
-#include "baseType.h"
+#include "lteCommon.h"
 #include "lteRrcPdcpInterface.h"
 #include "mempool.h"
 #include "asn1.h"
@@ -16,8 +16,8 @@
 #include "lteKpi.h"
 
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gUlRRcMsgName, ".ulpata");
-#pragma DATA_SECTION(gRrcUeContextList, ".ulpata");
+#pragma DATA_SECTION(gUlRRcMsgName, ".ulpdata");
+#pragma DATA_SECTION(gRrcUeContextList, ".ulpdata");
 #endif
 List gRrcUeContextList;
 UInt8 gUlRRcMsgName[17][50] = {
@@ -216,12 +216,21 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             memcpy(pUeCtx->ueIdentity.imsi, pIdResp->mobile_id.imsi, 15);
 
             // for print test
+#ifndef RUN_ON_STANDALONE_CORE
             for (i = 0; i < 15; i++) {
                 imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0'; 
-            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
 
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
+#else
+            UInt8* imsiOctect = pIdResp->mobile_id.imsi;
+            i = 0;
+            UInt32 imsi0, imsi1;
+            imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %07x%08x\n", __func__, rnti, imsi0, imsi1);
+#endif
             if (pUeCtx->ueIdentity.mTmsiPresent) {
                 LOG_INFO(ULP_LOGGER_NAME, "[%s], both M-MSI and IMSI are collected, rnti = %d, M-TMSI = %d\n", __func__, rnti, pUeCtx->ueIdentity.mTmsi);
             } else {
@@ -290,12 +299,21 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             }
             memcpy(pUeCtx->ueIdentity.imsi, pAttachReq->eps_mobile_id.imsi, 15);
 
+#ifndef RUN_ON_STANDALONE_CORE
             // for test print
             for (i = 0; i < 15; i++) {
                 imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %s\n", __func__, rnti, imsi);
+#else
+            UInt8* imsiOctect = pAttachReq->eps_mobile_id.imsi;
+            i = 0;
+            UInt32 imsi0, imsi1;
+            imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+            LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, imsi = %07x%08x\n", __func__, rnti, imsi0, imsi1);
+#endif
         } else {
             UInt8 imei[16];
             for (i = 0; i < 15; i++) {

@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #ifndef OS_LINUX
-#pragma DATA_SECTION(gMsgBitBuffer, ".ulpata");
+#pragma DATA_SECTION(gMsgBitBuffer, ".ulpdata");
 #endif
 LIBLTE_BIT_MSG_STRUCT gMsgBitBuffer;
 

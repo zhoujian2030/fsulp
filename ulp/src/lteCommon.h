@@ -1,12 +1,12 @@
 /*
- * baseType.h
+ * lteCommon.h
  *
  *  Created on: Apr 17, 2018
  *      Author: j.zh
  */
 
-#ifndef BASE_TYPE_H
-#define BASE_TYPE_H
+#ifndef LTE_COMMON_H
+#define LTE_COMMON_H
 
 #define TRUE  1
 #define FALSE 0
