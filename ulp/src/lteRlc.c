@@ -14,6 +14,7 @@
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
 #include "sync.h"
+#include <string.h>
 
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId);
 RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId);

@@ -18,6 +18,7 @@
 void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
 {
     KpiInit();
+    InitLogger();
     InitMemPool();
     InitMacLayer(standloneMacFlag);
     InitRlcLayer();
@@ -30,4 +31,5 @@ void UlpOneMilliSecondIsr()
 {
 	NotifyMacHandler();
 	NotifyResCleaner();
+	NotifyLogHandler();
 }

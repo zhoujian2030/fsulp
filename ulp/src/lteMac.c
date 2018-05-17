@@ -99,7 +99,7 @@ typedef struct {
 
 #ifndef OS_LINUX
 #define TASK_MAC_HANDLER_PRIORITY		3
-#define TASK_MAC_HANDLER_STACK_SIZE	(128*1024)
+#define TASK_MAC_HANDLER_STACK_SIZE	(256*1024)
 #pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
 UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
 #endif

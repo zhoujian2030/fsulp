@@ -8,6 +8,10 @@
 #ifndef LTELOGGER_H_
 #define LTELOGGER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined OS_LINUX
 #include <stdio.h>
 #include <string.h>
@@ -17,11 +21,12 @@
 #elif !defined RUN_ON_STANDALONE_CORE
 #include "system.h"
 #else
-#include "logger.h"
+#include "logInfoDef.h"
 #endif
 
-#ifdef OS_LINUX
 extern unsigned int gLogLevel;
+
+#ifdef OS_LINUX
 
 typedef enum
 {
@@ -31,6 +36,10 @@ typedef enum
 	LOG_LEVEL_WARN  = 3,
 	LOG_LEVEL_ERROR = 4
 }E_LogLevel;
+
+void InitLogger();
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char *fmt,...);
+int WriteBuffer(const char* pData, unsigned int dataLen);
 
 #define ULP_LOGGER_NAME "ULP"
 #define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
@@ -112,7 +121,6 @@ typedef enum
             printf("\n");\
         } }
 #elif !defined RUN_ON_STANDALONE_CORE
-extern unsigned int gLogLevel;
 
 typedef enum
 {
@@ -169,16 +177,43 @@ typedef enum
 	}
 
 #else
-#define ULP_LOGGER_NAME MODULE_ID_LAYER_MGR
-extern UInt32 gPrintfLevel;
+#define ULP_LOGGER_NAME 0x12
+
+void InitLogger();
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char *fmt,...);
+int WriteBuffer(const char* pData, unsigned int dataLen);
+
+void NotifyLogHandler();
+void SendLogData();
+
+#define LOG_TRACE(moduleId,fmt,args...){\
+        if((unsigned int)LOG_LEVEL_TRACE >= gLogLevel)\
+                WriteLog(moduleId,LOG_LEVEL_TRACE, fmt, ##args);}
+
+#define LOG_DBG(moduleId,fmt,args...){\
+        if((unsigned int)LOG_LEVEL_DBG >= gLogLevel)\
+                WriteLog(moduleId,LOG_LEVEL_DBG, fmt, ##args);}
 
 #define LOG_INFO(moduleId,fmt,args...){\
-		if((UInt32)LOG_LEVEL_INFO >= gPrintfLevel)\
-			writeLog(moduleId,LOG_LEVEL_INFO, fmt, ##args);}
+        if((unsigned int)LOG_LEVEL_INFO >= gLogLevel)\
+                WriteLog(moduleId,LOG_LEVEL_INFO, fmt, ##args);}
+
+#define LOG_WARN(moduleId,fmt,args...){\
+        if((unsigned int)LOG_LEVEL_WARN >= gLogLevel)\
+                WriteLog(moduleId,LOG_LEVEL_WARN, fmt, ##args);}
+
+#define LOG_ERROR(moduleId,fmt,args...){\
+        if((unsigned int)LOG_LEVEL_ERROR >= gLogLevel)\
+                WriteLog(moduleId,LOG_LEVEL_ERROR, fmt, ##args);}
+
+#define LOG_BUFFER(pData,dataLen){\
+        if((unsigned int)LOG_LEVEL_TRACE >= gLogLevel)\
+                WriteBuffer((const char*)pData,dataLen);}
 #endif
 
 
-
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LTELOGGER_H_ */

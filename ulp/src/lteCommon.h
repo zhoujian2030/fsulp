@@ -8,9 +8,9 @@
 #ifndef LTE_COMMON_H
 #define LTE_COMMON_H
 
-#define TRUE  1
-#define FALSE 0
-
+#ifdef RUN_ON_STANDALONE_CORE
+#include "baseType.h"
+#else
 typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;
@@ -25,5 +25,10 @@ typedef signed int      SInt32;
 typedef signed short    Int16;
 typedef signed int      Int32;
 typedef unsigned char   BOOL;
+
+#endif
+
+#define TRUE  1
+#define FALSE 0
 
 #endif
