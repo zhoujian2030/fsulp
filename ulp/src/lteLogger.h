@@ -22,9 +22,25 @@ extern "C" {
 #include "system.h"
 #else
 #include "logInfoDef.h"
+#include "list.h"
 #endif
 
 extern unsigned int gLogLevel;
+
+#define TIMESTAMP_LENGTH	27
+#define LOG_LEVEL_LENGTH	3
+#define LOG_ITEM_HEAD_LENGTH	(TIMESTAMP_LENGTH + LOG_LEVEL_LENGTH + 4)
+#define MAX_LOG_ITEM_LENGTH	256
+
+#define MAX_LOG_DATA_SIZE	(4096 - 4)
+//#define MAX_LOG_DATA_SIZE	15
+
+typedef struct
+{
+	unsigned short logType;
+	unsigned short length;
+	char buffer[MAX_LOG_DATA_SIZE];
+} LogData;
 
 #ifdef OS_LINUX
 
@@ -178,9 +194,20 @@ typedef enum
 
 #else
 #define ULP_LOGGER_NAME 0x12
+#define FUNCNAME __FUNCTION__
+
+#define MAX_LOG_ITEM_NUM	1024
+#define MAX_LOG_PARAM_NUM	6
+typedef struct {
+	ListNode node;
+	char* fmt;
+	char* funcName;
+	unsigned int value[MAX_LOG_PARAM_NUM];
+	unsigned char logLevel;
+} LogFormatData;
 
 void InitLogger();
-int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char *fmt,...);
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...);
 int WriteBuffer(const char* pData, unsigned int dataLen);
 
 void NotifyLogHandler();
@@ -188,28 +215,30 @@ void SendLogData();
 
 #define LOG_TRACE(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_TRACE >= gLogLevel)\
-                WriteLog(moduleId,LOG_LEVEL_TRACE, fmt, ##args);}
+                WriteLog(moduleId,LOG_LEVEL_TRACE, FUNCNAME, fmt, ##args);}
 
 #define LOG_DBG(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_DBG >= gLogLevel)\
-                WriteLog(moduleId,LOG_LEVEL_DBG, fmt, ##args);}
+                WriteLog(moduleId,LOG_LEVEL_DBG, FUNCNAME, fmt, ##args);}
 
 #define LOG_INFO(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_INFO >= gLogLevel)\
-                WriteLog(moduleId,LOG_LEVEL_INFO, fmt, ##args);}
+                WriteLog(moduleId,LOG_LEVEL_INFO, FUNCNAME, fmt, ##args);}
 
 #define LOG_WARN(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_WARN >= gLogLevel)\
-                WriteLog(moduleId,LOG_LEVEL_WARN, fmt, ##args);}
+                WriteLog(moduleId,LOG_LEVEL_WARN, FUNCNAME, fmt, ##args);}
 
 #define LOG_ERROR(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_ERROR >= gLogLevel)\
-                WriteLog(moduleId,LOG_LEVEL_ERROR, fmt, ##args);}
+                WriteLog(moduleId,LOG_LEVEL_ERROR, FUNCNAME, fmt, ##args);}
 
 #define LOG_BUFFER(pData,dataLen){\
         if((unsigned int)LOG_LEVEL_TRACE >= gLogLevel)\
                 WriteBuffer((const char*)pData,dataLen);}
 #endif
+
+void LoggerSetLogLevel(unsigned int level);
 
 
 #ifdef __cplusplus

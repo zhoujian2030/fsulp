@@ -8,6 +8,10 @@
 #ifndef LTE_COMMON_H
 #define LTE_COMMON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef RUN_ON_STANDALONE_CORE
 #include "baseType.h"
 #else
@@ -26,9 +30,34 @@ typedef signed short    Int16;
 typedef signed int      Int32;
 typedef unsigned char   BOOL;
 
-#endif
-
 #define TRUE  1
 #define FALSE 0
+
+#endif
+
+typedef struct {
+    UInt16  year;          /* 年 */
+    UInt16  month;         /* 月 */
+    UInt16  day;           /* 日 */
+    UInt16  hour;          /* 时 */
+    UInt16  minute;        /* 分 */
+    UInt16  second;        /* 秒 */
+    UInt16  millisecond;   /* 毫秒 */
+} SystemTime;
+
+typedef struct {
+	UInt16 sfn;
+	UInt8 sf;
+} SystemSfnSf;
+
+extern SystemTime gSystemTime;
+
+extern void UpdateSystemTime();
+extern void UpdateSfnSf(UInt16 sfn, UInt8 sf);
+extern void GetSfnAndSf(UInt16* pSfn, UInt8* pSf);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -99,7 +99,7 @@ typedef struct {
 
 #ifndef OS_LINUX
 #define TASK_MAC_HANDLER_PRIORITY		3
-#define TASK_MAC_HANDLER_STACK_SIZE	(256*1024)
+#define TASK_MAC_HANDLER_STACK_SIZE		(256*1024)
 #pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
 UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
 #endif
@@ -135,6 +135,7 @@ void* MacHandlerEntryFunc(void* p)
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], Entry\n", __func__);
     UInt32 count;
     PhyDataIndNode* pPhyDataNode;
+    unsigned int prevTime, curTime;
 
     while (1) {
         EventWait(&gMacHandlerEvent);
@@ -143,6 +144,9 @@ void* MacHandlerEntryFunc(void* p)
         if (count == 0) {
             continue;
         }
+
+        prevTime = CSL_tscRead();
+
         pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
         while (pPhyDataNode != 0) {
             MacProcessPhyDataInd(pPhyDataNode->pBuffer, pPhyDataNode->length);
@@ -151,6 +155,8 @@ void* MacHandlerEntryFunc(void* p)
             pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
         }
 
+        curTime = CSL_tscRead();
+    	LOG_WARN(ULP_LOGGER_NAME, "[%s], end scheduling, time = %d\n", __func__, (curTime - prevTime));
     }
 }
 
@@ -167,6 +173,7 @@ void PhyUlDataInd(unsigned char* pBuffer, unsigned short length)
     if (pBuffer == 0) {
         return;
     }
+
     LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d\n", __func__, length);
     // LOG_BUFFER(pBuffer, length);
 
@@ -255,6 +262,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
     	LOG_ERROR(ULP_LOGGER_NAME, "[%s], unsupported opc = %d\n", __func__, pMsgHead->opc);
     }
 #endif
+
 }
 
 // ---------------------------

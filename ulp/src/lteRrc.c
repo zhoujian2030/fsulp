@@ -216,7 +216,7 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             memcpy(pUeCtx->ueIdentity.imsi, pIdResp->mobile_id.imsi, 15);
 
             // for print test
-#ifndef RUN_ON_STANDALONE_CORExx
+#ifndef TI_DSP
             for (i = 0; i < 15; i++) {
                 imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
             }
@@ -299,7 +299,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             }
             memcpy(pUeCtx->ueIdentity.imsi, pAttachReq->eps_mobile_id.imsi, 15);
 
-#ifndef RUN_ON_STANDALONE_CORExx
+#ifndef TI_DSP
             // for test print
             for (i = 0; i < 15; i++) {
                 imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;

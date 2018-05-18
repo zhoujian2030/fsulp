@@ -5,6 +5,7 @@
  *      Author: j.zh
  */
 
+#include "lteCommon.h"
 #include "lteUlpMgr.h"
 #include "lteLogger.h"
 #include "mempool.h"
@@ -13,6 +14,7 @@
 #include "lteKpi.h"
 #include "lteMac.h"
 #include "lteRrc.h"
+
 
 // -------------------------
 void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
@@ -29,6 +31,8 @@ void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerF
 // -------------------------
 void UlpOneMilliSecondIsr()
 {
+	UpdateSystemTime();
+
 	NotifyMacHandler();
 	NotifyResCleaner();
 	NotifyLogHandler();

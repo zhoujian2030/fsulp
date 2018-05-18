@@ -6,13 +6,9 @@
  */
 
 #include "lteLogger.h"
-//#include "list.h"
-//#include "mempool.h"
-#include "sync.h"
 #include <stdio.h>
 #include <stdarg.h>
 #ifdef RUN_ON_STANDALONE_CORE
-//#include "logger.h"
 #include "event.h"
 #include "thread.h"
 #include "messaging.h"
@@ -20,35 +16,29 @@
 #endif
 
 void ProcessLogData(char* pData, unsigned int length);
-
- #define MAX_LOG_DATA_SIZE	(4096 - 4)
-//#define MAX_LOG_DATA_SIZE	15
-typedef struct
-{
-	unsigned short logType;
-	unsigned short length;
-	char buffer[MAX_LOG_DATA_SIZE];
-} LogData;
-
+int BuildLogItemData(LogData* pLogData, LogFormatData* pLogItem);
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gLogLevel, ".ulpdata");
-#pragma DATA_SECTION(gLogSem, ".ulpdata");
-#pragma DATA_SECTION(gLogData, ".ulpdata");
+#pragma DATA_SECTION(gLogLevelName, ".ulpdata");
 #endif
 unsigned int gLogLevel = 1;
-SEM_LOCK gLogSem;
-LogData gLogData;
-LogData gLogData2;
-unsigned int gActiveLogDataIndex = 0;
-LogData gLogDataArray[2];
+unsigned char gLogLevelName[LOG_LEVEL_ERROR + 1][LOG_LEVEL_LENGTH + 1] = {
+        {"TRC"},
+        {"DBG"},
+        {"INF"},
+        {"WAR"},
+        {"ERR"}
+};
 
+// --------------------
 #ifdef RUN_ON_STANDALONE_CORE
 
 void* LogHandlerEntryFunc(void* p);
 
 #define TASK_LOG_HANDLER_PRIORITY		2
-#define TASK_LOG_HANDLER_STACK_SIZE	(64*1024)
+#define TASK_LOG_HANDLER_STACK_SIZE		(64*1024)
+
 #pragma DATA_SECTION(gTaskLogHandlerStack, ".ulpdata");
 UInt8 gTaskLogHandlerStack[TASK_LOG_HANDLER_STACK_SIZE];
 
@@ -59,23 +49,28 @@ Event gLogEvent;
 #pragma DATA_SECTION(gSendLogMsgQ, ".ulpdata");
 MessageQueue gSendLogMsgQ;
 
+#pragma DATA_SECTION(gLogItems, ".ulpdata");
+LogFormatData gLogItems[MAX_LOG_ITEM_NUM];
+List gLogItemPool;
+List gLogItemList;
+
 #endif
 
 // -------------------------------
 void InitLogger()
 {
-	SemInit(&gLogSem, 1);
-	gLogData.length = 0;
-	gLogData.logType = 1;
-
-	gActiveLogDataIndex = 0;
-	gLogDataArray[0].length = 0;
-	gLogDataArray[0].logType = 1;
-	gLogDataArray[1].length = 0;
-	gLogDataArray[1].logType = 1;
-
 #ifdef RUN_ON_STANDALONE_CORE
 	EventInit(&gLogEvent);
+
+	ListInit(&gLogItemPool, 1);
+	ListInit(&gLogItemList, 1);
+
+	unsigned int i;
+	ListNode* pNode;
+	for (i=0; i<MAX_LOG_ITEM_NUM; i++) {
+		pNode = &gLogItems[i].node;
+		ListPushNode(&gLogItemPool, pNode);
+	}
 
 	gSendLogMsgQ.qid = QMSS_TX_FREE_HAND_ULP_TO_OAM_LOG;
 
@@ -86,6 +81,16 @@ void InitLogger()
 	threadParams.priority = TASK_LOG_HANDLER_PRIORITY;
 	ThreadCreate((void*)LogHandlerEntryFunc, &threadHandle, &threadParams);
 #endif
+}
+
+// -------------------------------
+void LoggerSetLogLevel(unsigned int level)
+{
+	if (level > LOG_LEVEL_ERROR) {
+		gLogLevel = LOG_LEVEL_ERROR;
+	} else {
+		gLogLevel = level;
+	}
 }
 
 #ifdef RUN_ON_STANDALONE_CORE
@@ -108,20 +113,32 @@ void* LogHandlerEntryFunc(void* p)
 // -------------------------------
 void SendLogData()
 {
-	if (gLogDataArray[gActiveLogDataIndex].length == 0) {
-		return;
+	LogData logData;
+	logData.logType = 1;
+	logData.length = 0;
+	LogFormatData* pLogItem;
+	unsigned int count = ListCount(&gLogItemList);
+
+	while (count > 0) {
+		pLogItem = (LogFormatData*)ListPopNode(&gLogItemList);
+		if (pLogItem == 0) {
+			break;
+		}
+
+		if (0 == BuildLogItemData(&logData, pLogItem)) {
+			// the log item is not written to buffer, save it back
+			ListPushNodeHead(&gLogItemList, &pLogItem->node);
+			break;
+		}
+
+		ListPushNode(&gLogItemPool, &pLogItem->node);
+
+		count--;
 	}
 
-	LogData* pLogData = &gLogDataArray[gActiveLogDataIndex];
-
-	SemWait(&gLogSem);
-
-	(gActiveLogDataIndex == 0) ? (gActiveLogDataIndex = 1) : (gActiveLogDataIndex = 0);
-	gLogDataArray[gActiveLogDataIndex].length = 0;
-
-	SemPost(&gLogSem);
-
-	ProcessLogData((char*)pLogData, pLogData->length + 4);
+	if (logData.length > 0) {
+		ProcessLogData((char*)&logData, logData.length + 4);
+	}
 }
 
 #endif
@@ -137,27 +154,88 @@ void ProcessLogData(char* pData, unsigned int length)
 }
 
 // -------------------------------
-int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char *fmt,...)
+int BuildLogItemData(LogData* pLogData, LogFormatData* pLogItem)
 {
-	va_list args;
-	va_start(args, fmt);
-
-	SemWait(&gLogSem);
-
-	LogData* pLogData = &gLogDataArray[gActiveLogDataIndex];
-
-	char* pLogBuffer = pLogData->buffer + pLogData->length;
-	int remainLen = MAX_LOG_DATA_SIZE - pLogData->length;
-	if (remainLen > 0) {
-		int varDataLen = vsnprintf(pLogBuffer, remainLen, fmt, args);
-		if ((pLogData->length + varDataLen) <= MAX_LOG_DATA_SIZE) {
-			pLogData->length += varDataLen;
-		}
+	if ((pLogData->length + LOG_ITEM_HEAD_LENGTH) > MAX_LOG_DATA_SIZE) {
+		// no enough space for this log item
+		return 0;
 	}
 
-	SemPost(&gLogSem);
+	static unsigned char logSeq = 0;
 
+	char* ptr = pLogData->buffer + pLogData->length;
+	int remainLen = MAX_LOG_DATA_SIZE - pLogData->length;
+	int varDataLen;
+	int logItemLen = 0;
+
+	varDataLen = snprintf(ptr, remainLen, "%02x[%04d-%02d-%02d %02d:%02d:%02d:%03d]", logSeq, gSystemTime.year,
+			gSystemTime.month, gSystemTime.day, gSystemTime.hour, gSystemTime.minute, gSystemTime.second, gSystemTime.millisecond);
+	if(varDataLen > (remainLen-1)) {
+		return 0;
+	}
+	remainLen -= varDataLen;
+	logItemLen += varDataLen;
+	ptr += varDataLen;
+
+	*ptr++ = '[';
+	remainLen--;
+	logItemLen++;
+
+	memcpy(ptr, gLogLevelName[pLogItem->logLevel], LOG_LEVEL_LENGTH);
+	remainLen -= LOG_LEVEL_LENGTH;
+	logItemLen += LOG_LEVEL_LENGTH;
+	ptr += LOG_LEVEL_LENGTH;
+
+	*ptr++ = ']';
+	*ptr++ = ':';
+	*ptr++ = ' ';
+	remainLen -= 3;
+	logItemLen += 3;
+
+	varDataLen = snprintf(ptr, remainLen, "[%s], ", pLogItem->funcName);
+	if(varDataLen > (remainLen-1)) {
+		return 0;
+	}
+	remainLen -= varDataLen;
+	logItemLen += varDataLen;
+	ptr += varDataLen;
+
+	varDataLen = snprintf(ptr, remainLen, (const char*)pLogItem->fmt,
+			pLogItem->value[0], pLogItem->value[1], pLogItem->value[2],
+			pLogItem->value[3], pLogItem->value[4], pLogItem->value[5]);
+	if(varDataLen > (remainLen-1)) {
+		return 0;
+	}
+	remainLen -= varDataLen;
+	logItemLen += varDataLen;
+
+	pLogData->length += logItemLen;
+
+	return logItemLen;
+}
+
+// -------------------------------
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...)
+{
+	LogFormatData* pLogData = (LogFormatData*)ListPopNode(&gLogItemPool);
+	if (pLogData == 0) {
+		return -1;
+	}
+
+	unsigned int i;
+	va_list args;
+
+	pLogData->fmt = (char*)fmt;
+	pLogData->funcName = (char*)funcName;
+	pLogData->logLevel = eLogLevel;
+
+	va_start(args, fmt);
+	for (i=0; i<MAX_LOG_PARAM_NUM; i++) {
+		pLogData->value[i] = va_arg(args, unsigned int);
+	}
 	va_end(args);
+
+	ListPushNode(&gLogItemList, &pLogData->node);
 
 	return 0;
 }

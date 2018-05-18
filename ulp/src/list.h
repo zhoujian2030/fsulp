@@ -35,8 +35,10 @@ void ListDeInit(List* pList);
 
 unsigned int ListCount(const List *pList);
 
-void ListInsertNode(List *pList, ListNode *pNode);
+void ListInsertNodeToTail(List *pList, ListNode *pNode);
+void ListInsertNodeToHead(List *pList, ListNode *pNode);
 void ListPushNode(List *pList, ListNode *pNode);
+void ListPushNodeHead(List *pList, ListNode *pNode);
 ListNode* ListPopNode(List *pList);
 void ListDeleteNode(List *pList, ListNode* pNode);
 

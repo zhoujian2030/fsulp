@@ -9,6 +9,7 @@
 #include "lteLogger.h"
 
 void PushTail(List* pList, ListNode* pNode);
+void PushHead(List *pList, ListNode *pNode);
 ListNode* PopHead(List* pList);
 unsigned int DeleteNode(List* pList, ListNode* pNode);
 
@@ -48,7 +49,7 @@ unsigned int ListCount(const List *pList)
 }
 
 // ----------------------------------
-void ListInsertNode(List *pList, ListNode *pNode)
+void ListInsertNodeToTail(List *pList, ListNode *pNode)
 {
     if ((pList != 0) && (pNode != 0)) {
         if (pList->mtFlag) {
@@ -62,9 +63,29 @@ void ListInsertNode(List *pList, ListNode *pNode)
 }
 
 // ----------------------------------
+void ListInsertNodeToHead(List *pList, ListNode *pNode)
+{
+    if ((pList != 0) && (pNode != 0)) {
+        if (pList->mtFlag) {
+            SemWait(&pList->lock);
+            PushHead(pList, pNode);
+            SemPost(&pList->lock);
+        } else {
+        	PushHead(pList, pNode);
+        }
+    }
+}
+
+// ----------------------------------
 void ListPushNode(List *pList, ListNode *pNode)
 {
-    ListInsertNode(pList, pNode);
+	ListInsertNodeToTail(pList, pNode);
+}
+
+// ----------------------------------
+void ListPushNodeHead(List *pList, ListNode *pNode)
+{
+	ListInsertNodeToHead(pList, pNode);
 }
 
 // ----------------------------------
@@ -155,6 +176,24 @@ void PushTail(List* pList, ListNode* pNode)
         pList->node.prev = pNode;
         pList->count++;
     }
+}
+
+// -----------------------------------
+void PushHead(List *pList, ListNode *pNode)
+{
+	if(( pList->node.next == 0 )||(pList->count == 0)||( pList->node.prev == 0 )) {
+		pList->node.next = pNode;
+		pList->node.prev = pNode;
+		pNode->next = 0;
+		pNode->prev = 0;
+		pList->count = 1;
+	} else {
+		pNode->prev = 0;
+		pNode->next = pList->node.next;
+		pList->node.next->prev = pNode;
+		pList->node.next = pNode;
+		pList->count++;
+	}
 }
 
 // -----------------------------------
