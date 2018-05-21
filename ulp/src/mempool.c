@@ -152,7 +152,7 @@ unsigned char* MemAlloc(unsigned int length)
 inline MemNode* CheckNode(void* pBuffer)
 {
     if (pBuffer == 0) {
-         LOG_ERROR(ULP_LOGGER_NAME, "pBuffer is null\n", __func__);
+         LOG_ERROR(ULP_LOGGER_NAME, "pBuffer is null\n");
          return 0;
     }
 
@@ -213,7 +213,7 @@ unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer)
 
     if (pSrcNode != 0 && pDstNode != 0) {
         if (pSrcNode->size >= (pSrcNode->length + pDstNode->length)) {
-            LOG_TRACE(ULP_LOGGER_NAME, "copy data to pSrcBuffer\n", __func__);
+            LOG_TRACE(ULP_LOGGER_NAME, "copy data to pSrcBuffer\n");
             memcpy(pSrcBuffer + pSrcNode->length, pDstBuffer, pDstNode->length);
             pSrcNode->length += pDstNode->length;
             MemFree(pDstBuffer);

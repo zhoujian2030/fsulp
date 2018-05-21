@@ -99,6 +99,9 @@ void LoggerSetLogLevel(unsigned int level);
 #define FUNCNAME __FUNCTION__
 #define LINE     __LINE__
 
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...);
+int WriteBuffer(const char* pData, unsigned int dataLen);
+
 #define LOG_TRACE(moduleId, fmt, args...){\
         if (gLogLevel == 0) {\
                 (void)moduleId;\
@@ -108,7 +111,7 @@ void LoggerSetLogLevel(unsigned int level);
                 struct tm * tmVal =  localtime(&tv.tv_sec);\
                 char date[32];\
                 strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [TRACE] [%3.3s] [%lu] [%s:%d] - ", date, ms, moduleId, pthread_self(), FILENAME,LINE);\
+                printf("[%s.%d] [TRACE] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
                 printf(fmt,##args);\
         } }
 
@@ -121,7 +124,7 @@ void LoggerSetLogLevel(unsigned int level);
                 struct tm * tmVal =  localtime(&tv.tv_sec);\
                 char date[32];\
                 strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [DEBUG] [%3.3s] [%lu] [%s:%d] - ", date, ms, moduleId, pthread_self(), FILENAME,LINE);\
+                printf("[%s.%d] [DEBUG] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
                 printf(fmt,##args);\
         } }
 
@@ -134,7 +137,7 @@ void LoggerSetLogLevel(unsigned int level);
                 struct tm * tmVal =  localtime(&tv.tv_sec);\
                 char date[32];\
                 strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [INFO ] [%3.3s] [%lu] [%s:%d] - ", date, ms, moduleId, pthread_self(), FILENAME,LINE);\
+                printf("[%s.%d] [INFO ] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
                 printf(fmt,##args);\
         } }
 #define LOG_WARN(moduleId, fmt,args...){\
@@ -146,7 +149,7 @@ void LoggerSetLogLevel(unsigned int level);
                 struct tm * tmVal =  localtime(&tv.tv_sec);\
                 char date[32];\
                 strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [WARN ] [%3.3s] [%lu] [%s:%d] - ", date, ms, moduleId, pthread_self(), FILENAME,LINE);\
+                printf("[%s.%d] [WARN ] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
                 printf(fmt,##args);\
         } }
 #define LOG_ERROR(moduleId, fmt, args...){\
@@ -158,7 +161,7 @@ void LoggerSetLogLevel(unsigned int level);
                 struct tm * tmVal =  localtime(&tv.tv_sec);\
                 char date[32];\
                 strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [ERROR] [%3.3s] [%lu] [%s:%d] - ", date, ms, moduleId, pthread_self(), FILENAME,LINE);\
+                printf("[%s.%d] [ERROR] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
                 printf(fmt,##args);\
         } }
 

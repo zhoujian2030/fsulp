@@ -77,7 +77,7 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
 {
     RlcUeContext* pUeCtx = (RlcUeContext*)MemAlloc(sizeof(RlcUeContext));
     if (pUeCtx == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rlc ue context\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rlc ue context\n");
         return 0;
     }
     LOG_INFO(ULP_LOGGER_NAME, "pUeCtx = %p, rnti = %d\n", pUeCtx, rnti);
@@ -252,12 +252,12 @@ void RlcDeleteAmdPduSegment(AmdPduSegment* pAmdPduSeg)
 void MacUeDataInd(MacUeDataInd_t* pMacDataInd) 
 {
     if (pMacDataInd == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd\n");
         return;
     }
 
     if (pMacDataInd->rlcData == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd->rlcData\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd->rlcData\n");
         return;
     }
 
@@ -490,7 +490,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     // init pdu segment
     AmdPduSegment* pAmdPduSegment = (AmdPduSegment*)MemAlloc(sizeof(AmdPduSegment));
     if (pAmdPduSegment == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "Fail to create AmdPduSegment\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "Fail to create AmdPduSegment\n");
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return RLC_FAILURE;
     }
@@ -502,7 +502,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     if (pAmdHeader->e == 0) {
         pDfe = (AmdDFE*)MemAlloc(sizeof(AmdDFE));
         if (pDfe == 0) {            
-            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AmdDFE\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AmdDFE\n");
             MemFree(pRlcDataInfo->rlcdataBuffer);
             MemFree(pAmdPduSegment);
             ListDeInit(&pAmdPduSegment->dfeQ);
@@ -520,7 +520,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
         // TODO
-        LOG_ERROR(ULP_LOGGER_NAME, "TODO\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "TODO\n");
     }
 
     ListPushNode(&pAmdPdu->segList, &pAmdPduSegment->node);
@@ -627,7 +627,7 @@ void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAm
                 RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
             }
         } else {
-            LOG_ERROR(ULP_LOGGER_NAME, "pAmdDfe->buffer.pData is NULL\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME, "pAmdDfe->buffer.pData is NULL\n");
         }
         MemFree((void*)pAmdDfe);
         pAmdDfe = (AmdDFE*)ListPopNode(&pAmdPduSeg->dfeQ);

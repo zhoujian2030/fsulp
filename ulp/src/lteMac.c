@@ -5,7 +5,6 @@
  *      Author: j.zh
  */
 
-#include <ti/csl/csl_tsc.h>
 #include "lteMac.h"
 #include "lteCommon.h"
 #include "lteMacPhyInterface.h"
@@ -18,6 +17,9 @@
 #include "event.h"
 #include "thread.h"
 #include "messaging.h"
+#ifndef OS_LINUX
+#include <ti/csl/csl_tsc.h>
+#endif
 
 void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length); 
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
@@ -134,7 +136,7 @@ void InitMacLayer(unsigned char standloneFlag)
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
         ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, 0);
-        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n");
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -142,7 +144,7 @@ void InitMacLayer(unsigned char standloneFlag)
         threadParams.stack = gTaskMacHandlerStack;
         threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
         ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
-        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n");
 #endif 
     }
 }
@@ -150,7 +152,7 @@ void InitMacLayer(unsigned char standloneFlag)
 // ---------------------------
 void* MacHandlerEntryFunc(void* p)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n", __func__);
+    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n");
     UInt32 count = 0;
     PhyDataIndNode* pPhyDataNode;
 
@@ -160,13 +162,16 @@ void* MacHandlerEntryFunc(void* p)
     UInt32 byteRecvd;
 #endif
 
+#ifndef OS_LINUX
     UInt32 prevTime, curTime;
+#endif
 
     while (1) {
         EventWait(&gMacHandlerEvent);
 
+#ifndef OS_LINUX
         prevTime = CSL_tscRead();
-
+#endif
         // process received messages in queue
         count = ListCount(&gMacRecvdPhyDataList);
         if (count > 0) {
@@ -198,11 +203,13 @@ void* MacHandlerEntryFunc(void* p)
         }
 #endif
 
+#ifndef OS_LINUX
         curTime = CSL_tscRead();
         if ((curTime - prevTime) > 10000) {
         	// only print when consuming time is more than 0.1ms
         	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
         }
+#endif
     }
 }
 
@@ -443,7 +450,7 @@ void MacProcessUlSchPdu(UlSchPdu* pPdu)
 
             default:
             {
-                LOG_ERROR(ULP_LOGGER_NAME,"[%s] Invalid lcId = %d\n", __func__,lcId);      
+                LOG_ERROR(ULP_LOGGER_NAME,"Invalid lcId = %d\n",lcId);      
             }
         }
 
@@ -459,7 +466,7 @@ void MacProcessUlSchPdu(UlSchPdu* pPdu)
     if (successDecodeFlag) {
         MacDeMultiplexAndSend(pDemuxData, pPdu->buffer, pData, pPdu->length, pPdu->rnti, pos, dataPtrPos);
     } else {
-        LOG_ERROR(ULP_LOGGER_NAME,"fail to decode the mac pdu\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME,"fail to decode the mac pdu\n");
     }
 }
 
@@ -760,7 +767,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
         switch(lchId) {
             case MAC_UL_CCCH_LCH:
             {
-                LOG_DBG(ULP_LOGGER_NAME, "TODO, MAC_UL_CCCH_LCH\n", __func__);
+                LOG_DBG(ULP_LOGGER_NAME, "TODO, MAC_UL_CCCH_LCH\n");
                 gLteKpi.lcIdArray[lchId]++;
                 return;
             }

@@ -273,6 +273,23 @@ int WriteBuffer(const char* pData, unsigned int dataLen)
 
 }
 
+#elif defined OS_LINUX
+
+// -------------------------------
+int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...)
+{
+
+	return 0;
+}
+
+// -------------------------------
+int WriteBuffer(const char* pData, unsigned int dataLen)
+{
+
+	return 0;
+}
+
+
 #endif
 
 

@@ -70,7 +70,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
 {
     RrcUeContext* pUeCtx = (RrcUeContext*)MemAlloc(sizeof(RrcUeContext));
     if (pUeCtx == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context\n");
         return 0;
     }
     LOG_INFO(ULP_LOGGER_NAME, "pUeCtx = %p, rnti = %d\n", pUeCtx, rnti);

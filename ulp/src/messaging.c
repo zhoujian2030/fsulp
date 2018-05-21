@@ -22,12 +22,12 @@ void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsi
 	}
 
 	if (Qmss_getQueueEntryCount(pMsgQueue->qid) <= 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_getQueueEntryCount error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_getQueueEntryCount error\n");
 		return pQmssFd;
 	}
 
 	if ((pQmssFd = Qmss_queuePop(pMsgQueue->qid)) == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_queuePop error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_queuePop error\n");
 		return pQmssFd;
 	}
 
@@ -73,7 +73,7 @@ int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
 	unsigned int qmssBuffLen = 0;
 
 	if ((pQmssFd = MessageQGetFreeTxFd(pMsgQueue, &pQmssDataBuff, &qmssBuffLen)) == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "MessageQGetFreeTxFd error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "MessageQGetFreeTxFd error\n");
 		return 0;
 	}
 

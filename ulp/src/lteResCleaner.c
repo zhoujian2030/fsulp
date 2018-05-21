@@ -37,7 +37,7 @@ void InitResCleaner(unsigned char startResCleanerFlag)
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
         ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, 0);
-        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task\n");
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -60,7 +60,7 @@ void NotifyResCleaner()
 // ---------------------------------
 void* ResCleanerEntryFunc(void* p)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n", __func__);
+    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n");
     
     while (1) {
         EventWait(&gCleanupEvent);

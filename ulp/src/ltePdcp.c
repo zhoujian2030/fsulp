@@ -49,7 +49,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
         PdcpUeSrbDataInd(rnti, lcId, pData, size-1);
     } else {
         // data is ciphered
-        LOG_TRACE(ULP_LOGGER_NAME, "TODO, data is ciphered ??\n", __func__);
+        LOG_TRACE(ULP_LOGGER_NAME, "TODO, data is ciphered ??\n");
         if (pData != 0) {
             MemFree(pData);
         }
