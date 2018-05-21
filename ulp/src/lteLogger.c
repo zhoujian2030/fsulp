@@ -8,16 +8,12 @@
 #include "lteLogger.h"
 #include <stdio.h>
 #include <stdarg.h>
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
 #include "event.h"
 #include "thread.h"
 #include "messaging.h"
 #include <string.h>
 #endif
-
-void ProcessLogData();
-void SendLogData(char* pData, unsigned int length);
-int BuildLogItemData(LogData* pLogData, LogFormatData* pLogItem);
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gLogLevel, ".ulpdata");
@@ -33,7 +29,11 @@ unsigned char gLogLevelName[LOG_LEVEL_ERROR + 1][LOG_LEVEL_LENGTH + 1] = {
 };
 
 // --------------------
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
+
+void ProcessLogData();
+void SendLogData(char* pData, unsigned int length);
+int BuildLogItemData(LogData* pLogData, LogFormatData* pLogItem);
 
 void* LogHandlerEntryFunc(void* p);
 
@@ -60,7 +60,7 @@ List gLogItemList;
 // -------------------------------
 void InitLogger()
 {
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
 	EventInit(&gLogEvent);
 
 	ListInit(&gLogItemPool, 1);
@@ -94,7 +94,7 @@ void LoggerSetLogLevel(unsigned int level)
 	}
 }
 
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
 // -------------------------------
 void NotifyLogHandler()
 {
@@ -142,16 +142,10 @@ void ProcessLogData()
 	}
 }
 
-#endif
-
 // -------------------------------
 void SendLogData(char* pData, unsigned int length)
 {
-#ifdef RUN_ON_STANDALONE_CORE
 	MessageQSend(&gSendLogMsgQ, (char*)pData, length);
-#else
-	printf("%s\n", pData);
-#endif
 }
 
 // -------------------------------
@@ -246,8 +240,7 @@ int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName,
 // return num of bytes sent
 int WriteBuffer(const char* pData, unsigned int dataLen)
 {
-#ifdef RUN_ON_STANDALONE_CORE
-
+//#ifdef TI_DSP
 	unsigned char* pMsgQBuff = 0;
 	unsigned int msgQBuffLen = 0;
 	void* pFd = MessageQGetFreeTxFd(&gSendLogMsgQ, &pMsgQBuff, &msgQBuffLen);
@@ -265,20 +258,21 @@ int WriteBuffer(const char* pData, unsigned int dataLen)
 	memcpy(pLogData->buffer, pData, dataLen);
 
 	return MessageQSendByFd(&gSendLogMsgQ, pFd, dataLen + 4);
-
-#else
-	unsigned int i;
-	for (i=0; i<dataLen; i++) {
-		printf("%02x ", pBuffer[i]);
-		if (i%10 == 9) {
-			printf("\n");
-		}
-	}
-	printf("\n");
-
-	return dataLen;
-#endif
+//#else
+//	unsigned int i;
+//	for (i=0; i<dataLen; i++) {
+//		printf("%02x ", pBuffer[i]);
+//		if (i%10 == 9) {
+//			printf("\n");
+//		}
+//	}
+//	printf("\n");
+//
+//	return dataLen;
+//#endif
 
 }
+
+#endif
 
 

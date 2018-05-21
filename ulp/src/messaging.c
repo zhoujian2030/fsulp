@@ -9,7 +9,7 @@
 #include "lteLogger.h"
 #include <string.h>
 
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
 
 // ----------------------------
 void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsigned int* pBufferLen)

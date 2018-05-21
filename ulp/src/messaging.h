@@ -10,7 +10,7 @@
 
 #include "lteCommon.h"
 
-#ifdef RUN_ON_STANDALONE_CORE
+#ifdef TI_DSP
 #include <xdc/std.h>
 #include "drivers/multi_core/struct_qmss.h"
 #include "drivers/multi_core/global.h"

@@ -12,9 +12,18 @@
 extern "C" {
 #endif
 
-#ifdef RUN_ON_STANDALONE_CORE
+#define INTEGRATE_PHYxx
+
+#ifdef TI_DSP
 #include "baseType.h"
+#elif defined INTEGRATE_PHY
+#include <xdc/std.h>
+
+typedef unsigned char   BOOL;
+typedef signed int      SInt32;
+
 #else
+
 typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;

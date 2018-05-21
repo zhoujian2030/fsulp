@@ -31,9 +31,14 @@ void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerF
 // -------------------------
 void UlpOneMilliSecondIsr()
 {
+#ifndef INTEGRATE_PHY
 	UpdateSystemTime();
+#endif
 
 	NotifyMacHandler();
 	NotifyResCleaner();
+
+#ifdef TI_DSP
 	NotifyLogHandler();
+#endif
 }

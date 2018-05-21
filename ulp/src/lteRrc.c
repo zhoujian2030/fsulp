@@ -186,7 +186,6 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
 {
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Identity Response (RNTI: %d)\n", rnti);
     RrcUeContext* pUeCtx;
-    UInt8 imsi[16];
     UInt32 i;
     LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp = (LIBLTE_MME_ID_RESPONSE_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
     if (pIdResp == 0) {
@@ -216,7 +215,8 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             memcpy(pUeCtx->ueIdentity.imsi, pIdResp->mobile_id.imsi, 15);
 
             // for print test
-#ifndef TI_DSP
+#ifdef OS_LINUX
+            UInt8 imsi[16];
             for (i = 0; i < 15; i++) {
                 imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
             }
@@ -255,7 +255,6 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Attach Request (RNTI: %d)\n", rnti);
     RrcUeContext* pUeCtx;
-    UInt8 imsi[16];    
     UInt32 i;
     LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT* pAttachReq = (LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT));
     if (pAttachReq == 0) {
@@ -299,7 +298,8 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             }
             memcpy(pUeCtx->ueIdentity.imsi, pAttachReq->eps_mobile_id.imsi, 15);
 
-#ifndef TI_DSP
+#ifdef OS_LINUX
+            UInt8 imsi[16];
             // for test print
             for (i = 0; i < 15; i++) {
                 imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;

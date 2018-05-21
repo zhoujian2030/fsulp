@@ -5,6 +5,7 @@
  *      Author: j.zh
  */
 
+#include <ti/csl/csl_tsc.h>
 #include "lteMac.h"
 #include "lteCommon.h"
 #include "lteMacPhyInterface.h"
@@ -87,15 +88,20 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
 
 // ----------------------------------------
 // standlone configurations
+#ifndef OS_LINUX
 #pragma DATA_SECTION(gMacStandloneFlag, ".ulpdata");
 #pragma DATA_SECTION(gMacRecvdPhyDataList, ".ulpdata");
 #pragma DATA_SECTION(gMacHandlerEvent, ".ulpdata");
-#pragma DATA_SECTION(gMscRecvMessageQ, ".ulpdata");
+#endif
+
 unsigned char gMacStandloneFlag = FALSE;
 List gMacRecvdPhyDataList;
 Event gMacHandlerEvent;
 
+#ifdef TI_DSP
+#pragma DATA_SECTION(gMscRecvMessageQ, ".ulpdata");
 MessageQueue gMscRecvMessageQ;
+#endif
 
 void* MacHandlerEntryFunc(void* p);
 
@@ -121,7 +127,9 @@ void InitMacLayer(unsigned char standloneFlag)
         ListInit(&gMacRecvdPhyDataList, 1);
         EventInit(&gMacHandlerEvent);
 
+#ifdef TI_DSP
         gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
+#endif
 
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
@@ -146,9 +154,11 @@ void* MacHandlerEntryFunc(void* p)
     UInt32 count = 0;
     PhyDataIndNode* pPhyDataNode;
 
+#ifdef TI_DSP
     UInt8* pMsgQBuffer;
     void* pFd = 0;
     UInt32 byteRecvd;
+#endif
 
     UInt32 prevTime, curTime;
 
@@ -169,6 +179,7 @@ void* MacHandlerEntryFunc(void* p)
 			}
         }
 
+#ifdef TI_DSP
         // receive msg from message queue
         count = 0;
         while (count < 4) {
@@ -185,6 +196,7 @@ void* MacHandlerEntryFunc(void* p)
 
         	count++;
         }
+#endif
 
         curTime = CSL_tscRead();
         if ((curTime - prevTime) > 10000) {
