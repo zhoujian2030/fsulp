@@ -88,7 +88,41 @@ int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
 }
 
 // ----------------------------
-int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer)
+int MessageQGetData(MessageQueue* pMsgQueue, unsigned char** pBuffer, void** pFd)
+{
+	unsigned int length = 0;
+
+	if (pMsgQueue == 0 || pBuffer ==  0 || pFd == 0) {
+		return length;
+	}
+
+	unsigned int queueCount = Qmss_getQueueEntryCount(pMsgQueue->qid);
+	if (queueCount == 0) {
+		return length;
+	}
+
+	*pFd = Qmss_queuePop(pMsgQueue->qid);
+	if (*pFd == 0) {
+		return length;
+	}
+
+	Cppi_getData (Cppi_DescType_HOST, (Cppi_Desc*)*pFd, pBuffer, &length);
+
+	return length;
+}
+
+// ----------------------------
+void MessageQFreeRecvFd(void* pFd)
+{
+	if (pFd == 0) {
+		return;
+	}
+
+	Qmss_queuePushDesc(Qmss_getQueueHandle(Cppi_getReturnQueue(Cppi_DescType_HOST, (Cppi_Desc*)pFd)), (Uint32 *)pFd);
+}
+
+// ----------------------------
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
 {
 	unsigned int length = 0;
 
@@ -96,18 +130,19 @@ int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer)
 		return length;
 	}
 
-	void* pQmssFd = 0;
-	unsigned int queueCount = Qmss_getQueueEntryCount(pMsgQueue->qid);
-	if (queueCount == 0) {
-		return length;
+	unsigned char* pDataBuffer;
+	void* pQmssFd;
+
+	length = MessageQGetData(pMsgQueue, &pDataBuffer, &pQmssFd);
+
+	if (length > 0) {
+		if (length > bufferLen) {
+			length = bufferLen;
+		}
+		memcpy((void*)pBuffer, (void*)pDataBuffer, length);
 	}
 
-	pQmssFd = Qmss_queuePop(pMsgQueue->qid);
-	if (pQmssFd == 0) {
-		return length;
-	}
-
-	Cppi_getData (Cppi_DescType_HOST, (Cppi_Desc*)pQmssFd, &pBuffer, &length);
+	MessageQFreeRecvFd(pQmssFd);
 
 	return length;
 }

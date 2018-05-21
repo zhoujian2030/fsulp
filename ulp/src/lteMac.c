@@ -16,6 +16,7 @@
 #include "list.h"
 #include "event.h"
 #include "thread.h"
+#include "messaging.h"
 
 void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length); 
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
@@ -86,9 +87,16 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
 
 // ----------------------------------------
 // standlone configurations
+#pragma DATA_SECTION(gMacStandloneFlag, ".ulpdata");
+#pragma DATA_SECTION(gMacRecvdPhyDataList, ".ulpdata");
+#pragma DATA_SECTION(gMacHandlerEvent, ".ulpdata");
+#pragma DATA_SECTION(gMscRecvMessageQ, ".ulpdata");
 unsigned char gMacStandloneFlag = FALSE;
 List gMacRecvdPhyDataList;
 Event gMacHandlerEvent;
+
+MessageQueue gMscRecvMessageQ;
+
 void* MacHandlerEntryFunc(void* p);
 
 typedef struct {
@@ -113,6 +121,8 @@ void InitMacLayer(unsigned char standloneFlag)
         ListInit(&gMacRecvdPhyDataList, 1);
         EventInit(&gMacHandlerEvent);
 
+        gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
+
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
         ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, 0);
@@ -133,30 +143,54 @@ void InitMacLayer(unsigned char standloneFlag)
 void* MacHandlerEntryFunc(void* p)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "Entry\n", __func__);
-    UInt32 count;
+    UInt32 count = 0;
     PhyDataIndNode* pPhyDataNode;
-    unsigned int prevTime, curTime;
+
+    UInt8* pMsgQBuffer;
+    void* pFd = 0;
+    UInt32 byteRecvd;
+
+    UInt32 prevTime, curTime;
 
     while (1) {
         EventWait(&gMacHandlerEvent);
 
-        count = ListCount(&gMacRecvdPhyDataList);
-        if (count == 0) {
-            continue;
-        }
-
         prevTime = CSL_tscRead();
 
-        pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
-        while (pPhyDataNode != 0) {
-            MacProcessPhyDataInd(pPhyDataNode->pBuffer, pPhyDataNode->length);
-            MemFree(pPhyDataNode->pBuffer);
-            MemFree(pPhyDataNode);
-            pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
+        // process received messages in queue
+        count = ListCount(&gMacRecvdPhyDataList);
+        if (count > 0) {
+			pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
+			while (pPhyDataNode != 0) {
+				MacProcessPhyDataInd(pPhyDataNode->pBuffer, pPhyDataNode->length);
+				MemFree(pPhyDataNode->pBuffer);
+				MemFree(pPhyDataNode);
+				pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
+			}
+        }
+
+        // receive msg from message queue
+        count = 0;
+        while (count < 4) {
+        	byteRecvd = MessageQGetData(&gMscRecvMessageQ, &pMsgQBuffer, &pFd);
+
+        	if (byteRecvd == 0) {
+        		MessageQFreeRecvFd(pFd);
+        		break;
+        	}
+
+        	PhyUlDataInd(pMsgQBuffer, byteRecvd);
+
+        	MessageQFreeRecvFd(pFd);
+
+        	count++;
         }
 
         curTime = CSL_tscRead();
-    	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
+        if ((curTime - prevTime) > 10000) {
+        	// only print when consuming time is more than 0.1ms
+        	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
+        }
     }
 }
 
