@@ -20,7 +20,7 @@ int SemInit(SEM_LOCK* pSem, unsigned int value)
                 return 0;
             }
         } else if (value != 1 ) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], not support value greater than 1\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME, "not support value greater than 1\n", __func__);
         }
 		KpiCountSem(1);
         return 0;
@@ -57,7 +57,7 @@ int SemInit(SEM_LOCK* pSem, unsigned int value)
 	Semaphore_Params_init(&semParams);
 	*pSem = Semaphore_create(value, &semParams, NULL);
     if (*pSem == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], Semaphore_create failed\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "Semaphore_create failed\n", __func__);
         return 1;
     } else {
 		KpiCountSem(1);
@@ -68,9 +68,9 @@ int SemInit(SEM_LOCK* pSem, unsigned int value)
 // --------------------------------
 int SemDestroy(SEM_LOCK* pSem)
 {
-	LOG_TRACE(ULP_LOGGER_NAME, "[%s], pSem = %p\n", __func__, pSem);
+	LOG_TRACE(ULP_LOGGER_NAME, "pSem = %p\n", pSem);
 	if (0 == *pSem) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "pSem null\n", __func__);
 		return 1;
 	}
 	KpiCountSem(0);
@@ -82,7 +82,7 @@ int SemDestroy(SEM_LOCK* pSem)
 int SemWait(SEM_LOCK* pSem)
 {
 	if (0 == *pSem) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "pSem null\n", __func__);
 		return 1;
 	}
 	if(Semaphore_pend(*pSem, BIOS_WAIT_FOREVER)) {
@@ -96,7 +96,7 @@ int SemWait(SEM_LOCK* pSem)
 int SemPost(SEM_LOCK* pSem)
 {
 	if (0 == *pSem) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pSem null\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "pSem null\n", __func__);
 		return 1;
 	}
 

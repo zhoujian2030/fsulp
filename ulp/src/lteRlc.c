@@ -68,7 +68,7 @@ RlcUeContext* RlcGetUeContext(unsigned short rnti)
         }
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], UE context NOT exists, rnti = %d\n", __func__, rnti);
+    LOG_TRACE(ULP_LOGGER_NAME, "UE context NOT exists, rnti = %d\n", rnti);
     return 0;
 }
 
@@ -77,10 +77,10 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
 {
     RlcUeContext* pUeCtx = (RlcUeContext*)MemAlloc(sizeof(RlcUeContext));
     if (pUeCtx == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for rlc ue context\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rlc ue context\n", __func__);
         return 0;
     }
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], pUeCtx = %p, rnti = %d\n", __func__, pUeCtx, rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "pUeCtx = %p, rnti = %d\n", pUeCtx, rnti);
     memset(pUeCtx, 0, sizeof(RlcUeContext));
     pUeCtx->rnti = rnti; 
     SemInit(&pUeCtx->lockOfCount, 1);
@@ -95,7 +95,7 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
 void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx)
 {
     if (pRlcUeCtx != 0) {
-        LOG_INFO(ULP_LOGGER_NAME, "[%s], pRlcUeCtx = %p, rnti = %d\n", __func__, pRlcUeCtx, pRlcUeCtx->rnti);
+        LOG_INFO(ULP_LOGGER_NAME, "pRlcUeCtx = %p, rnti = %d\n", pRlcUeCtx, pRlcUeCtx->rnti);
         KpiCountRlcUeCtx(FALSE);
         unsigned int i;
         for (i=0; i<MAX_LC_ID; i++) {
@@ -144,12 +144,12 @@ RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
     if (pUeCtx != 0 && lcId <MAX_LC_ID) {
         pRxAmEntity = (RxAMEntity*)MemAlloc(sizeof(RxAMEntity));
         if (pRxAmEntity == 0) {            
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for RxAMEntity, rnti = %d, lcId = %d\n", 
-                __func__, pUeCtx->rnti, lcId);
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for RxAMEntity, rnti = %d, lcId = %d\n", 
+                pUeCtx->rnti, lcId);
             return 0;
         }
-        LOG_INFO(ULP_LOGGER_NAME, "[%s], pRxAmEntity = %p, rnti = %d, lcId = %d\n", 
-            __func__, pRxAmEntity, pUeCtx->rnti, lcId);
+        LOG_INFO(ULP_LOGGER_NAME, "pRxAmEntity = %p, rnti = %d, lcId = %d\n", 
+            pRxAmEntity, pUeCtx->rnti, lcId);
         memset((void*)pRxAmEntity, 0, sizeof(RxAMEntity));
         pUeCtx->rxAMEntityArray[lcId] = pRxAmEntity;
         pRxAmEntity->rnti = pUeCtx->rnti;
@@ -171,8 +171,8 @@ RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
 void RlcDeleteRxAmEntity(RxAMEntity* pRxAmEntity) {
     if (pRxAmEntity != 0) {
         UInt16 i;  
-        LOG_INFO(ULP_LOGGER_NAME, "[%s], pRxAmEntity = %p, rnti = %d, lcId = %d\n", 
-            __func__, pRxAmEntity, pRxAmEntity->rnti, pRxAmEntity->lcId);
+        LOG_INFO(ULP_LOGGER_NAME, "pRxAmEntity = %p, rnti = %d, lcId = %d\n", 
+            pRxAmEntity, pRxAmEntity->rnti, pRxAmEntity->lcId);
         for(i=0; i<pRxAmEntity->amdPduRing.size; i++) {
             if (RLC_GET_RX_AMD_PDU_STATUS(pRxAmEntity, i) != RS_FREE) {              
                 RlcDeleteAmdPdu(RLC_GET_RX_AMD_PDU(pRxAmEntity, i));
@@ -180,8 +180,8 @@ void RlcDeleteRxAmEntity(RxAMEntity* pRxAmEntity) {
         }
 
         if (pRxAmEntity->rxRawSdu.rawSdu.pData != 0) {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], pRxAmEntity->rxRawSdu.rawSdu.pData = %p\n", 
-                __func__, pRxAmEntity->rxRawSdu.rawSdu.pData);
+            LOG_DBG(ULP_LOGGER_NAME, "pRxAmEntity->rxRawSdu.rawSdu.pData = %p\n", 
+                pRxAmEntity->rxRawSdu.rawSdu.pData);
             MemFree(pRxAmEntity->rxRawSdu.rawSdu.pData);
         }
         MemFree(pRxAmEntity);
@@ -192,16 +192,16 @@ void RlcDeleteRxAmEntity(RxAMEntity* pRxAmEntity) {
 AmdPdu* RlcCreateAmdPdu(RxAMEntity* pRxAmEntity, UInt16 ringSn)
 {
     if (pRxAmEntity == 0) {        
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s],  pRxAmEntity is NULL, ringSn = %d\n", __func__, ringSn);
+        LOG_ERROR(ULP_LOGGER_NAME, " pRxAmEntity is NULL, ringSn = %d\n", ringSn);
         return 0;
     }
 
     AmdPdu* pAmdPdu = (AmdPdu*)MemAlloc(sizeof(AmdPdu));
     if (pAmdPdu == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for AM PDU, rnti = %d, ringSn = %d\n", __func__, pRxAmEntity->rnti, ringSn);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AM PDU, rnti = %d, ringSn = %d\n", pRxAmEntity->rnti, ringSn);
         return 0;
     } 
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], create AM PDU, rnti = %d, ringSn = %d\n", __func__, pRxAmEntity->rnti, ringSn);
+    LOG_DBG(ULP_LOGGER_NAME, "create AM PDU, rnti = %d, ringSn = %d\n", pRxAmEntity->rnti, ringSn);
     RLC_SET_RX_AMD_PDU(pRxAmEntity, ringSn, pAmdPdu);
     ListInit(&pAmdPdu->segList, 0);
     return pAmdPdu;
@@ -211,7 +211,7 @@ AmdPdu* RlcCreateAmdPdu(RxAMEntity* pRxAmEntity, UInt16 ringSn)
 void RlcDeleteAmdPdu(AmdPdu* pAmdPdu)
 {
     if (pAmdPdu != 0) {
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], pAmdPdu = %p\n", __func__, pAmdPdu);
+        LOG_DBG(ULP_LOGGER_NAME, "pAmdPdu = %p\n", pAmdPdu);
         if (ListCount(&pAmdPdu->segList) > 0) {
             AmdPduSegment* pAmdPduSeg = (AmdPduSegment*)ListPopNode(&pAmdPdu->segList);
             while (pAmdPduSeg != 0) {
@@ -230,11 +230,11 @@ void RlcDeleteAmdPduSegment(AmdPduSegment* pAmdPduSeg)
 {
     if (pAmdPduSeg != 0) {
         if (ListCount(&pAmdPduSeg->dfeQ) > 0) {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], pAmdPduSeg = %p\n", __func__, pAmdPduSeg);
+            LOG_DBG(ULP_LOGGER_NAME, "pAmdPduSeg = %p\n", pAmdPduSeg);
             AmdDFE* pAmdDfe = (AmdDFE*)ListPopNode(&pAmdPduSeg->dfeQ);
             while (pAmdDfe != 0) {
-                LOG_DBG(ULP_LOGGER_NAME, "[%s], pAmdDfe = %p, pAmdDfe->buffer.pData = %p\n", 
-                    __func__, pAmdDfe, pAmdDfe->buffer.pData);
+                LOG_DBG(ULP_LOGGER_NAME, "pAmdDfe = %p, pAmdDfe->buffer.pData = %p\n", 
+                    pAmdDfe, pAmdDfe->buffer.pData);
                 if (pAmdDfe->buffer.pData != 0) {
                     MemFree(pAmdDfe->buffer.pData);
                 }
@@ -252,12 +252,12 @@ void RlcDeleteAmdPduSegment(AmdPduSegment* pAmdPduSeg)
 void MacUeDataInd(MacUeDataInd_t* pMacDataInd) 
 {
     if (pMacDataInd == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer pMacDataInd\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd\n", __func__);
         return;
     }
 
     if (pMacDataInd->rlcData == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], NULL pointer pMacDataInd->rlcData\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd->rlcData\n", __func__);
         return;
     }
 
@@ -265,10 +265,10 @@ void MacUeDataInd(MacUeDataInd_t* pMacDataInd)
     RlcUlDataInfo* pRlcDataInfo = 0;
     UInt32 i;
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], rnti = %d, numLCInfo = %d\n", __func__, pMacDataInd->rnti, pRlcData->numLCInfo);
+    LOG_TRACE(ULP_LOGGER_NAME, "rnti = %d, numLCInfo = %d\n", pMacDataInd->rnti, pRlcData->numLCInfo);
     for (i=0; i<pRlcData->numLCInfo; i++) {
         pRlcDataInfo = &pRlcData->rlcDataArray[i];
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, length = %d\n", __func__, pMacDataInd->rnti, pRlcDataInfo->lcId, pRlcDataInfo->length);
+        LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, lcId = %d, length = %d\n", pMacDataInd->rnti, pRlcDataInfo->lcId, pRlcDataInfo->length);
         LOG_BUFFER(pRlcDataInfo->rlcdataBuffer, pRlcDataInfo->length);
 
         if (pRlcDataInfo->lcId <= SRB_2_LCID) {
@@ -292,12 +292,12 @@ BOOL isSNEqual(UInt16 x, UInt16 y)
 void RlcProcessUmOrTmRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 {
     if (pRlcDataInfo->lcId <= SRB_2_LCID) {
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], unsupport lcId = %d, rnti = %d\n", __func__, pRlcDataInfo->lcId, rnti);
+        LOG_WARN(ULP_LOGGER_NAME, "unsupport lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
 
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], This could be PDCP DRB data, lcId = %d, rnti = %d\n", __func__, pRlcDataInfo->lcId, rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
 
     //TODO
     MemFree(pRlcDataInfo->rlcdataBuffer);
@@ -314,7 +314,7 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     AmdPdu* pAmdPdu = 0;
 
     if (pRlcDataInfo->lcId > SRB_2_LCID) {
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], unsupport lcId = %d, rnti = %d\n", __func__, pRlcDataInfo->lcId, rnti);
+        LOG_WARN(ULP_LOGGER_NAME, "unsupport lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
@@ -322,13 +322,13 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     ret = RlcDecodeAmdHeader(pRlcDataInfo, &amdHeader);
 
     if (ret == RLC_FAILURE) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to decode AMD, rnti = %d\n", __func__, rnti);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to decode AMD, rnti = %d\n", rnti);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
 
     if (!amdHeader.dc) {
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], receive RLC status PDU, ignore it, rnti = %d\n", __func__, rnti);
+        LOG_DBG(ULP_LOGGER_NAME, "receive RLC status PDU, ignore it, rnti = %d\n", rnti);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }
@@ -341,17 +341,17 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
             MemFree(pRlcDataInfo->rlcdataBuffer);
             return;
         } else {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc ue context, rnti = %d, pUeCtx = %p\n", __func__, rnti, pUeCtx);
+            LOG_DBG(ULP_LOGGER_NAME, "create rlc ue context, rnti = %d, pUeCtx = %p\n", rnti, pUeCtx);
         }
     }
 
     // create RX AM entity if not exists
     pRxAmEntity = RlcGetRxAmEntity(pUeCtx, pRlcDataInfo->lcId);
     if (pRxAmEntity == 0) {        
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], create rlc AM entity, rnti = %d, lcId = %d\n", __func__, rnti, pRlcDataInfo->lcId);
+        LOG_DBG(ULP_LOGGER_NAME, "create rlc AM entity, rnti = %d, lcId = %d\n", rnti, pRlcDataInfo->lcId);
         pRxAmEntity = RlcCreateRxAmEntity(pUeCtx, pRlcDataInfo->lcId);
         if (pRxAmEntity == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for RxAMEntity, rnti = %d, lcId = %d\n", __func__, rnti, pRlcDataInfo->lcId);
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for RxAMEntity, rnti = %d, lcId = %d\n", rnti, pRlcDataInfo->lcId);
             MemFree(pRlcDataInfo->rlcdataBuffer);
             return;
         }
@@ -374,7 +374,7 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
         if (amdHeader.rf) {
             // handle AMD PDU segment
-            LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO handle first AMD PDU segment, rnti = %d\n", __func__, rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "TODO handle first AMD PDU segment, rnti = %d\n", rnti);
             ret = RlcProcessAmdPduSegment(pAmdPdu, &amdHeader, pRlcDataInfo);
             // TODO
         } else {
@@ -392,21 +392,21 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     else 
     {
         if (pAmdPdu == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], pAmdPdu is null, could not happen! rnti = %d\n", __func__, rnti);
+            LOG_ERROR(ULP_LOGGER_NAME, "pAmdPdu is null, could not happen! rnti = %d\n", rnti);
             // any resource to free?
             MemFree(pRlcDataInfo->rlcdataBuffer);
             return;
         }
 
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], receive rlc segment, rnti = %d\n", __func__, rnti);
+        LOG_TRACE(ULP_LOGGER_NAME, "receive rlc segment, rnti = %d\n", rnti);
 
         if (amdHeader.rf) {
             // handle AMD segment
-            LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO handle AMD segment, rnti = %d\n", __func__, rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "TODO handle AMD segment, rnti = %d\n", rnti);
             ret = RlcProcessAmdPduSegment(pAmdPdu, &amdHeader, pRlcDataInfo);
             // TODO
         } else {
-            LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO handle last AMD PDU segment, rnti = %d\n", __func__, rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "TODO handle last AMD PDU segment, rnti = %d\n", rnti);
             pAmdPdu->status = PDU_AM_COMPLETE;            
         }
 
@@ -427,7 +427,7 @@ BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
     }
 
     if (pRlcDataInfo->length < 2) {
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], invalid length = %d\n", __func__, pRlcDataInfo->length);
+        LOG_WARN(ULP_LOGGER_NAME, "invalid length = %d\n", pRlcDataInfo->length);
         return FALSE;
     }
 
@@ -443,27 +443,27 @@ BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
         pAmdHeader->e  =  (data[i] >> 2 ) & 0x01U;
         pAmdHeader->sn = ( ( (data[i] & 0x03U) << 8 )| (data[i + 1] & 0xFFU) );
 
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], p = %d, sn = %d, e = %d, fi = %d\n",
-            __func__, pAmdHeader->p, pAmdHeader->sn, pAmdHeader->e, pAmdHeader->fi);
+        LOG_TRACE(ULP_LOGGER_NAME, "p = %d, sn = %d, e = %d, fi = %d\n",
+            pAmdHeader->p, pAmdHeader->sn, pAmdHeader->e, pAmdHeader->fi);
 
         /*Decode AMD PDU Segment*/    
         if ( pAmdHeader->rf ) {
             if (pRlcDataInfo->length < 4) {
-                LOG_WARN(ULP_LOGGER_NAME, "[%s], invalid length = %d\n", __func__, pRlcDataInfo->length);
+                LOG_WARN(ULP_LOGGER_NAME, "invalid length = %d\n", pRlcDataInfo->length);
                 return FALSE;
             }
             /* Get Last Segment Flag (LSF) field */
             pAmdHeader->lsf =  (data[i + 2] >> 7 ) & 0x01U;
             /* Get Segment Offset (SO) field */
             pAmdHeader->so  = ( ((UInt16)(data[i + 2] & 0x7FU ) << 8) | (data[i + 3] & 0xFFU )); 
-            LOG_TRACE(ULP_LOGGER_NAME, "[%s], lsf = %d, so = %d\n", __func__, pAmdHeader->lsf, pAmdHeader->so);
+            LOG_TRACE(ULP_LOGGER_NAME, "lsf = %d, so = %d\n", pAmdHeader->lsf, pAmdHeader->so);
         }
     } else {
         UInt8 cpt = (data[i] >> 4) & 0x07;
         UInt16 ackSn = 0;
     	if (cpt == 0) {
     		ackSn = ((data[i] & 0x0f) << 6) | ((data[i+1] >> 2) &0x3f);
-        	LOG_TRACE(ULP_LOGGER_NAME, "[%s], ackSn = %d\n", __func__, ackSn);
+        	LOG_TRACE(ULP_LOGGER_NAME, "ackSn = %d\n", ackSn);
     	}
     }
 
@@ -473,8 +473,8 @@ BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
 // ---------------------------------
 BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], sn = %d, fi = %d, e = %d, length = %d\n", 
-        __func__, pAmdHeader->sn, pAmdHeader->fi, pAmdHeader->e, pRlcDataInfo->length);
+    LOG_INFO(ULP_LOGGER_NAME, "sn = %d, fi = %d, e = %d, length = %d\n", 
+        pAmdHeader->sn, pAmdHeader->fi, pAmdHeader->e, pRlcDataInfo->length);
 
     BOOL ret = RLC_SUCCESS;
     AmdDFE *pDfe = 0 ;
@@ -482,7 +482,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     unsigned int segCount = ListCount(&pAmdPdu->segList);
 
     if (segCount) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], segCount = %d\n", __func__, segCount);
+        LOG_ERROR(ULP_LOGGER_NAME, "segCount = %d\n", segCount);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return RLC_FAILURE;
     }    
@@ -490,7 +490,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     // init pdu segment
     AmdPduSegment* pAmdPduSegment = (AmdPduSegment*)MemAlloc(sizeof(AmdPduSegment));
     if (pAmdPduSegment == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], Fail to create AmdPduSegment\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "Fail to create AmdPduSegment\n", __func__);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return RLC_FAILURE;
     }
@@ -502,7 +502,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     if (pAmdHeader->e == 0) {
         pDfe = (AmdDFE*)MemAlloc(sizeof(AmdDFE));
         if (pDfe == 0) {            
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory for AmdDFE\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AmdDFE\n", __func__);
             MemFree(pRlcDataInfo->rlcdataBuffer);
             MemFree(pAmdPduSegment);
             ListDeInit(&pAmdPduSegment->dfeQ);
@@ -520,7 +520,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
         // TODO
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], TODO\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "TODO\n", __func__);
     }
 
     ListPushNode(&pAmdPdu->segList, &pAmdPduSegment->node);
@@ -572,7 +572,7 @@ void RlcSetAmdPduAndDfeStatus(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, AmdDFE* pA
 // --------------------------------
 void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
 {
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, lcId = %d\n", __func__, sn, pRxAmEntity->rnti, pRxAmEntity->lcId);
+    LOG_DBG(ULP_LOGGER_NAME, "sn = %d, rnti = %d, lcId = %d\n", sn, pRxAmEntity->rnti, pRxAmEntity->lcId);
 
     UInt16 ringSn = sn & 511;
     RingNodeStatus rnStatus = RLC_GET_RX_AMD_PDU_STATUS(pRxAmEntity, ringSn);
@@ -582,7 +582,7 @@ void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
     if (rnStatus == RS_IN_USE) {
         pAmdPdu = RLC_GET_RX_AMD_PDU(pRxAmEntity, ringSn);
         if (pAmdPdu == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], pAmdPdu is null, sn = %d, rnti = %d, lcId = %d\n", __func__, sn, pRxAmEntity->rnti, pRxAmEntity->lcId);
+            LOG_ERROR(ULP_LOGGER_NAME, "pAmdPdu is null, sn = %d, rnti = %d, lcId = %d\n", sn, pRxAmEntity->rnti, pRxAmEntity->lcId);
             RLC_SET_RX_AMD_PDU_STATUS(pRxAmEntity, ringSn, RS_FREE);
         } else {
             if ((pAmdPdu->status == PDU_AM_COMPLETE) || (pAmdPdu->status == PDU_AM_SEGMENT_COMPLETE)) {
@@ -601,20 +601,20 @@ void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
                 RLC_SET_RX_AMD_PDU(pRxAmEntity, ringSn, 0);
                 RLC_SET_RX_AMD_PDU_STATUS(pRxAmEntity, ringSn, RS_FREE);
             } else {
-                LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, lcId = %d, pAmdPdu->status = %d\n",
-                    __func__, sn, pRxAmEntity->rnti, pRxAmEntity->lcId, pAmdPdu->status);
+                LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, lcId = %d, pAmdPdu->status = %d\n",
+                    sn, pRxAmEntity->rnti, pRxAmEntity->lcId, pAmdPdu->status);
             }
         }
     } else {
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, lcId = %d, ring node status = %d\n", 
-            __func__, sn, pRxAmEntity->rnti, pRxAmEntity->lcId, rnStatus);
+        LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, lcId = %d, ring node status = %d\n", 
+            sn, pRxAmEntity->rnti, pRxAmEntity->lcId, rnStatus);
     }
 }
 
 // --------------------------------
 void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdPduSeg = %p\n", __func__, sn, pRxAmEntity->rnti, pAmdPduSeg);
+    LOG_INFO(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdPduSeg = %p\n", sn, pRxAmEntity->rnti, pAmdPduSeg);
 
     RlcAmRawSdu* pRawSdu = &pRxAmEntity->rxRawSdu;
 
@@ -627,7 +627,7 @@ void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAm
                 RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
             }
         } else {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], pAmdDfe->buffer.pData is NULL\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME, "pAmdDfe->buffer.pData is NULL\n", __func__);
         }
         MemFree((void*)pAmdDfe);
         pAmdDfe = (AmdDFE*)ListPopNode(&pAmdPduSeg->dfeQ);
@@ -637,7 +637,7 @@ void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAm
 // --------------------------------
 void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdDfe->status = %d\n", __func__, sn, pRxAmEntity->rnti, pAmdDfe->status);
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
 
     RlcAmBuffer *pPrevBuffer = &(pRawSdu->rawSdu);
     RlcAmBuffer *pCurrBuffer = &(pAmdDfe->buffer);
@@ -647,12 +647,12 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
         switch(pAmdDfe->status) {
             case AM_PDU_MAP_SDU_END:
             {
-                LOG_DBG(ULP_LOGGER_NAME, "[%s], receive last SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
+                LOG_DBG(ULP_LOGGER_NAME, "receive last SDU segment, rnti = %d, sn = %d\n", pRxAmEntity->rnti, sn);
 
                 pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
                 if (pTmpBuffer == 0) {
-                    LOG_ERROR(ULP_LOGGER_NAME, "[%s], MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
-                        __func__, pPrevBuffer->pData, pCurrBuffer->pData);
+                    LOG_ERROR(ULP_LOGGER_NAME, "MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
+                        pPrevBuffer->pData, pCurrBuffer->pData);
                     return;
                 }
                 pPrevBuffer->size += pCurrBuffer->size;
@@ -668,12 +668,12 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
             case AM_PDU_MAP_SDU_MID:
             {                
-                LOG_DBG(ULP_LOGGER_NAME, "[%s], receive middle SDU segment, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
+                LOG_DBG(ULP_LOGGER_NAME, "receive middle SDU segment, rnti = %d, sn = %d\n", pRxAmEntity->rnti, sn);
 
                 pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
                 if (pTmpBuffer == 0) {
-                    LOG_ERROR(ULP_LOGGER_NAME, "[%s], AM_PDU_MAP_SDU_MID MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
-                        __func__, pPrevBuffer->pData, pCurrBuffer->pData);
+                    LOG_ERROR(ULP_LOGGER_NAME, "AM_PDU_MAP_SDU_MID MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
+                        pPrevBuffer->pData, pCurrBuffer->pData);
                     return;
                 }
                 pPrevBuffer->size += pCurrBuffer->size;
@@ -685,7 +685,7 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
             case AM_PDU_MAP_SDU_FULL:
             {
-                LOG_WARN(ULP_LOGGER_NAME, "[%s], receive single SDU, discard previous segments, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
+                LOG_WARN(ULP_LOGGER_NAME, "receive single SDU, discard previous segments, rnti = %d, sn = %d\n", pRxAmEntity->rnti, sn);
                 MemFree(pPrevBuffer->pData);
                 pPrevBuffer->pData = 0;
                 pPrevBuffer->size = 0;
@@ -697,7 +697,7 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
             default:
             {
-                LOG_WARN(ULP_LOGGER_NAME, "[%s], receive first SDU segment, discard previous segments, rnti = %d, sn = %d\n", __func__, pRxAmEntity->rnti, sn);
+                LOG_WARN(ULP_LOGGER_NAME, "receive first SDU segment, discard previous segments, rnti = %d, sn = %d\n", pRxAmEntity->rnti, sn);
                 MemFree(pPrevBuffer->pData);
                 pPrevBuffer->pData = pCurrBuffer->pData;
                 pPrevBuffer->size = pCurrBuffer->size;
@@ -707,8 +707,8 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             }
         }
     } else {
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], seq num not consecutive, discard previous received SDU segment, sn = %d, pRawSdu->sn = %d, rnti = %d\n",
-            __func__, sn, pRawSdu->sn, pRxAmEntity->rnti);
+        LOG_WARN(ULP_LOGGER_NAME, "seq num not consecutive, discard previous received SDU segment, sn = %d, pRawSdu->sn = %d, rnti = %d\n",
+            sn, pRawSdu->sn, pRxAmEntity->rnti);
         MemFree(pRawSdu->rawSdu.pData);
         pRawSdu->rawSdu.pData = 0;
         pRawSdu->rawSdu.size = 0;
@@ -720,7 +720,7 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 // --------------------------------
 void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], sn = %d, rnti = %d, pAmdDfe->status = %d\n", __func__, sn, pRxAmEntity->rnti, pAmdDfe->status);
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
 
     switch(pAmdDfe->status) {
         case AM_PDU_MAP_SDU_FULL:
@@ -731,7 +731,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 
         case AM_PDU_MAP_SDU_START:
         {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], save first SDU segment, sn = %d, rnti = %d, data size = %d\n", __func__, sn, pRxAmEntity->rnti, pAmdDfe->buffer.size);
+            LOG_DBG(ULP_LOGGER_NAME, "save first SDU segment, sn = %d, rnti = %d, data size = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->buffer.size);
             pRawSdu->sn = sn;
             pRawSdu->rawSdu.size = pAmdDfe->buffer.size;
             pRawSdu->rawSdu.pData = pAmdDfe->buffer.pData;
@@ -742,7 +742,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 
         default:
         {
-            LOG_WARN(ULP_LOGGER_NAME, "[%s], should not come here, status = %d, rnti = %d\n", __func__, pAmdDfe->status, pRxAmEntity->rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "should not come here, status = %d, rnti = %d\n", pAmdDfe->status, pRxAmEntity->rnti);
             MemFree(pAmdDfe->buffer.pData);
             break;
         }
@@ -752,7 +752,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 // --------------------------------
 void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->size);
+    LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, lcId = %d, data size = %d\n", pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->size);
 
     if (!IP_RLC_DATA_IND(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size)) {
         return;

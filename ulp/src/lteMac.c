@@ -98,7 +98,7 @@ typedef struct {
 } PhyDataIndNode;
 
 #ifndef OS_LINUX
-#define TASK_MAC_HANDLER_PRIORITY		3
+#define TASK_MAC_HANDLER_PRIORITY		5
 #define TASK_MAC_HANDLER_STACK_SIZE		(256*1024)
 #pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
 UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
@@ -116,7 +116,7 @@ void InitMacLayer(unsigned char standloneFlag)
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
         ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, 0);
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create mac handler task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n", __func__);
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -124,7 +124,7 @@ void InitMacLayer(unsigned char standloneFlag)
         threadParams.stack = gTaskMacHandlerStack;
         threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
         ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create mac handler task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n", __func__);
 #endif 
     }
 }
@@ -132,7 +132,7 @@ void InitMacLayer(unsigned char standloneFlag)
 // ---------------------------
 void* MacHandlerEntryFunc(void* p)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], Entry\n", __func__);
+    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n", __func__);
     UInt32 count;
     PhyDataIndNode* pPhyDataNode;
     unsigned int prevTime, curTime;
@@ -156,7 +156,7 @@ void* MacHandlerEntryFunc(void* p)
         }
 
         curTime = CSL_tscRead();
-    	LOG_WARN(ULP_LOGGER_NAME, "[%s], end scheduling, time = %d\n", __func__, (curTime - prevTime));
+    	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
     }
 }
 
@@ -174,7 +174,7 @@ void PhyUlDataInd(unsigned char* pBuffer, unsigned short length)
         return;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d\n", __func__, length);
+    LOG_TRACE(ULP_LOGGER_NAME, "length = %d\n", length);
     // LOG_BUFFER(pBuffer, length);
 
     if (gMacStandloneFlag) {
@@ -206,7 +206,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
 
     // pTmpBuffer += UL_SCH_IND_MSG_HEADER_LEN;
     
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], sfn = %d, sf = %d, numOfPDUs = %d\n", __func__, pRxUlSchInd->sfn, pRxUlSchInd->sf, pRxUlSchInd->numOfPDUs);
+    LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d\n", pRxUlSchInd->sfn, pRxUlSchInd->sf, pRxUlSchInd->numOfPDUs);
 
     while ((tempLen < length) && (numPdu < pRxUlSchInd->numOfPDUs)) {
         pUlSchPdu = (UlSchPdu*)(pBuffer + tempLen);
@@ -214,7 +214,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
         tempLen += pUlSchPdu->length;
         // check if PDU length valid
         if (tempLen > length) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], length = %d, tempLen = %d\n", __func__, length, tempLen);
+            LOG_ERROR(ULP_LOGGER_NAME, "length = %d, tempLen = %d\n", length, tempLen);
             break;
         }
 
@@ -231,7 +231,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
     if (pMsgHead->opc == RX_ULSCH_INDICATION) {
     	pUlIndHead = (S_UlIndHead*)(pBuffer + tempLen);
     	tempLen += sizeof(S_UlIndHead);
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], sfn = %d, sf = %d, numOfPDUs = %d\n", __func__, pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs);
+        LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs);
 
 		while ((tempLen < length) && (numPdu < pUlIndHead->numOfPDUs)) {
 			pUlSchPduHead = (S_RxUlschIndHeadPdu*)(pBuffer + tempLen);
@@ -239,7 +239,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
 
 			// check if PDU length valid
 			if (tempLen > length) {
-				LOG_ERROR(ULP_LOGGER_NAME, "[%s], length = %d, tempLen = %d\n", __func__, length, tempLen);
+				LOG_ERROR(ULP_LOGGER_NAME, "length = %d, tempLen = %d\n", length, tempLen);
 				break;
 			}
 
@@ -251,7 +251,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
 
 				MacProcessUlSchPdu(&ulSchPdu);
 			} else {
-		    	LOG_ERROR(ULP_LOGGER_NAME, "[%s], crc error, ignore it, rnti = %d\n", __func__, pUlSchPduHead->RNTI);
+		    	LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
 			}
 
 			tempLen += (pUlSchPduHead->wordLen << 2);
@@ -259,7 +259,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
 		}
 
     } else {
-    	LOG_ERROR(ULP_LOGGER_NAME, "[%s], unsupported opc = %d\n", __func__, pMsgHead->opc);
+    	LOG_ERROR(ULP_LOGGER_NAME, "unsupported opc = %d\n", pMsgHead->opc);
     }
 #endif
 
@@ -268,7 +268,7 @@ void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
 // ---------------------------
 void MacProcessUlSchPdu(UlSchPdu* pPdu)
 {
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, length = %d\n", __func__, pPdu->rnti, pPdu->length);
+    LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, length = %d\n", pPdu->rnti, pPdu->length);
     if ((pPdu->buffer == 0) || (pPdu->length == 0)) {
         return;
     }
@@ -299,7 +299,7 @@ void MacProcessUlSchPdu(UlSchPdu* pPdu)
 
         localLength = 0;
 
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], lcId = %d, extnFlag = %d\n", __func__, lcId, extnFlag);
+        LOG_TRACE(ULP_LOGGER_NAME, "lcId = %d, extnFlag = %d\n", lcId, extnFlag);
 
         switch (lcId) {
             case MAC_UL_CCCH_LCH:
@@ -404,7 +404,7 @@ void MacProcessUlSchPdu(UlSchPdu* pPdu)
         if(remainingPayloadLength < 0)
         {
             successDecodeFlag = FALSE;
-            LOG_ERROR(ULP_LOGGER_NAME,"[%s], Invalid remainingPayloadLength = %d\n", __func__, remainingPayloadLength);
+            LOG_ERROR(ULP_LOGGER_NAME,"Invalid remainingPayloadLength = %d\n", remainingPayloadLength);
         }
         pData++;
 
@@ -413,7 +413,7 @@ void MacProcessUlSchPdu(UlSchPdu* pPdu)
     if (successDecodeFlag) {
         MacDeMultiplexAndSend(pDemuxData, pPdu->buffer, pData, pPdu->length, pPdu->rnti, pos, dataPtrPos);
     } else {
-        LOG_ERROR(ULP_LOGGER_NAME,"[%s], fail to decode the mac pdu\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME,"fail to decode the mac pdu\n", __func__);
     }
 }
 
@@ -451,7 +451,7 @@ void MacProcessMacLcId( UInt8 startPaddingFlag,
 
     if(*localLength != 0) {
         if(*pos < MAX_NUM_CHANNELS) {
-            LOG_DBG(ULP_LOGGER_NAME, "[%s], lcId = %d, length = %d\n", __func__, lcId, *localLength);
+            LOG_DBG(ULP_LOGGER_NAME, "lcId = %d, length = %d\n", lcId, *localLength);
             (demuxData_p + *pos)->lchId = lcId;
             (demuxData_p + *pos)->length =  *localLength;
             *pos += 1;
@@ -498,7 +498,7 @@ void MacProcessUlCcchLch(UInt8 startPaddingFlag,
 
     if(*localLength != 0) {
         if(*pos < MAX_NUM_CHANNELS) {
-            LOG_TRACE(ULP_LOGGER_NAME, "[%s], lcId = %d, length = %d\n", __func__, MAC_UL_CCCH_LCH, *localLength);
+            LOG_TRACE(ULP_LOGGER_NAME, "lcId = %d, length = %d\n", MAC_UL_CCCH_LCH, *localLength);
             (demuxData_p + *pos)->lchId = MAC_UL_CCCH_LCH;
             (demuxData_p + *pos)->length =  *localLength;
             *pos += 1;
@@ -565,7 +565,7 @@ void MacProcessShortOrTruncatedBsr(SInt32 *remainingPayloadLength,
     UInt32 *dataPtrPos,
     UInt32 lcId)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], remainingPayloadLength = %d\n", __func__, *remainingPayloadLength);
+    LOG_TRACE(ULP_LOGGER_NAME, "remainingPayloadLength = %d\n", *remainingPayloadLength);
     if(*remainingPayloadLength < SHORT_BSR_MAC_CE_LENGTH)
     {
         *sucessDecodeFlag = FALSE;
@@ -702,19 +702,19 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     pMacUeDataInd->rnti = recvdRNTI;
     pMacUeDataInd->rlcData = 0;
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], origDataPtr_p = %p, dataPtr_p = %p, length = %d, recvdRNTI = %d, dataPtrPos = %d\n", 
-        __func__, origDataPtr_p, dataPtr_p, length, recvdRNTI, dataPtrPos);
+    LOG_TRACE(ULP_LOGGER_NAME, "origDataPtr_p = %p, dataPtr_p = %p, length = %d, recvdRNTI = %d, dataPtrPos = %d\n", 
+        origDataPtr_p, dataPtr_p, length, recvdRNTI, dataPtrPos);
 
     for (idx=0; idx < pos && (pos <= MAX_NUM_CHANNELS); idx++) {
         lchId  = (demuxData_p + idx)->lchId;
         lcIdSduLen = (demuxData_p + idx)->length;
 
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], lchId = %d, lcIdSduLen = %d\n", __func__, lchId, lcIdSduLen);
+        LOG_TRACE(ULP_LOGGER_NAME, "lchId = %d, lcIdSduLen = %d\n", lchId, lcIdSduLen);
 
         switch(lchId) {
             case MAC_UL_CCCH_LCH:
             {
-                LOG_DBG(ULP_LOGGER_NAME, "[%s], TODO, MAC_UL_CCCH_LCH\n", __func__);
+                LOG_DBG(ULP_LOGGER_NAME, "TODO, MAC_UL_CCCH_LCH\n", __func__);
                 gLteKpi.lcIdArray[lchId]++;
                 return;
             }
@@ -748,7 +748,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                 UInt16 bsrVal = (*dataPtr_p & 0x3F);
                 UInt32 shortBSRLcgId = ((*dataPtr_p & 0xC0)>>6);
 
-                LOG_TRACE(ULP_LOGGER_NAME, "[%s], bsrVal = %d, shortBSRLcgId = %d\n", __func__, bsrVal, shortBSRLcgId);
+                LOG_TRACE(ULP_LOGGER_NAME, "bsrVal = %d, shortBSRLcgId = %d\n", bsrVal, shortBSRLcgId);
 
                 dataPtrPos = dataPtrPos + lcIdSduLen;
                 /*increment data pointer to point to next SDU*/
@@ -771,7 +771,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                 UInt8 bsrVal3 = (*dataPtr_p & 0x3F);
                 dataPtr_p++;
 
-                LOG_TRACE(ULP_LOGGER_NAME, "[%s], bsrVal0 = %d, bsrVal1 = %d, bsrVal2 = %d, bsrVal3 = %d\n", __func__, bsrVal0, bsrVal1, bsrVal2, bsrVal3);
+                LOG_TRACE(ULP_LOGGER_NAME, "bsrVal0 = %d, bsrVal1 = %d, bsrVal2 = %d, bsrVal3 = %d\n", bsrVal0, bsrVal1, bsrVal2, bsrVal3);
 
                 dataPtrPos = dataPtrPos + lcIdSduLen;      
                 break;
@@ -780,7 +780,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
             case MAC_POWER_HEAD_LCH:
             {
                 UInt8 ph = *dataPtr_p & 0x3F;
-                LOG_TRACE(ULP_LOGGER_NAME, "[%s], ph = %d\n", __func__, ph);
+                LOG_TRACE(ULP_LOGGER_NAME, "ph = %d\n", ph);
 
                 dataPtrPos = dataPtrPos + lcIdSduLen;
                 dataPtr_p++;
@@ -814,11 +814,11 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
 {
     RlcUlDataInfo *rlcLCIdData_p = 0;
 
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], *dataPtrPos = %d, length = %d, lchId = %d\n", __func__, *dataPtrPos, length, lchId);
+    LOG_DBG(ULP_LOGGER_NAME, "*dataPtrPos = %d, length = %d, lchId = %d\n", *dataPtrPos, length, lchId);
 
     if (*lcIdx >= MAX_NUM_UL_PKTS) {
         //TODO
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], invalid *lcIdx = %d\n", __func__, *lcIdx);
+        LOG_WARN(ULP_LOGGER_NAME, "invalid *lcIdx = %d\n", *lcIdx);
     } else {
         *ulDataReceivedFlag = TRUE;
 

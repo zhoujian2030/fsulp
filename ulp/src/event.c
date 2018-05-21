@@ -12,7 +12,7 @@
 int EventInit(Event* pEvent)
 {
     if (pEvent == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
+        LOG_ERROR(ULP_LOGGER_NAME, "pEvent is null\n", __func__); 
         return 1;
     }
 
@@ -21,12 +21,12 @@ int EventInit(Event* pEvent)
     if (result == 0) {
         result = pthread_cond_init(&pEvent->condition, 0);
         if (result != 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to init pthread_cond_t\n", __func__); 
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to init pthread_cond_t\n", __func__); 
             pthread_mutex_destroy(&pEvent->mutex);
             return 1;
         }
     } else {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to init pthread_mutex_t\n", __func__); 
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to init pthread_mutex_t\n", __func__); 
         return 1;
     }
 
@@ -46,12 +46,12 @@ int EventInit(Event* pEvent)
 void EventDeInit(Event* pEvent)
 {
     if (pEvent == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
+        LOG_ERROR(ULP_LOGGER_NAME, "pEvent is null\n", __func__); 
         return;
     }
 
 #ifdef OS_LINUX
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p, setFlag = %d\n", __func__, pEvent, pEvent->setFlag); 
+    LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p, setFlag = %d\n", pEvent, pEvent->setFlag); 
 
     pthread_mutex_destroy(&pEvent->mutex);
     pthread_cond_destroy(&pEvent->condition);
@@ -65,23 +65,23 @@ void EventDeInit(Event* pEvent)
 int EventWait(Event* pEvent)
 {
     if (pEvent == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
+        LOG_ERROR(ULP_LOGGER_NAME, "pEvent is null\n", __func__); 
         return 1;
     }
 
 #ifdef OS_LINUX
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p, setFlag = %d\n", __func__, pEvent, pEvent->setFlag); 
+    LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p, setFlag = %d\n", pEvent, pEvent->setFlag); 
 
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to lock on mutex\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to lock on mutex\n", __func__);
         return 1;
     }
 
     while (!pEvent->setFlag) {       
         result = pthread_cond_wait(&pEvent->condition, &pEvent->mutex);
         if (result != 0) {
-            LOG_ERROR(ULP_LOGGER_NAME,  "[%s], fail to wait on condition\n", __func__);
+            LOG_ERROR(ULP_LOGGER_NAME,  "fail to wait on condition\n", __func__);
             pthread_mutex_unlock(&pEvent->mutex);
             return 1;
         }
@@ -101,23 +101,23 @@ int EventWait(Event* pEvent)
 int EventSend(Event* pEvent)
 {
     if (pEvent == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pEvent is null\n", __func__); 
+        LOG_ERROR(ULP_LOGGER_NAME, "pEvent is null\n", __func__); 
         return 1;
     }
 
 #ifdef OS_LINUX
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pEvent = %p\n", __func__, pEvent);
+    LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p\n", pEvent);
     
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to lock on mutex\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to lock on mutex\n", __func__);
         return 1;
     }        
 
     pEvent->setFlag = 1;
     result = pthread_cond_signal(&pEvent->condition);
     if (result != 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to signal\n", __func__);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to signal\n", __func__);
         return 1;
     }
 

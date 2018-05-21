@@ -130,7 +130,7 @@ void ListDeleteNode(List *pList, ListNode* pNode)
             if (found) {
                 DeleteNode(pList, tmpNode);
             } else {
-                LOG_ERROR(ULP_LOGGER_NAME, "[%s], pNode = %p is not found in pList = %p\n", __func__, pNode, pList);
+                LOG_ERROR(ULP_LOGGER_NAME, "pNode = %p is not found in pList = %p\n", pNode, pList);
             }
 
             if (pList->mtFlag) {
@@ -218,11 +218,11 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         pList->node.next = 0;
         pList->node.prev = 0;
         ret = 1;
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], list count is 0, pNode = %p\n", __func__, pNode);
+        LOG_ERROR(ULP_LOGGER_NAME, "list count is 0, pNode = %p\n", pNode);
     } else if(pList->count == 1) {
         if((pNode->prev != 0) || (pNode->next != 0) || (pList->node.prev != pNode) || (pList->node.next != pNode)) {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pNode = %p, pNode->prev = %p, pNode->next = %p, pList->node.prev = %p, pList->node.next = %p\n", 
-                __func__, pNode, pNode->prev, pNode->next, pList->node.prev, pList->node.next);
+            LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->prev = %p, pNode->next = %p, pList->node.prev = %p, pList->node.next = %p\n", 
+                pNode, pNode->prev, pNode->next, pList->node.prev, pList->node.next);
             ret = 1;
         } else {
             pList->node.next = 0;
@@ -235,8 +235,8 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         if((pNode->next == 0) && (pNode->prev != 0)) {
             /** Last in List **/
             if((pList->node.prev != pNode) || (pList->node.prev->prev != pNode->prev)) {
-                LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pNode = %p, pNode->prev = %p, pList->node.prev = %p, pList->node.prev->prev = %p\n", 
-                    __func__, pNode, pNode->prev, pList->node.prev, pList->node.prev->prev);
+                LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->prev = %p, pList->node.prev = %p, pList->node.prev->prev = %p\n", 
+                    pNode, pNode->prev, pList->node.prev, pList->node.prev->prev);
                 ret = 1;
             } else {
                 pList->node.prev = pNode->prev;
@@ -248,8 +248,8 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         } else if((pNode->next != 0) && (pNode->prev == 0)) {
             /** First in List **/
             if((pList->node.next != pNode) || (pList->node.next->next != pNode->next)) {
-                LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pNode = %p, pNode->next = %p, pList->node.next = %p, pList->node.next->next = %p\n", 
-                    __func__, pNode, pNode->next, pList->node.next, pList->node.next->next);
+                LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->next = %p, pList->node.next = %p, pList->node.next->next = %p\n", 
+                    pNode, pNode->next, pList->node.next, pList->node.next->next);
                 ret = 1;
             } else {
                 pList->node.next = pNode->next;
@@ -261,8 +261,8 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         } else if((pNode->next != 0)&&(pNode->prev != 0)) {
             /** middle in List **/
             if((pNode->next->prev != pNode)||(pNode->prev->next != pNode)) {
-                LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pNode = %p, pNode->next->prev = %p, pNode->prev->next = %p\n", 
-                    __func__, pNode, pNode->next->prev, pNode->prev->next);
+                LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->next->prev = %p, pNode->prev->next = %p\n", 
+                    pNode, pNode->next->prev, pNode->prev->next);
                 ret = 1;
             } else {
                 pNode->next->prev = pNode->prev;
@@ -274,8 +274,8 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         }
         else
         {
-            LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pNode = %p, pNode->next = %p, pNode->prev = %p, pList->count = %d\n", 
-                __func__, pNode, pNode->next, pNode->prev, pList->count);
+            LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->next = %p, pNode->prev = %p, pList->count = %d\n", 
+                pNode, pNode->next, pNode->prev, pList->count);
             ret = 1;
         }
     }

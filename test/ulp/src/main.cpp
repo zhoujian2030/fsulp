@@ -20,7 +20,7 @@ void Test_Rlc_SDU_2_Segment();
 
 // --------------------------
 int main(int argc, char* argv[]) {
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], main entry\n", __func__);
+    LOG_DBG(ULP_LOGGER_NAME, "main entry\n", __func__);
 
     gLogLevel = 2
 

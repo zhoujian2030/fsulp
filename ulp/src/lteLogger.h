@@ -211,7 +211,6 @@ int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName,
 int WriteBuffer(const char* pData, unsigned int dataLen);
 
 void NotifyLogHandler();
-void SendLogData();
 
 #define LOG_TRACE(moduleId,fmt,args...){\
         if((unsigned int)LOG_LEVEL_TRACE >= gLogLevel)\

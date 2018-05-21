@@ -20,11 +20,11 @@ void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size);
 void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
 {
     if ((pData == 0) || (size == 0)) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], pData = %p, rnti = %d, lcId = %d, data size = %d\n", __func__, pData, rnti, lcId, size);
+        LOG_ERROR(ULP_LOGGER_NAME, "pData = %p, rnti = %d, lcId = %d, data size = %d\n", pData, rnti, lcId, size);
         return;
     }
 
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
+    LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, lcId = %d, data size = %d\n", rnti, lcId, size);
     LOG_BUFFER(pData, size);
 
     if (lcId <= 2) {
@@ -38,7 +38,7 @@ void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData
 void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
     UInt16 sn = pData[0] & PDCP_TS_PDU_SRB_SN_MASK;
-    LOG_DBG(ULP_LOGGER_NAME, "[%s], rnti = %d, lcId = %d, data size = %d, sn = %d\n", __func__, rnti, lcId, size, sn);
+    LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, lcId = %d, data size = %d, sn = %d\n", rnti, lcId, size, sn);
 
     if (lcId < 2) {
         // remove one byte header and send to RRC
@@ -49,7 +49,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
         PdcpUeSrbDataInd(rnti, lcId, pData, size-1);
     } else {
         // data is ciphered
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], TODO, data is ciphered ??\n", __func__);
+        LOG_TRACE(ULP_LOGGER_NAME, "TODO, data is ciphered ??\n", __func__);
         if (pData != 0) {
             MemFree(pData);
         }
@@ -59,7 +59,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 // -----------------------------
 void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
-    LOG_WARN(ULP_LOGGER_NAME, "[%s], TODO, rnti = %d, lcId = %d, data size = %d\n", __func__, rnti, lcId, size);
+    LOG_WARN(ULP_LOGGER_NAME, "TODO, rnti = %d, lcId = %d, data size = %d\n", rnti, lcId, size);
 
 
     if (pData != 0) {

@@ -88,7 +88,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg( LIBLTE_BIT_MSG_
         	liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr,
                                                     &ul_info_transfer->dedicated_info);
         }else{
-            printf("[%s], Invalid dedicated_info_type = %d\n", __func__, ul_info_transfer->dedicated_info_type);
+            printf("Invalid dedicated_info_type = %d\n", ul_info_transfer->dedicated_info_type);
         }
 
         liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);

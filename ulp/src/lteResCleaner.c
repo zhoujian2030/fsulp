@@ -21,7 +21,7 @@ void* ResCleanerEntryFunc(void* p);
 void ExecuteCleanup();
 
 #ifndef OS_LINUX
-#define TASK_RESOURCE_CLEANER_PRIORITY		2
+#define TASK_RESOURCE_CLEANER_PRIORITY		3
 #define TASK_RESOURCE_CLEANER_STACK_SIZE	(32*1024)
 #pragma DATA_SECTION(gTaskResCleanerStack, ".ulpdata");
 UInt8 gTaskResCleanerStack[TASK_RESOURCE_CLEANER_STACK_SIZE];
@@ -37,7 +37,7 @@ void InitResCleaner(unsigned char startResCleanerFlag)
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
         ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, 0);
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], Create resource cleaner task\n", __func__);
+        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task\n", __func__);
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -60,7 +60,7 @@ void NotifyResCleaner()
 // ---------------------------------
 void* ResCleanerEntryFunc(void* p)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], Entry\n", __func__);
+    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n", __func__);
     
     while (1) {
         EventWait(&gCleanupEvent);
@@ -75,13 +75,13 @@ void ExecuteCleanup()
     UInt32 rlcCtxCount = ListCount(&gRlcUeContextList);
     RlcUeContext* pRlcUeCtx;
     
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], rlcCtxCount = %d\n", __func__, rlcCtxCount);
+    LOG_TRACE(ULP_LOGGER_NAME, "rlcCtxCount = %d\n", rlcCtxCount);
 
     if (rlcCtxCount > 0) {
         pRlcUeCtx = (RlcUeContext*)ListGetFirstNode(&gRlcUeContextList);
         while (pRlcUeCtx != 0) {
             if (pRlcUeCtx->idleCount >= MAC_IDLE_COUNT) {
-                LOG_DBG(ULP_LOGGER_NAME, "[%s], clean RLC UE context, rnti = %d\n", __func__, pRlcUeCtx->rnti);
+                LOG_DBG(ULP_LOGGER_NAME, "clean RLC UE context, rnti = %d\n", pRlcUeCtx->rnti);
                 RlcDeleteUeContext(pRlcUeCtx);
             } else {
                 RlcUpdateUeContextTime(pRlcUeCtx, 1);

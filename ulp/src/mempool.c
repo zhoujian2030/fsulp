@@ -82,7 +82,7 @@ void InitMemPool()
         NUM_MEM_BLOCK += gMemPoolConfig[i].num;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], NUM_MEM_BLOCK = %d\n", __func__, NUM_MEM_BLOCK); 
+    LOG_TRACE(ULP_LOGGER_NAME, "NUM_MEM_BLOCK = %d\n", NUM_MEM_BLOCK); 
 }
 
 // --------------------------------
@@ -107,8 +107,8 @@ inline int findMatchPool(unsigned int size) {
     unsigned int i = 0;
     for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
         if (size <= gMemPoolConfig[i].size) {
-            LOG_TRACE(ULP_LOGGER_NAME, "[%s], find poolId = %d, pool size = %d, actual size = %d\n", 
-                __func__, i, gMemPoolConfig[i].size, size);
+            LOG_TRACE(ULP_LOGGER_NAME, "find poolId = %d, pool size = %d, actual size = %d\n", 
+                i, gMemPoolConfig[i].size, size);
             return i;
         }
     }
@@ -121,7 +121,7 @@ unsigned char* MemAlloc(unsigned int length)
 {
     int poolId = findMatchPool(length);
     if (poolId < 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], fail to allocate memory from pool, length = %d\n", __func__, length);
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory from pool, length = %d\n", length);
         return 0;
     }
 
@@ -132,18 +132,18 @@ unsigned char* MemAlloc(unsigned int length)
             break;
         }
 
-        LOG_DBG(ULP_LOGGER_NAME, "[%s], No available node in pool[%d]\n", __func__, poolId);
+        LOG_DBG(ULP_LOGGER_NAME, "No available node in pool[%d]\n", poolId);
 
         poolId++;
     }   
 
     if (pNode != 0) {
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], length = %d, pBuffer = %p, mem size = %d\n", 
-            __func__, length, pNode->pData, pNode->size);
+        LOG_TRACE(ULP_LOGGER_NAME, "length = %d, pBuffer = %p, mem size = %d\n", 
+            length, pNode->pData, pNode->size);
         pNode->length = length;
         return pNode->pData;
     } else {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], no available node, length = %d\n", __func__, length);
+        LOG_ERROR(ULP_LOGGER_NAME, "no available node, length = %d\n", length);
         return 0;
     }    
 }
@@ -152,13 +152,13 @@ unsigned char* MemAlloc(unsigned int length)
 inline MemNode* CheckNode(void* pBuffer)
 {
     if (pBuffer == 0) {
-         LOG_ERROR(ULP_LOGGER_NAME, "[%s], pBuffer is null\n", __func__);
+         LOG_ERROR(ULP_LOGGER_NAME, "pBuffer is null\n", __func__);
          return 0;
     }
 
     MemNode* pNode = (MemNode*)((unsigned char*)pBuffer - MEM_NODE_SIZE);
     if ((pNode == 0) || (pNode->magicNo != MAGIC_NUMBER) || (pNode->poolId >= MAX_NUM_POOL_SIZE)) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid MemNode  = %p\n", __func__, pNode);
+        LOG_ERROR(ULP_LOGGER_NAME, "invalid MemNode  = %p\n", pNode);
         return 0;
     }    
 
@@ -171,8 +171,8 @@ void MemFree(void* pBuffer)
 {
     MemNode* pNode = CheckNode(pBuffer);
     if (pNode) {
-        LOG_TRACE(ULP_LOGGER_NAME, "[%s], free memory, length = %d, poolId = %d\n", 
-            __func__, pNode->length, pNode->poolId);
+        LOG_TRACE(ULP_LOGGER_NAME, "free memory, length = %d, poolId = %d\n", 
+            pNode->length, pNode->poolId);
         pNode->length = 0;
         ListPushNode(&gMemPool.pool[pNode->poolId], &pNode->node);
     }
@@ -205,7 +205,7 @@ unsigned int MemGetSize(void* pBuffer)
 // ----------------------------------
 unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pSrcBuffer = %p, pDstBuffer = %p\n", __func__, pSrcBuffer, pDstBuffer);
+    LOG_TRACE(ULP_LOGGER_NAME, "pSrcBuffer = %p, pDstBuffer = %p\n", pSrcBuffer, pDstBuffer);
 
     MemNode* pSrcNode = CheckNode(pSrcBuffer);
     MemNode* pDstNode = CheckNode(pDstBuffer);    
@@ -213,7 +213,7 @@ unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer)
 
     if (pSrcNode != 0 && pDstNode != 0) {
         if (pSrcNode->size >= (pSrcNode->length + pDstNode->length)) {
-            LOG_TRACE(ULP_LOGGER_NAME, "[%s], copy data to pSrcBuffer\n", __func__);
+            LOG_TRACE(ULP_LOGGER_NAME, "copy data to pSrcBuffer\n", __func__);
             memcpy(pSrcBuffer + pSrcNode->length, pDstBuffer, pDstNode->length);
             pSrcNode->length += pDstNode->length;
             MemFree(pDstBuffer);
@@ -246,25 +246,25 @@ unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer)
 // ---------------------------------
 int MemRemove(unsigned char* pBuffer, unsigned int where, unsigned int count)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "[%s], pBuffer = %p, where = %d, count = %d\n", 
-        __func__, pBuffer, where, count);
+    LOG_TRACE(ULP_LOGGER_NAME, "pBuffer = %p, where = %d, count = %d\n", 
+        pBuffer, where, count);
 
     MemNode* pNode = CheckNode(pBuffer);
 
     if (pNode == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "[%s], invalid pBuffer = %p\n", __func__, pBuffer);
+        LOG_ERROR(ULP_LOGGER_NAME, "invalid pBuffer = %p\n", pBuffer);
         return 0;
     }
 
     if (where >= pNode->length) {
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], no data to be removed, length = %d, where = %d\n", 
-            __func__, pNode->length, where);
+        LOG_WARN(ULP_LOGGER_NAME, "no data to be removed, length = %d, where = %d\n", 
+            pNode->length, where);
         return 0;
     }
 
     if (count > (pNode->length - where)) {
         count = pNode->length - where;
-        LOG_WARN(ULP_LOGGER_NAME, "[%s], count is too big, change to %d\n", __func__, count);
+        LOG_WARN(ULP_LOGGER_NAME, "count is too big, change to %d\n", count);
     } else {
         memmove(pBuffer + where, pBuffer + where + count, pNode->length - where - count);
     }

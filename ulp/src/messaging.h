@@ -71,6 +71,8 @@ int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length);
 void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsigned int* pBufferLen);
 int MessageQSendByFd(MessageQueue* pMsgQueue, void* pFd, unsigned int length);
 
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer);
+
 #endif
 
 

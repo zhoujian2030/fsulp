@@ -15,7 +15,8 @@
 #include <string.h>
 #endif
 
-void ProcessLogData(char* pData, unsigned int length);
+void ProcessLogData();
+void SendLogData(char* pData, unsigned int length);
 int BuildLogItemData(LogData* pLogData, LogFormatData* pLogItem);
 
 #ifndef OS_LINUX
@@ -106,12 +107,12 @@ void* LogHandlerEntryFunc(void* p)
     while (1) {
         EventWait(&gLogEvent);
 
-        SendLogData();
+        ProcessLogData();
     }
 }
 
 // -------------------------------
-void SendLogData()
+void ProcessLogData()
 {
 	LogData logData;
 	logData.logType = 1;
@@ -137,14 +138,14 @@ void SendLogData()
 	}
 
 	if (logData.length > 0) {
-		ProcessLogData((char*)&logData, logData.length + 4);
+		SendLogData((char*)&logData, logData.length + 4);
 	}
 }
 
 #endif
 
 // -------------------------------
-void ProcessLogData(char* pData, unsigned int length)
+void SendLogData(char* pData, unsigned int length)
 {
 #ifdef RUN_ON_STANDALONE_CORE
 	MessageQSend(&gSendLogMsgQ, (char*)pData, length);
@@ -231,6 +232,7 @@ int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName,
 
 	va_start(args, fmt);
 	for (i=0; i<MAX_LOG_PARAM_NUM; i++) {
+		// NOT support log string type when the string value is a local tmp var within function !!!!
 		pLogData->value[i] = va_arg(args, unsigned int);
 	}
 	va_end(args);

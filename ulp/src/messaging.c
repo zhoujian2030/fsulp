@@ -17,17 +17,17 @@ void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsi
 	void* pQmssFd = 0;
 
 	if (pMsgQueue == 0 || pBuffer == 0 || pBufferLen == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pMsgQueue = %p, pBuffer = %p, bufferLen = %p\n", __func__, pMsgQueue, pBuffer, pBufferLen);
+		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pBuffer = %p, bufferLen = %p\n", pMsgQueue, pBuffer, pBufferLen);
 		return pQmssFd;
 	}
 
 	if (Qmss_getQueueEntryCount(pMsgQueue->qid) <= 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], Qmss_getQueueEntryCount error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_getQueueEntryCount error\n", __func__);
 		return pQmssFd;
 	}
 
 	if ((pQmssFd = Qmss_queuePop(pMsgQueue->qid)) == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], Qmss_queuePop error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "Qmss_queuePop error\n", __func__);
 		return pQmssFd;
 	}
 
@@ -40,7 +40,7 @@ void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsi
 int MessageQSendByFd(MessageQueue* pMsgQueue, void* pFd, unsigned int length)
 {
 	if (pMsgQueue == 0 || pFd == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pMsgQueue = %p, pFd = %p\n", __func__, pMsgQueue, pFd);
+		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pFd = %p\n", pMsgQueue, pFd);
 		return 0;
 	}
 
@@ -64,7 +64,7 @@ int MessageQSendByFd(MessageQueue* pMsgQueue, void* pFd, unsigned int length)
 int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
 {
 	if (pMsgQueue == 0 || pBuffer == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], pMsgQueue = %p, pBuffer = %p\n", __func__, pMsgQueue, pBuffer);
+		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pBuffer = %p\n", pMsgQueue, pBuffer);
 		return 0;
 	}
 
@@ -73,19 +73,43 @@ int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
 	unsigned int qmssBuffLen = 0;
 
 	if ((pQmssFd = MessageQGetFreeTxFd(pMsgQueue, &pQmssDataBuff, &qmssBuffLen)) == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "[%s], MessageQGetFreeTxFd error\n", __func__);
+		LOG_ERROR(ULP_LOGGER_NAME, "MessageQGetFreeTxFd error\n", __func__);
 		return 0;
 	}
 
-	if (length > qmssBuffLen) {
-//		LOG_WARN(ULP_LOGGER_NAME, "[%s], length[%d] exceeds qmssBuffLen[%d]\n", __func__, length, qmssBuffLen);
+//	if (length > qmssBuffLen) {
+//		LOG_WARN(ULP_LOGGER_NAME, "length[%d] exceeds qmssBuffLen[%d]\n", length, qmssBuffLen);
 //		length = qmssBuffLen;
-	}
+//	}
 
 	memcpy(pQmssDataBuff, pBuffer, length);
-//	pQmssDataBuff[length-1] = '\0';
 
 	return MessageQSendByFd(pMsgQueue, pQmssFd, length);
+}
+
+// ----------------------------
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer)
+{
+	unsigned int length = 0;
+
+	if (pMsgQueue == 0 || pBuffer ==  0) {
+		return length;
+	}
+
+	void* pQmssFd = 0;
+	unsigned int queueCount = Qmss_getQueueEntryCount(pMsgQueue->qid);
+	if (queueCount == 0) {
+		return length;
+	}
+
+	pQmssFd = Qmss_queuePop(pMsgQueue->qid);
+	if (pQmssFd == 0) {
+		return length;
+	}
+
+	Cppi_getData (Cppi_DescType_HOST, (Cppi_Desc*)pQmssFd, &pBuffer, &length);
+
+	return length;
 }
 
 #endif
