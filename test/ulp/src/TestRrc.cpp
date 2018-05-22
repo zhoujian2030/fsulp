@@ -539,12 +539,15 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
 
     KpiRefresh();
+
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
     ASSERT_EQ((int)gLteKpi.mem, 1);
     pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
     ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
     ASSERT_EQ((int)pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE);
-    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_TRACKING_AREA_UPDATE_REQUEST);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_TRACKING_AREA_UPDATE_REQUEST);    
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 1); 
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsi, 0xc81b6259);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }

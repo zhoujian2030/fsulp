@@ -1208,3 +1208,43 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_ext_service_request_msg(LIBLTE_SIMPLE_BYTE_M
 
     return(err);
 }
+
+// -------------------------------------------
+LIBLTE_ERROR_ENUM liblte_mme_unpack_tau_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_TAU_REQ_STRUCT *tau_req)
+{
+    // refer to 3gpp 24.301 8.2.29
+    LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
+    uint8             *msg_ptr = msg->msg;
+    uint8              sec_hdr_type;
+
+    if(msg != NULL && tau_req != NULL)
+    {
+        // Security Header Type
+        sec_hdr_type = (msg->msg[0] & 0xF0) >> 4;
+        if (LIBLTE_MME_SECURITY_HDR_TYPE_PLAIN_NAS == sec_hdr_type) {
+            msg_ptr++;
+        } else {
+            msg_ptr += 7;
+        }
+
+        // Skip Message Type
+        msg_ptr++;
+
+        // eps update type
+        tau_req->eps_update_type.value = *msg_ptr & 0x07;
+        tau_req->eps_update_type.activeFlag = (*msg_ptr & 0x08) >> 3;
+        //NAS Key Set Identifier
+        liblte_mme_unpack_nas_key_set_id_ie(&msg_ptr, 4, &tau_req->nas_ksi);
+        msg_ptr++;
+
+        // EPS Mobile ID
+        liblte_mme_unpack_eps_mobile_id_ie(&msg_ptr, &tau_req->eps_mobile_id);
+
+        printf("[%s], eps_update_type.value = %d, eps_update_type.activeFlag = %d, tsc_flag = %d, nas_ksi = %d\n", __func__, tau_req->eps_update_type.value,
+            tau_req->eps_update_type.activeFlag, tau_req->nas_ksi.tsc_flag, tau_req->nas_ksi.nas_ksi);
+
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);   
+}

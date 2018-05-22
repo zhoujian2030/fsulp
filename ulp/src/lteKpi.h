@@ -26,6 +26,7 @@ typedef struct
     unsigned int attachReq; 
     unsigned int extServReq; 
     unsigned int detachReq; 
+    unsigned int tauReq;
     unsigned int imsi;
     unsigned int mTmsi;
 } LteKpi;

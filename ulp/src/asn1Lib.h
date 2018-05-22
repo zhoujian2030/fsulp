@@ -464,6 +464,24 @@ typedef struct {
     LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
 } LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT;
 
+typedef enum{
+    LIBLTE_MME_EPS_UPDATE_TYPE_TA_UPDATING = 0,
+    LIBLTE_MME_EPS_UPDATE_TYPE_COMBINED_TA_LA_UPDATING = 1,
+    LIBLTE_MME_EPS_UPDATE_TYPE_COMBINED_TA_LA_UPDATING_WITH_IMSI_ATTACH = 2,
+    LIBLTE_MME_EPS_UPDATE_TYPE_COMBINED_PERIODIC_UPDATING = 3
+}LIBLTE_MME_EPS_UPDATE_TYPE_ENUM;
+
+typedef struct {
+    uint8 value;
+    uint8 activeFlag;
+} LIBLTE_MME_EPS_UPDATE_TYPE_STRUCT;
+
+typedef struct {
+    LIBLTE_MME_EPS_UPDATE_TYPE_STRUCT eps_update_type;
+    LIBLTE_MME_NAS_KEY_SET_ID_STRUCT nas_ksi;
+    LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
+} LIBLTE_MME_TAU_REQ_STRUCT;
+
 extern LIBLTE_ERROR_ENUM liblte_mme_parse_msg_header(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, uint8 *pd, uint8 *msg_type);
 extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT *ul_info_transfer);
 
@@ -483,5 +501,6 @@ extern LIBLTE_ERROR_ENUM liblte_mme_unpack_mobile_id_ie(uint8 **ie_ptr, LIBLTE_M
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_attach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT *attach_req);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT *detach_req);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_ext_service_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT *ext_service_req);
+extern LIBLTE_ERROR_ENUM liblte_mme_unpack_tau_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_TAU_REQ_STRUCT *tau_req);
 
 #endif /* ASN1LIB_H_ */
