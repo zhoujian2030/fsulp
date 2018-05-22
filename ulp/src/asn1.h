@@ -114,6 +114,7 @@ typedef enum {
 #define NAS_MSG_TYPE_NOTIFICATION                                                  0xDB
 #define NAS_MSG_TYPE_ESM_STATUS                                                    0xE8
 
+extern void Asn1Init();
 extern int Asn1ParseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
 extern int Asn1ParseUlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);
 extern int Asn1ParseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType);

@@ -15,6 +15,12 @@
 #endif
 LIBLTE_BIT_MSG_STRUCT gMsgBitBuffer;
 
+// -----------------------------
+void Asn1Init()
+{
+	memset(gMsgBitBuffer.buff, 0, LIBLTE_MAX_MSG_SIZE_BITS);
+}
+
 int Asn1ParseDcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigned char *ext, unsigned char *msgType) {
     int err = ASN1_ERROR;
 
@@ -59,6 +65,8 @@ int Asn1ParseDlCcchMsgHeader(unsigned char *msgBuf, unsigned int length, unsigne
 }
 
 int Asn1ParseUlInfoTransMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT* pUlInfoTrans) {
+	int err = ASN1_ERROR;
+
 	gMsgBitBuffer.msg = gMsgBitBuffer.buff;
 	unsigned int bitLen = length << 3;
 
@@ -67,11 +75,17 @@ int Asn1ParseUlInfoTransMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_R
 	gMsgBitBuffer.msg += 5;
 	gMsgBitBuffer.N_bits = bitLen - 5;
 
-	return liblte_rrc_unpack_ul_information_transfer_msg(&gMsgBitBuffer, pUlInfoTrans);
+	err = liblte_rrc_unpack_ul_information_transfer_msg(&gMsgBitBuffer, pUlInfoTrans);
+
+	memset(gMsgBitBuffer.buff, 0, bitLen);
+
+	return err;
 }
 
 int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupCompl)
 {
+	int err = ASN1_ERROR;
+
 	gMsgBitBuffer.msg = gMsgBitBuffer.buff;
 	unsigned int bitLen = length << 3;
 
@@ -80,8 +94,10 @@ int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE
 	gMsgBitBuffer.msg += 5;
 	gMsgBitBuffer.N_bits = bitLen - 5;
 
-    return liblte_rrc_unpack_rrc_connection_setup_complete_msg(&gMsgBitBuffer, pRrcSetupCompl);
-    // printf("mmegi = %d, mmec = %d, mcc = %d, mnc = %d\n", rrcConnSetupComplMsg.registered_mme.mmegi, rrcConnSetupComplMsg.registered_mme.mmec, 
-    //     rrcConnSetupComplMsg.registered_mme.plmn_id.mcc, rrcConnSetupComplMsg.registered_mme.plmn_id.mnc);
+	err = liblte_rrc_unpack_rrc_connection_setup_complete_msg(&gMsgBitBuffer, pRrcSetupCompl);
+
+	memset(gMsgBitBuffer.buff, 0, bitLen);
+
+	return err;
 }
 

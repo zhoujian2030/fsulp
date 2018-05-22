@@ -14,6 +14,7 @@
 #include "lteKpi.h"
 #include "lteMac.h"
 #include "lteRrc.h"
+#include "asn1.h"
 
 
 // -------------------------
@@ -22,6 +23,7 @@ void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerF
     KpiInit();
     InitLogger();
     InitMemPool();
+    Asn1Init();
     InitMacLayer(standloneMacFlag);
     InitRlcLayer();
     InitRrcLayer();

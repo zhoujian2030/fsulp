@@ -69,26 +69,26 @@ void LoggerSetLogLevel(unsigned int level);
 		MyLogPrintf(logType, ERROR, fmt, ##args);}
 
 #define LOG_BUFFER(pData,length){\
-		if(LOG_LEVEL_DBG >= gLogLevel && pData != 0){\
-			unsigned int i=0;\
-			unsigned int nLine = length/5;\
-			unsigned int rest = 0;\
-			while(nLine--) {\
-				MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x %02x\n", \
-						pData[i], pData[i+1], pData[i+2], pData[i+3], pData[i+4]);\
-				i += 5;\
-			}\
-			rest = length - i;\
-			if (rest == 1) {\
-				MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x\n", pData[i]);\
-			} else if (rest == 2) {\
-				MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x\n", pData[i], pData[i+1]);\
-			} else if (rest == 3) {\
-				MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x\n", pData[i], pData[i+1], pData[i+2]);\
-			} else if (rest == 4) {\
-				MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x\n", pData[i], pData[i+1], pData[i+2], pData[i+3]);\
-			}\
-		}\
+        if(LOG_LEVEL_DBG >= gLogLevel && pData != 0){\
+                unsigned int i=0;\
+                unsigned int nLine = length/5;\
+                unsigned int rest = 0;\
+                while(nLine--) {\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x %02x\n", \
+                                        pData[i], pData[i+1], pData[i+2], pData[i+3], pData[i+4]);\
+                        i += 5;\
+                }\
+                rest = length - i;\
+                if (rest == 1) {\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x\n", pData[i]);\
+                } else if (rest == 2) {\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x\n", pData[i], pData[i+1]);\
+                } else if (rest == 3) {\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x\n", pData[i], pData[i+1], pData[i+2]);\
+                } else if (rest == 4) {\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x\n", pData[i], pData[i+1], pData[i+2], pData[i+3]);\
+                }\
+        }\
 	}
 
 // -----------------------------------------------
