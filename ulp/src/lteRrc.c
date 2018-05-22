@@ -337,7 +337,6 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Detach Request (RNTI: %d)\n", rnti);
     RrcUeContext* pUeCtx;
-    UInt8 imsi[16];    
     LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT* pDetachReq = (LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT));
     UInt32 i;
     if (pDetachReq == 0) {
@@ -387,12 +386,22 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             }
             memcpy(pUeCtx->ueIdentity.imsi, pDetachReq->eps_mobile_id.imsi, 15);
 
+#ifdef OS_LINUX
+            UInt8 imsi[16];
             // for test print
             for (i = 0; i < 15; i++) {
                 imsi[i] = pDetachReq->eps_mobile_id.imsi[i] + 0x30;
             }
             imsi[15] = '\0';
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+#else
+            UInt8* imsiOctect = pDetachReq->eps_mobile_id.imsi;
+            i = 0;
+            UInt32 imsi0, imsi1;
+            imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %07x%08x\n", rnti, imsi0, imsi1);
+#endif
         } else {
             UInt8 imei[16];
             for (i = 0; i < 15; i++) {
@@ -408,6 +417,90 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
     }
 
     MemFree(pDetachReq);
+}
+
+// --------------------------------
+void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
+{
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Extended Service Request (RNTI: %d)\n", rnti);
+    LOG_BUFFER(pNasMsgBuff->msg, pNasMsgBuff->N_bytes);
+
+    RrcUeContext* pUeCtx;
+    LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT* pExtServReq = (LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT));
+    UInt32 i;
+    if (pExtServReq == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT, rnti = %d\n", rnti);
+        return;
+    }
+
+    if (ASN1_SUCCES == liblte_mme_unpack_ext_service_request_msg(pNasMsgBuff, pExtServReq)) {
+        gLteKpi.extServReq++;
+
+        pUeCtx = RrcGetUeContext(rnti);
+        if (pUeCtx == 0) {
+            pUeCtx = RrcCreateUeContext(rnti);
+            if (pUeCtx == 0) {
+                LOG_ERROR(ULP_LOGGER_NAME, "fail to create ue context, rnti = %d\n", rnti);
+                MemFree(pExtServReq);
+                return;
+            }
+        }
+
+        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_TMSI == pExtServReq->eps_mobile_id.type_of_id) {
+            gLteKpi.mTmsi++;
+            if (pUeCtx->ueIdentity.mTmsiPresent) {
+                if (pUeCtx->ueIdentity.mTmsi != pExtServReq->eps_mobile_id.m_tmsi) {
+                    LOG_WARN(ULP_LOGGER_NAME, "update M-TMSI, rnti = %d\n", rnti);
+                }
+            } else {
+                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
+            }
+            pUeCtx->ueIdentity.mTmsi = pExtServReq->eps_mobile_id.m_tmsi;
+
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x\n", rnti, pExtServReq->eps_mobile_id.m_tmsi);
+            
+        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pExtServReq->eps_mobile_id.type_of_id) {
+            gLteKpi.imsi++;
+            if (pUeCtx->ueIdentity.imsiPresent) {
+                if (memcmp(pUeCtx->ueIdentity.imsi, pExtServReq->eps_mobile_id.imsi, 15) != 0) {
+                    LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
+                }
+            } else {
+                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            }
+            memcpy(pUeCtx->ueIdentity.imsi, pExtServReq->eps_mobile_id.imsi, 15);
+
+#ifdef OS_LINUX
+            UInt8 imsi[16];
+            // for test print
+            for (i = 0; i < 15; i++) {
+                imsi[i] = pExtServReq->eps_mobile_id.imsi[i] + 0x30;
+            }
+            imsi[15] = '\0';
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+#else
+            UInt8* imsiOctect = pExtServReq->eps_mobile_id.imsi;
+            i = 0;
+            UInt32 imsi0, imsi1;
+            imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %07x%08x\n", rnti, imsi0, imsi1);
+#endif
+        } else {
+            UInt8 imei[16];
+            for (i = 0; i < 15; i++) {
+                imei[i] = pExtServReq->eps_mobile_id.imei[i] + 0x30;
+            }
+            imei[15] = '\0';
+            LOG_INFO(ULP_LOGGER_NAME, "TODO, rnti = %d, imei = %s\n", rnti, imei);
+        }
+
+        RrcUeDataInd(pUeCtx);
+    } else {
+        LOG_ERROR(ULP_LOGGER_NAME, "liblte_mme_unpack_ext_service_request_msg error, rnti = %d\n", rnti);
+    }
+
+    MemFree(pExtServReq);
 }
 
 // --------------------------------
@@ -453,6 +546,12 @@ unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
         case NAS_MSG_TYPE_DETACH_REQUEST:
         {
             RrcDecodeDetachReq(rnti, pNasMsgBuff);
+            break;
+        }
+
+        case NAS_MSG_TYPE_EXTENDED_SERVICE_REQUEST:
+        {
+            RrcDecodeExtServiceReq(rnti, pNasMsgBuff);
             break;
         }
 

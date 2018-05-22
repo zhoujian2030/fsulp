@@ -190,6 +190,7 @@ typedef struct{
     uint8                                type_of_id;
     uint8                                imsi[15];
     uint8                                imei[15];
+    uint32                               m_tmsi;
 }LIBLTE_MME_EPS_MOBILE_ID_STRUCT;
 
 typedef struct{
@@ -374,6 +375,7 @@ typedef enum{
 }LIBLTE_MME_GUTI_TYPE_ENUM;
 
 #define LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI 0x1
+#define LIBLTE_MME_EPS_MOBILE_ID_TYPE_TMSI 0x4
 #define LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI 0x6
 #define LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMEI 0x3
 
@@ -450,6 +452,18 @@ typedef struct{
     LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
 }LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT; 
 
+typedef enum{
+    LIBLTE_MME_SERVICE_TYPE_MO_CS_FALLBACK = 0,
+    LIBLTE_MME_SERVICE_TYPE_MT_CS_FALLBACK = 1,
+    LIBLTE_MME_SERVICE_TYPE_MO_CS_FALL_BACK_EC
+}LIBLTE_MME_SERVICE_TYPE_ENUM;
+
+typedef struct {
+    uint8 service_type;
+    LIBLTE_MME_NAS_KEY_SET_ID_STRUCT nas_ksi;
+    LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
+} LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT;
+
 extern LIBLTE_ERROR_ENUM liblte_mme_parse_msg_header(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, uint8 *pd, uint8 *msg_type);
 extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT *ul_info_transfer);
 
@@ -468,5 +482,6 @@ extern LIBLTE_ERROR_ENUM liblte_mme_unpack_identity_response_msg(LIBLTE_SIMPLE_B
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_mobile_id_ie(uint8 **ie_ptr, LIBLTE_MME_MOBILE_ID_STRUCT  *mobile_id);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_attach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT *attach_req);
 extern LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT *detach_req);
+extern LIBLTE_ERROR_ENUM liblte_mme_unpack_ext_service_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT *ext_service_req);
 
 #endif /* ASN1LIB_H_ */

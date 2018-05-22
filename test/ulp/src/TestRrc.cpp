@@ -247,6 +247,105 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
 }
 
 // -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ExtServReq) {
+    gLogLevel = 0;
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+    Asn1Init();
+
+    unsigned short rnti = 103;
+    unsigned short lcId = 1;
+
+    // DLT: 147, Payload: lte-rrc.ul.dcch (LTE Radio Resource Control (RRC) protocol)
+    // UL-DCCH-Message
+    //     message: c1 (0)
+    //         c1: rrcConnectionSetupComplete (4)
+    //             rrcConnectionSetupComplete
+    //                 rrc-TransactionIdentifier: 1
+    //                 criticalExtensions: c1 (0)
+    //                     c1: rrcConnectionSetupComplete-r8 (0)
+    //                         rrcConnectionSetupComplete-r8
+    //                             selectedPLMN-Identity: 1
+    //                             dedicatedInfoNAS: 174c63e3c209074c0105f4ea69f853b157022000
+    //                                 Non-Access-Stratum (NAS)PDU
+    //                                     0001 .... = Security header type: Integrity protected (1)
+    //                                     .... 0111 = Protocol discriminator: EPS mobility management messages (0x7)
+    //                                     Message authentication code: 0x4c63e3c2
+    //                                     Sequence number: 9
+    //                                     0000 .... = Security header type: Plain NAS message, not security protected (0)
+    //                                     .... 0111 = Protocol discriminator: EPS mobility management messages (0x7)
+    //                                     NAS EPS Mobility Management Message Type: Extended service request (0x4c)
+    //                                     0... .... = Type of security context flag (TSC): Native security context (for KSIasme)
+    //                                     .000 .... = NAS key set identifier:  (0)
+    //                                     .... 0001 = Service type: Mobile terminating CS fallback or 1xCS fallback (1)
+    //                                     Mobile identity - M-TMSI - TMSI/P-TMSI (0xea69f853)
+    //                                         Length: 5
+    //                                         1111 .... = Unused: 0xf
+    //                                         .... 0... = Odd/even indication: Even number of identity digits
+    //                                         .... .100 = Mobile Identity Type: TMSI/P-TMSI/M-TMSI (4)
+    //                                         TMSI/P-TMSI: 0xea69f853
+    //                                     CSFB response
+    //                                         1011 .... = Element ID: 0xb-
+    //                                         .... 0... = Spare bit(s): 0x00
+    //                                         .... ..01 = CSFB response: CS fallback accepted by the UE (1)
+    //                                     EPS bearer context status
+    //                                         Element ID: 0x57
+    //                                         Length: 2
+    //                                         0... .... = EBI(7): BEARER CONTEXT-INACTIVE
+    //                                         .0.. .... = EBI(6): BEARER CONTEXT-INACTIVE
+    //                                         ..1. .... = EBI(5): BEARER CONTEXT-ACTIVE
+    //                                         ...0 .... = EBI(4) spare: False
+    //                                         .... 0... = EBI(3) spare: False
+    //                                         .... .0.. = EBI(2) spare: False
+    //                                         .... ..0. = EBI(1) spare: False
+    //                                         .... ...0 = EBI(0) spare: False
+    //                                         0... .... = EBI(15): BEARER CONTEXT-INACTIVE
+    //                                         .0.. .... = EBI(14): BEARER CONTEXT-INACTIVE
+    //                                         ..0. .... = EBI(13): BEARER CONTEXT-INACTIVE
+    //                                         ...0 .... = EBI(12): BEARER CONTEXT-INACTIVE
+    //                                         .... 0... = EBI(11): BEARER CONTEXT-INACTIVE
+    //                                         .... .0.. = EBI(10): BEARER CONTEXT-INACTIVE
+    //                                         .... ..0. = EBI(9): BEARER CONTEXT-INACTIVE
+    //                                         .... ...0 = EBI(8): BEARER CONTEXT-INACTIVE
+    //                             nonCriticalExtension
+    //                                 nonCriticalExtension
+    //                                     nonCriticalExtension
+    //                                         nonCriticalExtension
+    //                                             mobilityState-r12: normal (0)
+    //                                             mobilityHistoryAvail-r12: true (0)
+    unsigned char rrcMsg[] = {
+        0x22, 0x10, 0x28, 0x2e, 0x98, 0xc7, 0xc7, 0x84, 0x12, 0x0e, 
+        0x98, 0x02, 0x0b, 0xe9, 0xd4, 0xd3, 0xf0, 0xa7, 0x62, 0xae, 
+        0x04, 0x40, 0x00, 0x85, 0xc0, 0x00, 0x00, 0x00, 0x00
+    };
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+
+    unsigned short dataSize = sizeof(rrcMsg);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ((int)pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_EXTENDED_SERVICE_REQUEST);    
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 1); 
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsi, 0xea69f853);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+}
+
+// -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     gLogLevel = 0;
     gCallRrcDataInd = 0;
@@ -449,3 +548,4 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }
+

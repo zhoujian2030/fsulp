@@ -865,8 +865,7 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_eps_mobile_id_ie(uint8                      
 
         eps_mobile_id->type_of_id = **ie_ptr & 0x07;
 
-        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == eps_mobile_id->type_of_id)
-        {
+        if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == eps_mobile_id->type_of_id ) {
             *ie_ptr                 += 1;
             eps_mobile_id->guti.mcc  = (**ie_ptr & 0x0F)*100;
             eps_mobile_id->guti.mcc += ((**ie_ptr >> 4) & 0x0F)*10;
@@ -899,11 +898,21 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_eps_mobile_id_ie(uint8                      
             *ie_ptr                          += 1;
             eps_mobile_id->guti.m_tmsi       |= **ie_ptr;
             *ie_ptr                          += 1;
-        }else{
+        } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_TMSI == eps_mobile_id->type_of_id) {
+            *ie_ptr  += 1;
+            eps_mobile_id->m_tmsi = **ie_ptr << 24;
+            *ie_ptr  += 1;
+            eps_mobile_id->m_tmsi |= **ie_ptr << 16;
+            *ie_ptr  += 1;
+            eps_mobile_id->m_tmsi |= **ie_ptr << 8;
+            *ie_ptr  += 1;
+            eps_mobile_id->m_tmsi |= **ie_ptr;
+            *ie_ptr  += 1;
+        } else {
             if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == eps_mobile_id->type_of_id)
             {
                 id = eps_mobile_id->imsi;
-            }else{
+            } else {
                 id = eps_mobile_id->imei;
             }
 
@@ -1154,6 +1163,45 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_detach_request_msg(
 
         // EPS Mobile ID
         liblte_mme_unpack_eps_mobile_id_ie(&msg_ptr, &detach_req->eps_mobile_id);
+
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);
+}
+
+// -------------------------------------------
+LIBLTE_ERROR_ENUM liblte_mme_unpack_ext_service_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT *ext_service_req)
+{
+    // refer to 3gpp 24.301 8.2.15
+    LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
+    uint8             *msg_ptr = msg->msg;
+    uint8              sec_hdr_type;
+
+    if(msg != NULL && ext_service_req != NULL)
+    {
+        // Security Header Type
+        sec_hdr_type = (msg->msg[0] & 0xF0) >> 4;
+        if (LIBLTE_MME_SECURITY_HDR_TYPE_PLAIN_NAS == sec_hdr_type) {
+            msg_ptr++;
+        } else {
+            msg_ptr += 7;
+        }
+
+        // Skip Message Type
+        msg_ptr++;
+
+        // service type
+        ext_service_req->service_type = *msg_ptr & 0x0f;
+        //NAS Key Set Identifier
+        liblte_mme_unpack_nas_key_set_id_ie(&msg_ptr, 4, &ext_service_req->nas_ksi);
+        msg_ptr++;
+
+        // EPS Mobile ID
+        liblte_mme_unpack_eps_mobile_id_ie(&msg_ptr, &ext_service_req->eps_mobile_id);
+
+        // printf("[%s], service_type = %d, tsc_flag = %d, nas_ksi = %d\n", __func__, ext_service_req->service_type,
+        //     ext_service_req->nas_ksi.tsc_flag, ext_service_req->nas_ksi.nas_ksi);
 
         err = LIBLTE_SUCCESS;
     }
