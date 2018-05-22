@@ -105,9 +105,10 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
     unsigned char expectRlcPdu2[] = {
         0xA0, 0x01, 0x01, 0x48, 0x01, 0x60, 0xEA, 0xC1, 0x09, 0x20, 
         0xC8, 0x02, 0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 
-        0x00};        
+        0x00};     
+    KpiRefresh();   
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
-    ASSERT_EQ((int)gLteKpi.mem, 2);
+    ASSERT_EQ((int)gLteKpi.mem, 4); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 2 for pMacUeDataInd->rlcData->rlcDataArray[0]&[1]
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 2);
     ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
     ASSERT_EQ(gMacUeDataInd.numUe, 1);
@@ -179,7 +180,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
     // check after
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
-    ASSERT_EQ((int)gLteKpi.mem, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1); // 1 for MacUeDataInd_t
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 0);
     ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
     ASSERT_EQ(gMacUeDataInd.numUe, 1);
@@ -187,5 +188,74 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
     ASSERT_EQ(pMacUeDataInd->rnti, 124);
     ASSERT_TRUE(pMacUeDataInd->rlcData == 0);
     memset((void*)&gMacUeDataInd, 0, sizeof(MacUeDataInd_Test_Array));
+}
 
+TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
+    gLogLevel = 0;
+    gCallMacDataInd = 0;
+    gCallRlcDataInd = 0;
+    KpiInit();
+    InitMemPool();
+    InitMacLayer(0);
+
+    // Identity Response, imsi = 460041143702947
+    unsigned char macPdu[] = {
+        0x01, 0xa0, 0x01, 0x01, 0x48, 0x02, 0x22, 0xfa, 0xb3, 0x98, 
+        0xa8, 0x21, 0x40, 0xea, 0xc1, 0x09, 0x20, 0xc4, 0x05, 0x28,
+        0x06, 0xea, 0x26, 0x20, 0x00, 0x00, 0x00, 0x00
+    };
+
+    unsigned short length = 0;
+
+    S_PhyHlMsgHead* pPhyMsgHead = (S_PhyHlMsgHead*)gMsgBuffer;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    S_UlIndHead* pUlIndHead = (S_UlIndHead*)(gMsgBuffer + length);
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 501;
+    pUlIndHead->sf = 2;
+    pUlIndHead->numOfPDUs = 1;
+
+    S_RxUlschIndHeadPdu* pUlSchPduHead = (S_RxUlschIndHeadPdu*)(gMsgBuffer + length);
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = 124;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPdu) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPdu) << 3;
+    memcpy(gMsgBuffer + length, macPdu, sizeof(macPdu));    
+    length += (pUlSchPduHead->wordLen << 2);
+
+    // Pre-check status
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+
+    PhyUlDataInd(gMsgBuffer, length);
+
+    // check after
+    unsigned char expectRlcPdu[] = {
+        0xa0, 0x01, 0x01, 0x48, 0x02, 0x22, 0xfa, 0xb3, 0x98, 
+        0xa8, 0x21, 0x40, 0xea, 0xc1, 0x09, 0x20, 0xc4, 0x05, 0x28,
+        0x06, 0xea, 0x26, 0x20, 0x00, 0x00, 0x00, 0x00}; 
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.mem, 3); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 1 for pMacUeDataInd->rlcData->rlcDataArray[0]
+    ASSERT_EQ((int)gLteKpi.lcIdArray[1], 1);
+    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ(gMacUeDataInd.numUe, 1);
+    MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pMacUeDataInd->rnti, 124);
+    ASSERT_TRUE(pMacUeDataInd->rlcData != 0);
+    ASSERT_EQ(pMacUeDataInd->rlcData->numLCInfo, 1);
+    ASSERT_EQ(pMacUeDataInd->rlcData->rlcDataArray[0].lcId, 1);
+    ASSERT_EQ(pMacUeDataInd->rlcData->rlcDataArray[0].length, sizeof(expectRlcPdu));
+    ASSERT_TRUE(memcmp(pMacUeDataInd->rlcData->rlcDataArray[0].rlcdataBuffer, expectRlcPdu, sizeof(expectRlcPdu)) == 0);
+    delete pMacUeDataInd->rlcData->rlcDataArray[0].rlcdataBuffer;
+    delete pMacUeDataInd->rlcData;
+    pMacUeDataInd->rlcData->rlcDataArray[0].rlcdataBuffer = 0;
+    pMacUeDataInd->rlcData = 0;
+    gMacUeDataInd.numUe = 0;
+    memset((void*)&gMacUeDataInd, 0, sizeof(MacUeDataInd_Test_Array));
 }

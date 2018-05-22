@@ -39,7 +39,7 @@ int IP_Call_Mac_Data_Ind(void* pData)
     // printf("IP_Call_Mac_Data_Ind, pMacDataInd = %p\n", pData);
 
     MacUeDataInd_t* pMacDataInd = (MacUeDataInd_t*)pData;
-    if (pMacDataInd == 0 || pMacDataInd->rlcData == 0) {
+    if (pMacDataInd == 0) {
         return gCallMacDataInd;
     }
 
@@ -47,18 +47,20 @@ int IP_Call_Mac_Data_Ind(void* pData)
     gMacUeDataInd.numUe++;
 
     pUeInd->rnti = pMacDataInd->rnti;
-    pUeInd->rlcData = new RlcUlData();
-    pUeInd->rlcData->numLCInfo = pMacDataInd->rlcData->numLCInfo;
-    unsigned int i = 0;
-    for (i=0; i<pMacDataInd->rlcData->numLCInfo; i++) {
-        pUeInd->rlcData->rlcDataArray[i].lcId = pMacDataInd->rlcData->rlcDataArray[i].lcId;
-        pUeInd->rlcData->rlcDataArray[i].length = pMacDataInd->rlcData->rlcDataArray[i].length;
-        if (pMacDataInd->rlcData->rlcDataArray[i].rlcdataBuffer == 0) {
-            return gCallMacDataInd;
+    if (pMacDataInd->rlcData != 0) {
+        pUeInd->rlcData = new RlcUlData();
+        pUeInd->rlcData->numLCInfo = pMacDataInd->rlcData->numLCInfo;
+        unsigned int i = 0;
+        for (i=0; i<pMacDataInd->rlcData->numLCInfo; i++) {
+            pUeInd->rlcData->rlcDataArray[i].lcId = pMacDataInd->rlcData->rlcDataArray[i].lcId;
+            pUeInd->rlcData->rlcDataArray[i].length = pMacDataInd->rlcData->rlcDataArray[i].length;
+            if (pMacDataInd->rlcData->rlcDataArray[i].rlcdataBuffer == 0) {
+                return gCallMacDataInd;
+            }
+            pUeInd->rlcData->rlcDataArray[i].rlcdataBuffer = new unsigned char[pMacDataInd->rlcData->rlcDataArray[i].length];
+            memcpy(pUeInd->rlcData->rlcDataArray[i].rlcdataBuffer, pMacDataInd->rlcData->rlcDataArray[i].rlcdataBuffer,
+                pMacDataInd->rlcData->rlcDataArray[i].length);
         }
-        pUeInd->rlcData->rlcDataArray[i].rlcdataBuffer = new unsigned char[pMacDataInd->rlcData->rlcDataArray[i].length];
-        memcpy(pUeInd->rlcData->rlcDataArray[i].rlcdataBuffer, pMacDataInd->rlcData->rlcDataArray[i].rlcdataBuffer,
-            pMacDataInd->rlcData->rlcDataArray[i].length);
     }
 
     return gCallMacDataInd;
