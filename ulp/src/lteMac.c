@@ -232,8 +232,16 @@ void PhyUlDataInd(unsigned char* pBuffer, unsigned short length)
 
     if (gMacStandloneFlag) {
         PhyDataIndNode* pPhyDataInd = (PhyDataIndNode*)MemAlloc(sizeof(PhyDataIndNode));
+        if (pPhyDataInd == 0) {
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for PhyDataIndNode, size = %ld\n", sizeof(PhyDataIndNode));
+            return;
+        }
         pPhyDataInd->length = length;
         pPhyDataInd->pBuffer = MemAlloc(length);
+        if (pPhyDataInd == 0) {
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for phy data, length = %d\n", length);
+            return;
+        }
         memcpy(pPhyDataInd->pBuffer, pBuffer, length);
         ListPushNode(&gMacRecvdPhyDataList, &pPhyDataInd->node);
     } else {
@@ -752,6 +760,10 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     // RlcUlData* pRlcUlData = 0;
     UInt8 ulDataReceivedFlag = FALSE;
     MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)MemAlloc(sizeof(MacUeDataInd_t));
+    if (pMacUeDataInd == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for MacUeDataInd_t, size = %ld\n", sizeof(MacUeDataInd_t));
+        return;
+    }
     pMacUeDataInd->rnti = recvdRNTI;
     pMacUeDataInd->rlcData = 0;
 
@@ -880,15 +892,23 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
             *dataToRlc_p = (RlcUlData*)MemAlloc(sizeof(RlcUlData));
         }    
 
-        rlcLCIdData_p = &(*dataToRlc_p)->rlcDataArray[*lcIdx];
-        *lcIdx += 1;
-        (*dataToRlc_p)->numLCInfo = *lcIdx;
+        if (0 != *dataToRlc_p) {
+            rlcLCIdData_p = &(*dataToRlc_p)->rlcDataArray[*lcIdx];
+            *lcIdx += 1;
+            (*dataToRlc_p)->numLCInfo = *lcIdx;
 
-        /* fill the struct for sending data to RLC*/
-        rlcLCIdData_p->rlcdataBuffer = MemAlloc(length);
-        memcpy(rlcLCIdData_p->rlcdataBuffer, *dataPtr_p, length);
-        rlcLCIdData_p->length = length;
-        rlcLCIdData_p->lcId = lchId;
+            /* fill the struct for sending data to RLC*/
+            rlcLCIdData_p->rlcdataBuffer = MemAlloc(length);
+            if (rlcLCIdData_p->rlcdataBuffer != 0) {
+                memcpy(rlcLCIdData_p->rlcdataBuffer, *dataPtr_p, length);
+                rlcLCIdData_p->length = length;
+                rlcLCIdData_p->lcId = lchId;
+            } else {                
+                LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for rlcdataBuffer\n");
+            }            
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for RlcUlData\n");
+        }
 
         // LOG_BUFFER(rlcLCIdData_p->rlcdataBuffer, rlcLCIdData_p->length);
         
