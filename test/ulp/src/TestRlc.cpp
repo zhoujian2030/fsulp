@@ -1012,6 +1012,59 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Multi_Rlc_SDU_Seg_Rrc_Setup_Compl)
 }
 
 // -------------------------------
+TEST_F(TestRlc, Interface_MacUeDataInd_No_Rlc_Data) {
+    gLogLevel = 0;
+    gCallRlcDataInd = 0;
+    KpiInit();
+    InitMemPool();
+    InitRlcLayer();
+
+    MacUeDataInd_t* pMacDataInd;
+    RlcUeContext* pRlcUeCtx;
+    unsigned short rnti = 401;
+    unsigned short lcId = 3;
+    unsigned int i;
+    unsigned numOfUeTest = 1;
+    
+    unsigned int numMemCreated = 0;
+
+    for (i=0; i<numOfUeTest; i++) {
+        // Create test data
+        pMacDataInd = (MacUeDataInd_t*)MemAlloc(sizeof(MacUeDataInd_t));
+        ASSERT_TRUE(pMacDataInd != 0);
+        pMacDataInd->rnti = rnti;
+        pMacDataInd->rlcData = 0;
+        
+        // Pre-check status
+        KpiRefresh();
+        pRlcUeCtx = RlcGetUeContext(rnti);
+        ASSERT_TRUE(pRlcUeCtx == 0);
+        ASSERT_EQ(gLteKpi.activeRlcCtx, i);
+        ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1); // 10 for mempool, 1 for RLC context list
+        numMemCreated = 1; // 1 for test data
+        ASSERT_EQ(gLteKpi.mem, numMemCreated);
+
+        MacUeDataInd(pMacDataInd);
+
+        // Check status
+        KpiRefresh();
+        pRlcUeCtx = RlcGetUeContext(rnti);
+        ASSERT_TRUE(pRlcUeCtx == 0);
+        ASSERT_EQ((int)gLteKpi.activeRlcCtx, 0);
+        ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1);
+        numMemCreated = 0; // for rlc ctx + AM entity + pdcp buffer
+        ASSERT_EQ(gLteKpi.mem, numMemCreated); 
+        ASSERT_EQ(gRlcUeDataInd.numUe, 0);
+
+        rnti++;
+    }
+    
+    ASSERT_EQ((int)gLteKpi.activeRlcCtx, 0);
+    ASSERT_EQ((int)ListCount(&gRlcUeContextList), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+}
+
+// -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Pdu_Segment) {
 
 

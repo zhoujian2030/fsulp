@@ -257,7 +257,8 @@ void MacUeDataInd(MacUeDataInd_t* pMacDataInd)
     }
 
     if (pMacDataInd->rlcData == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd->rlcData\n");
+        // LOG_ERROR(ULP_LOGGER_NAME, "NULL pointer pMacDataInd->rlcData\n");
+        MemFree(pMacDataInd);
         return;
     }
 
