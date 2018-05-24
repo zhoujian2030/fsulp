@@ -9,7 +9,7 @@ LIBDIR = lib
 
 # Libraries
 INC += -I$(PROJBASE)/cm/include
-LIBS += 
+LIBS =
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
@@ -18,16 +18,38 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
 include ../cm/global.mk
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DUNIT_TEST
+
+ifeq ($(PLATFORM), arm)
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DARM_LINUX
+LIBS += $(PROJBASE)/cm/lib/libnetcp.a
+else
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW
+endif
+
+ifeq ($(GTEST_SUPPORT), TRUE)
+CFLAGS += -DUNIT_TEST
+endif
 
 all: $(LIBA)
-
+ifeq ($(PLATFORM), arm)
+$(LIBA): buildrepo $(OBJS)
+	$(AR) x $(LIBS) 
+	@mv *.o $(OBJDIR)
+	@mv *.ov7A $(OBJDIR)
+	$(AR) q $@ $(OBJDIR)/*.*
+	@mkdir -p $(LIBDIR)
+	@mv $(LIBA) $(LIBDIR)
+	@mkdir -p $(INCDIR)
+	@cp $(SRCDIR)/*.h $(INCDIR)
+	@sh ./postbuild.sh libulp
+else
 $(LIBA): buildrepo $(OBJS)
 	$(AR) q $@ $(OBJS)
 	@mkdir -p $(LIBDIR)
 	@mv $(LIBA) $(LIBDIR)
 	@mkdir -p $(INCDIR)
 	@cp $(SRCDIR)/*.h $(INCDIR)
+endif
 
 clean:
 	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o

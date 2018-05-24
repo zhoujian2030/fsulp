@@ -1,5 +1,10 @@
+ifeq ($(GTEST_SUPPORT), TRUE)
 SUBDIRS = ulp \
 	test
+else
+SUBDIRS = ulp \
+	main
+endif
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

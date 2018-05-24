@@ -103,6 +103,9 @@ Event gMacHandlerEvent;
 #ifdef TI_DSP
 #pragma DATA_SECTION(gMscRecvMessageQ, ".ulpdata");
 MessageQueue gMscRecvMessageQ;
+#elif defined ARM_LINUX
+#define MAX_MESSAGEQ_BUFFER_LENGTH  4096
+MessageQueue gMscRecvMessageQ;
 #endif
 
 void* MacHandlerEntryFunc(void* p);
@@ -131,6 +134,9 @@ void InitMacLayer(unsigned char standloneFlag)
 
 #ifdef TI_DSP
         gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
+#elif defined ARM_LINUX
+        gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
+        Init_Netcp();
 #endif
 
 #ifdef OS_LINUX 
@@ -159,6 +165,9 @@ void* MacHandlerEntryFunc(void* p)
 #ifdef TI_DSP
     UInt8* pMsgQBuffer;
     void* pFd = 0;
+    UInt32 byteRecvd;
+#elif defined ARM_LINUX
+    UInt8 recvMsgQBuffer[MAX_MESSAGEQ_BUFFER_LENGTH];
     UInt32 byteRecvd;
 #endif
 
@@ -201,6 +210,23 @@ void* MacHandlerEntryFunc(void* p)
 
         	count++;
         }
+#elif defined ARM_LINUX
+        count = MessageQCount(&gMscRecvMessageQ);
+        LOG_TRACE(ULP_LOGGER_NAME, "count = %d\n", count);
+        if (count > 10) {
+            count = 10;
+        }
+        while (count--) {
+            byteRecvd = MessageQRecv(&gMscRecvMessageQ, (char*)recvMsgQBuffer, MAX_MESSAGEQ_BUFFER_LENGTH);
+
+            if (byteRecvd == 0) {
+                break;
+            }
+
+            PhyUlDataInd(recvMsgQBuffer, byteRecvd);
+        }
+#elif defined OS_LINUX
+        // LOG_DBG(ULP_LOGGER_NAME, "Task running\n");
 #endif
 
 #ifndef OS_LINUX

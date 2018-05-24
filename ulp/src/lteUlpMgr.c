@@ -33,7 +33,7 @@ void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerF
 // -------------------------
 void UlpOneMilliSecondIsr()
 {
-#ifndef INTEGRATE_PHY
+#ifdef TI_DSP
 	UpdateSystemTime();
 #endif
 

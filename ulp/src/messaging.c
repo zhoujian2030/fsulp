@@ -61,33 +61,6 @@ int MessageQSendByFd(MessageQueue* pMsgQueue, void* pFd, unsigned int length)
 }
 
 // ----------------------------
-int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
-{
-	if (pMsgQueue == 0 || pBuffer == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pBuffer = %p\n", pMsgQueue, pBuffer);
-		return 0;
-	}
-
-	void* pQmssFd;
-	unsigned char* pQmssDataBuff = 0;
-	unsigned int qmssBuffLen = 0;
-
-	if ((pQmssFd = MessageQGetFreeTxFd(pMsgQueue, &pQmssDataBuff, &qmssBuffLen)) == 0) {
-		LOG_ERROR(ULP_LOGGER_NAME, "MessageQGetFreeTxFd error\n");
-		return 0;
-	}
-
-//	if (length > qmssBuffLen) {
-//		LOG_WARN(ULP_LOGGER_NAME, "length[%d] exceeds qmssBuffLen[%d]\n", length, qmssBuffLen);
-//		length = qmssBuffLen;
-//	}
-
-	memcpy(pQmssDataBuff, pBuffer, length);
-
-	return MessageQSendByFd(pMsgQueue, pQmssFd, length);
-}
-
-// ----------------------------
 int MessageQGetData(MessageQueue* pMsgQueue, unsigned char** pBuffer, void** pFd)
 {
 	unsigned int length = 0;
@@ -122,14 +95,50 @@ void MessageQFreeRecvFd(void* pFd)
 }
 
 // ----------------------------
-int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
+int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
 {
-	unsigned int length = 0;
+	if (pMsgQueue == 0 || pBuffer == 0) {
+		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pBuffer = %p\n", pMsgQueue, pBuffer);
+		return 0;
+	}
+	
+	void* pQmssFd;
+	unsigned char* pQmssDataBuff = 0;
+	unsigned int qmssBuffLen = 0;
 
-	if (pMsgQueue == 0 || pBuffer ==  0) {
-		return length;
+	if ((pQmssFd = MessageQGetFreeTxFd(pMsgQueue, &pQmssDataBuff, &qmssBuffLen)) == 0) {
+		LOG_ERROR(ULP_LOGGER_NAME, "MessageQGetFreeTxFd error\n");
+		return 0;
 	}
 
+//	if (length > qmssBuffLen) {
+//		LOG_WARN(ULP_LOGGER_NAME, "length[%d] exceeds qmssBuffLen[%d]\n", length, qmssBuffLen);
+//		length = qmssBuffLen;
+//	}
+
+	memcpy(pQmssDataBuff, pBuffer, length);
+
+	return MessageQSendByFd(pMsgQueue, pQmssFd, length);
+}
+
+// ----------------------------
+int MessageQCount(MessageQueue* pMsgQueue)
+{
+	if (pMsgQueue == 0) {
+		return 0;
+	}
+
+	return Qmss_getQueueEntryCount(pMsgQueue->qid);
+}
+
+// ----------------------------
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
+{
+	if (pMsgQueue == 0 || pBuffer ==  0) {
+		return 0;
+	}
+
+	unsigned int length = 0;
 	unsigned char* pDataBuffer;
 	void* pQmssFd;
 
@@ -145,6 +154,39 @@ int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
 	MessageQFreeRecvFd(pQmssFd);
 
 	return length;
+}
+
+#elif defined ARM_LINUX
+
+// ----------------------------
+int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length)
+{
+	if (pMsgQueue == 0 || pBuffer == 0) {
+		LOG_ERROR(ULP_LOGGER_NAME, "pMsgQueue = %p, pBuffer = %p\n", pMsgQueue, pBuffer);
+		return 0;
+	}
+	
+	return Qmss_SendData(pMsgQueue->qid, (void*)pBuffer, length);
+}
+
+// ----------------------------
+int MessageQCount(MessageQueue* pMsgQueue)
+{
+	if (pMsgQueue == 0) {
+		return 0;
+	}
+
+	return Qmss_GetQueueEntryCount(pMsgQueue->qid);
+}
+
+// ----------------------------
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
+{
+	if (pMsgQueue == 0 || pBuffer ==  0) {
+		return 0;
+	}
+
+	return Qmss_RecsData(pMsgQueue->qid, (void*)pBuffer);
 }
 
 #endif

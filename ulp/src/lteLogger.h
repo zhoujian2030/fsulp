@@ -166,7 +166,7 @@ int WriteBuffer(const char* pData, unsigned int dataLen);
         } }
 
 #define LOG_BUFFER(pBuffer, length) {\
-        if (gLogLevel <= 1) {\
+        if (gLogLevel <= 0) {\
             unsigned int i;\
             for (i=0; i<length; i++) {\
                 printf("%02x ", pBuffer[i]);\

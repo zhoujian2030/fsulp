@@ -67,14 +67,31 @@ typedef struct {
 	Qmss_QueueHnd qid;
 } MessageQueue;
 
-int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length);
 void* MessageQGetFreeTxFd(MessageQueue* pMsgQueue, unsigned char** pBuffer, unsigned int* pBufferLen);
 int MessageQSendByFd(MessageQueue* pMsgQueue, void* pFd, unsigned int length);
 
-int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen);
 int MessageQGetData(MessageQueue* pMsgQueue, unsigned char** pBuffer, void** pFd);
 void MessageQFreeRecvFd(void* pFd);
 
+int MessageQCount(MessageQueue* pMsgQueue);
+
+int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length);
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen);
+
+#elif defined ARM_LINUX
+
+#include "netcp_interface.h"
+
+#define	QMSS_RX_HAND_ULP_FROM_L1_DATA	L3_RECS_CMAC_CFG_RSP
+
+typedef struct {
+	Qmss_QueueHnd qid;
+} MessageQueue;
+
+int MessageQCount(MessageQueue* pMsgQueue);
+
+int MessageQSend(MessageQueue* pMsgQueue, char* pBuffer, unsigned int length);
+int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen);
 
 #endif
 

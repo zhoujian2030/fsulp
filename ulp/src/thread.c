@@ -6,11 +6,7 @@
  */
 
 #include "thread.h"
-#ifdef OS_LINUX
-#include "CLogger.h"
-#else
 #include "lteLogger.h"
-#endif
 
 // -------------------------------
 int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pThreadParams)
