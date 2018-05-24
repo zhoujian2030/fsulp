@@ -233,7 +233,7 @@ void PhyUlDataInd(unsigned char* pBuffer, unsigned short length)
     if (gMacStandloneFlag) {
         PhyDataIndNode* pPhyDataInd = (PhyDataIndNode*)MemAlloc(sizeof(PhyDataIndNode));
         if (pPhyDataInd == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for PhyDataIndNode, size = %ld\n", sizeof(PhyDataIndNode));
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for PhyDataIndNode\n");
             return;
         }
         pPhyDataInd->length = length;
@@ -761,7 +761,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
     UInt8 ulDataReceivedFlag = FALSE;
     MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)MemAlloc(sizeof(MacUeDataInd_t));
     if (pMacUeDataInd == 0) {
-        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for MacUeDataInd_t, size = %ld\n", sizeof(MacUeDataInd_t));
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for MacUeDataInd_t\n");
         return;
     }
     pMacUeDataInd->rnti = recvdRNTI;

@@ -1022,7 +1022,6 @@ TEST_F(TestRlc, Interface_MacUeDataInd_No_Rlc_Data) {
     MacUeDataInd_t* pMacDataInd;
     RlcUeContext* pRlcUeCtx;
     unsigned short rnti = 401;
-    unsigned short lcId = 3;
     unsigned int i;
     unsigned numOfUeTest = 1;
     

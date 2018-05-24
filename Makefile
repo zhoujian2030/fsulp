@@ -29,4 +29,4 @@ $(INSTALLDIRS):
 .PHONY: all install clean
 
 # specify the dependency here
-test: sim
+test: ulp
