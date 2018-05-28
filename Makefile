@@ -1,8 +1,10 @@
 ifeq ($(GTEST_SUPPORT), TRUE)
-SUBDIRS = ulp \
+SUBDIRS = cm \
+	ulp \
 	test
 else
-SUBDIRS = ulp \
+SUBDIRS = cm \
+	ulp \
 	main
 endif
 

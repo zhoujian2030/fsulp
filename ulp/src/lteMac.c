@@ -226,7 +226,7 @@ void* MacHandlerEntryFunc(void* p)
             PhyUlDataInd(recvMsgQBuffer, byteRecvd);
         }
 #elif defined OS_LINUX
-        // LOG_DBG(ULP_LOGGER_NAME, "Task running\n");
+        LOG_DBG(ULP_LOGGER_NAME, "Task running\n");
 #endif
 
 #ifndef OS_LINUX

@@ -21,6 +21,10 @@ if [[ $COMMAND = "clean" ]]; then
 elif [[ $COMMAND = "install" ]]; then
     make install
 else
+    if [[ $COMMAND = "--disabletest" ]]; then
+        export GTEST_SUPPORT=FALSE
+    fi
+
     make
 fi
 

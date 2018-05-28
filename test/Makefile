@@ -1,4 +1,5 @@
-SUBDIRS = ulp
+SUBDIRS = cm \
+	ulp
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

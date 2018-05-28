@@ -82,7 +82,7 @@ int MessageQRecv(MessageQueue* pMsgQueue, char* pBuffer, unsigned int bufferLen)
 
 #include "netcp_interface.h"
 
-#define	QMSS_RX_HAND_ULP_FROM_L1_DATA	L3_RECS_CMAC_CFG_RSP
+#define	QMSS_RX_HAND_ULP_FROM_L1_DATA	L2_RECS_L1_DATA
 
 typedef struct {
 	Qmss_QueueHnd qid;

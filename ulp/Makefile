@@ -21,7 +21,7 @@ include ../cm/global.mk
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DARM_LINUX
-LIBS += $(PROJBASE)/cm/lib/libnetcp.a
+LIBS += $(PROJBASE)/cm/extlib/libnetcp.a
 else
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW
 endif

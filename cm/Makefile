@@ -1,14 +1,15 @@
 # Target  name
-TARGET = ulp
+LIBA = libcm.a
 
 # Directories
 OBJDIR = obj
 SRCDIR = src
 INCDIR = inc
 LIBDIR = lib
+EXTERNAL_INC = include
 
 # Libraries
-INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/ulp/inc
+INC += 
 LIBS =
 
 # Files and folders
@@ -17,22 +18,26 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
-include ../cm/global.mk
+include global.mk
 
 ifeq ($(PLATFORM), arm)
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/cm/lib/libcm_arm.a $(PROJBASE)/ulp/lib/libulp_arm.a
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DARM_LINUX
 else
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
-LIBS += $(PROJBASE)/cm/lib/libcm.a $(PROJBASE)/ulp/lib/libulp.a
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW
 endif
 
-all: $(TARGET)
+ifeq ($(GTEST_SUPPORT), TRUE)
+CFLAGS += -DUNIT_TEST
+endif
 
-# Targets
-$(TARGET): buildrepo $(OBJS)
-	$(CC) $(OBJS) -o $@ -lrt -pthread $(LIBS)
-	@mv $(TARGET) $(OBJDIR)
+all: $(LIBA)
+$(LIBA): buildrepo $(OBJS)
+	$(AR) q $@ $(OBJS)
+	@mkdir -p $(LIBDIR)
+	@mv $(LIBA) $(LIBDIR)
+	@mkdir -p $(INCDIR)
+	@cp $(SRCDIR)/*.h $(INCDIR)
+	@sh ./postbuild.sh libcm
 
 clean:
 	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o
