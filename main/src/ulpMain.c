@@ -39,13 +39,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    ConfigUpdate(configFileName);
-    ConfigShow();
+    ParseConfig(configFileName);
+    ShowConfig();
+    LteLoggerUpdateConfig(&gLteConfig.logConfig);
 
     InitUlpLayer(1, 1);
-
-    LoggerSetLogLevel(gLteConfig.loglevel);
-
+    
     sleep(1);
 
     while (1) {

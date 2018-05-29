@@ -21,10 +21,10 @@ include ../cm/global.mk
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/cm/lib/libcm_arm.a $(PROJBASE)/ulp/lib/libulp_arm.a
+LIBS += $(PROJBASE)/ulp/lib/libulp_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
 else
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
-LIBS += $(PROJBASE)/cm/lib/libcm.a $(PROJBASE)/ulp/lib/libulp.a
+LIBS += $(PROJBASE)/ulp/lib/libulp.a $(PROJBASE)/cm/lib/libcm.a
 endif
 
 all: $(TARGET)

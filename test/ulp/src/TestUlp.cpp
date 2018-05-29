@@ -18,15 +18,14 @@
 #include "lteUlpMgr.h"
 #include "list.h"
 #include "lteRrc.h"
+#include "lteLogger.h"
 
 using namespace std;
-
-extern unsigned int gLogLevel;
 
 extern List gRrcUeContextList;
 
 TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
-    gLogLevel = 1;
+    LteLoggerSetLogLevel(1);
     gCallMacDataInd = 1;
     gCallRlcDataInd = 1;
     gCallPdcpDataInd = 1;
@@ -170,7 +169,7 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     gCallRlcDataInd = 1;
     gCallPdcpDataInd = 1;
     gCallRrcDataInd = 0;
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     InitUlpLayer(0, 0);
 
     // Identity response, imsi = 460041143702947

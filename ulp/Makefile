@@ -8,7 +8,7 @@ INCDIR = inc
 LIBDIR = lib
 
 # Libraries
-INC += -I$(PROJBASE)/cm/include
+INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/cm/inc
 LIBS =
 
 # Files and folders

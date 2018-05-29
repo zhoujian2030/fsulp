@@ -653,6 +653,8 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, 
         pRrcUeCtx->ueIdentity.detachFlag, pRrcUeCtx->rnti);
     
+    LOG_INFO(ULP_LOGGER_NAME, "KPI: idResp = %d, attachReq = %d\n", gLteKpi.idResp, gLteKpi.attachReq);
+    
     if (!IP_RRC_DATA_IND(pRrcUeCtx)) {
         return;
     }

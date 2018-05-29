@@ -19,14 +19,14 @@
 #include "lteKpi.h"
 #include "asn1.h"
 #include "list.h"
+#include "lteLogger.h"
 
 using namespace std;
 
-extern unsigned int gLogLevel;
 extern List gRrcUeContextList;
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRrcDataInd = 0;
     KpiInit();
     InitRrcLayer();
@@ -78,7 +78,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
 
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Detach) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRrcDataInd = 0;
     KpiInit();
     InitRrcLayer();
@@ -164,7 +164,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Detach) {
 
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRrcDataInd = 0;
     KpiInit();
     InitRrcLayer();
@@ -248,7 +248,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
 
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ExtServReq) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRrcDataInd = 0;
     KpiInit();
     InitRrcLayer();
@@ -347,7 +347,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ExtServReq) {
 
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRrcDataInd = 0;
     KpiInit();
     InitRrcLayer();

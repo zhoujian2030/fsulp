@@ -85,13 +85,15 @@ void InitLogger()
 }
 
 // -------------------------------
-void LoggerSetLogLevel(unsigned int level)
+void LteLoggerSetLogLevel(unsigned int level)
 {
 	if (level > LOG_LEVEL_ERROR) {
 		gLogLevel = LOG_LEVEL_ERROR;
 	} else {
 		gLogLevel = level;
 	}
+
+	LoggerSetlevel(gLogLevel);
 }
 
 #ifdef TI_DSP
@@ -275,20 +277,14 @@ int WriteBuffer(const char* pData, unsigned int dataLen)
 
 #elif defined OS_LINUX
 
-// -------------------------------
-int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...)
+// ----------------------------------------
+void LteLoggerUpdateConfig(LoggerConfig* pConfig)
 {
-
-	return 0;
+	if (pConfig != 0) {
+		gLogLevel = pConfig->logLevel;
+		LoggerUpdateConfig(pConfig);
+	}
 }
-
-// -------------------------------
-int WriteBuffer(const char* pData, unsigned int dataLen)
-{
-
-	return 0;
-}
-
 
 #endif
 

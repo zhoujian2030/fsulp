@@ -25,7 +25,7 @@ extern List gRlcUeContextList;
 
 // -------------------------------
 TEST_F(TestResCleaner, Basic_Test) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     InitUlpLayer(0, 1);
     usleep(10);
     unsigned int i;

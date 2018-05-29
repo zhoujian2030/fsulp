@@ -13,6 +13,7 @@
 #include "TestMempool.h"
 #include "mempool.h"
 #include "list.h"
+#include "lteLogger.h"
 
 using namespace std;
 
@@ -29,11 +30,9 @@ extern unsigned char gMemBufSize9[NUM_SIZE_9][SIZE_9];
 
 extern MemPool gMemPool;
 
-extern unsigned int gLogLevel;
-
 // ------------------------
 TEST_F(TestMempool, Allocate_Memory_Success) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     InitMemPool();
 
     EXPECT_EQ((int)ListCount(&gMemPool.pool[0]), NUM_SIZE_0);
@@ -94,7 +93,7 @@ TEST_F(TestMempool, Allocate_Memory_Success) {
 
 // ------------------------
 TEST_F(TestMempool, Allocate_Memory_Failure_In_1st_Pool) {
-    gLogLevel = 1;
+    LteLoggerSetLogLevel(1);
 
     InitMemPool();
 
@@ -115,7 +114,7 @@ TEST_F(TestMempool, Allocate_Memory_Failure_In_1st_Pool) {
 
 // ------------------------
 TEST_F(TestMempool, Allocate_Memory_Failure) {
-    gLogLevel = 1;
+    LteLoggerSetLogLevel(1);
 
     InitMemPool();
 
@@ -126,7 +125,7 @@ TEST_F(TestMempool, Allocate_Memory_Failure) {
 
 // ------------------------
 TEST_F(TestMempool, Join_Memory) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
 
     InitMemPool();
 
@@ -179,7 +178,7 @@ TEST_F(TestMempool, Join_Memory) {
 
 // ------------------------
 TEST_F(TestMempool, Mem_Remove) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
 
     InitMemPool();
 

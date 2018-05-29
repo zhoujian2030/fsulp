@@ -13,9 +13,16 @@
 #include "lteLogger.h"
 
 LteConfig gLteConfig = 
-{
-    1, 
-    5000
+{ 
+    5000,
+
+    {
+        TRACE,
+        1, 
+        0,
+        1024*1024*5,
+        ""
+    }
 };
 
 // --------------------------------
@@ -42,7 +49,7 @@ int IsStringEqual(char* src, char* dst)
 }
 
 // --------------------------------
-void ConfigUpdate(char* configFileName)
+void ParseConfig(char* configFileName)
 {
     if (configFileName == 0) {
         return;
@@ -56,10 +63,14 @@ void ConfigUpdate(char* configFileName)
     int numBytesRead = 0;
     char jsonBuffer[8192];
     int ret;
-    cJSON *jsonRoot, *jsonItem;
+    cJSON *jsonRoot, *jsonLoggerRoot, *jsonItem;
     
     ret = FileRead(fd, jsonBuffer, 8192, &numBytesRead);
     if (ret != FILE_SUCC || numBytesRead <= 0) {
+        return;
+    }
+
+    if (numBytesRead == 8192) {
         return;
     }
 
@@ -78,35 +89,80 @@ void ConfigUpdate(char* configFileName)
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LogLevel");
-    if (jsonItem != 0) {
-        if (jsonItem->type == cJSON_String) {
-            if (IsStringEqual(jsonItem->valuestring, "TRACE")) {
-                gLteConfig.loglevel = LOG_LEVEL_TRACE;
-            } else if (IsStringEqual(jsonItem->valuestring, "DEBUG")) {
-                gLteConfig.loglevel = LOG_LEVEL_DBG;
-            } else if (IsStringEqual(jsonItem->valuestring, "INFO")) {
-                gLteConfig.loglevel = LOG_LEVEL_INFO;
-            } else if (IsStringEqual(jsonItem->valuestring, "WARNING")) {
-                gLteConfig.loglevel = LOG_LEVEL_WARN;
-            } else if (IsStringEqual(jsonItem->valuestring, "ERROR")) {
-                gLteConfig.loglevel = LOG_LEVEL_ERROR;
+    jsonLoggerRoot = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
+    if (jsonLoggerRoot != 0) {
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogLevel");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_String) {
+                if (IsStringEqual(jsonItem->valuestring, "TRACE")) {
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_TRACE;
+                } else if (IsStringEqual(jsonItem->valuestring, "DEBUG")) {
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_DBG;
+                } else if (IsStringEqual(jsonItem->valuestring, "INFO")) {
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_INFO;
+                } else if (IsStringEqual(jsonItem->valuestring, "WARNING")) {
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_WARN;
+                } else if (IsStringEqual(jsonItem->valuestring, "ERROR")) {
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_ERROR;
+                } else {
+                    printf("Invalid value for LogLevel: %s\n", jsonItem->valuestring);
+                    gLteConfig.logConfig.logLevel = LOG_LEVEL_INFO;
+                }
             } else {
-                printf("Invalid value for LogLevel: %s\n", jsonItem->valuestring);
-                gLteConfig.loglevel = LOG_LEVEL_INFO;
+                printf("Invalid config for LogLevel\n");
+                gLteConfig.logConfig.logLevel = LOG_LEVEL_INFO;
             }
-        } else {
-            printf("Invalid config for LogLevel\n");
-            gLteConfig.loglevel = LOG_LEVEL_INFO;
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogToConsole");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_True) {                
+                gLteConfig.logConfig.logToConsoleFlag = jsonItem->valueint;
+            } else {
+                printf("Invalid config for LogToConsole\n");
+                gLteConfig.logConfig.logToConsoleFlag = 0;
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogToFile");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_True) {                
+                gLteConfig.logConfig.logToFileFlag = jsonItem->valueint;
+            } else {
+                printf("Invalid config for LogToFile\n");
+                gLteConfig.logConfig.logToFileFlag = 0;
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "MaxLogFileSize");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.logConfig.maxLogFileSize = jsonItem->valueint;
+            } else {
+                printf("Invalid config for MaxLogFileSize\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogFilePath");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_String) {      
+                if (strlen(jsonItem->valuestring) < MAX_LOG_FILE_PATH_LENGTH) {
+                    strcpy(gLteConfig.logConfig.logFilePath, jsonItem->valuestring);
+                }       
+            }
         }
     }
 }
 
 // -------------------------------
-void ConfigShow()
+void ShowConfig()
 {
     printf("+----------------------------------------+\n");
     printf("pollingInterval: %d\n", gLteConfig.pollingInterval);
-    printf("loglevel: %d\n", gLteConfig.loglevel);
+    printf("logLevel: %d\n", gLteConfig.logConfig.logLevel);
+    printf("logToConsoleFlag: %d\n", gLteConfig.logConfig.logToConsoleFlag);
+    printf("logToFileFlag: %d\n", gLteConfig.logConfig.logToFileFlag);
+    printf("maxLogFileSize: %d\n", gLteConfig.logConfig.maxLogFileSize);
+    printf("logFilePath: %s\n", gLteConfig.logConfig.logFilePath);
     printf("+----------------------------------------+\n");
 }

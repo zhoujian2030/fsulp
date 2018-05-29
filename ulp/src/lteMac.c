@@ -19,6 +19,8 @@
 #include "messaging.h"
 #ifndef OS_LINUX
 #include <ti/csl/csl_tsc.h>
+#include <time.h>
+#include <sys/time.h>
 #endif
 
 void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length); 
@@ -173,6 +175,9 @@ void* MacHandlerEntryFunc(void* p)
 
 #ifndef OS_LINUX
     UInt32 prevTime, curTime;
+#else 
+    struct timeval prevTv, curTv;
+    UInt32 delta;
 #endif
 
     while (1) {
@@ -180,6 +185,8 @@ void* MacHandlerEntryFunc(void* p)
 
 #ifndef OS_LINUX
         prevTime = CSL_tscRead();
+#else
+        gettimeofday(&prevTv, 0);
 #endif
         // process received messages in queue
         count = ListCount(&gMacRecvdPhyDataList);
@@ -226,7 +233,7 @@ void* MacHandlerEntryFunc(void* p)
             PhyUlDataInd(recvMsgQBuffer, byteRecvd);
         }
 #elif defined OS_LINUX
-        LOG_DBG(ULP_LOGGER_NAME, "Task running\n");
+        LOG_TRACE(ULP_LOGGER_NAME, "Task running\n");
 #endif
 
 #ifndef OS_LINUX
@@ -234,6 +241,18 @@ void* MacHandlerEntryFunc(void* p)
         if ((curTime - prevTime) > 10000) {
         	// only print when consuming time is more than 0.1ms
         	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
+        }
+#else
+        gettimeofday(&curTv, 0);
+
+        if (curTv.tv_sec >= prevTv.tv_sec) {
+            delta = (curTv.tv_sec - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
+        } else {
+            delta = (curTv.tv_sec + 60 - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
+        }
+        if (delta > 100) {
+        	// only print when consuming time is more than 0.1ms
+        	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, delta = %d\n", delta);
         }
 #endif
     }

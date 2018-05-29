@@ -17,14 +17,13 @@
 #include "ltePdcpRlcInterface.h"
 #include "UlpTestCommon.h"
 #include "lteKpi.h"
+#include "lteLogger.h"
 
 using namespace std;
 
-extern unsigned int gLogLevel;
-
 // -------------------------------
 TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_1_Normal) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallPdcpDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -66,7 +65,7 @@ TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_1_Normal) {
 
 // -------------------------------
 TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_2_Normal) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallPdcpDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -99,7 +98,7 @@ TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_2_Normal) {
 
 // -------------------------------
 TEST_F(TestPdcp, Interface_RlcUeDataInd_DRB_Normal) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallPdcpDataInd = 0;
     KpiInit();
     InitMemPool();

@@ -12,17 +12,19 @@
 extern "C" {
 #endif
 
-typedef struct {
-    int loglevel;           // TRACE, DEBUG, INFO, WARNING, ERROR
-    int pollingInterval;    // in micro second
+#include "logger.h"
+
+typedef struct {       
+    int  pollingInterval;       // in micro second
+    LoggerConfig logConfig;     // TRACE, DEBUG, INFO, WARNING, ERROR
 } LteConfig;
 
 
 extern LteConfig gLteConfig;
 
 int IsStringEqual(char* src, char* dst);
-void ConfigUpdate(char* configFileName);
-void ConfigShow();
+void ParseConfig(char* configFileName);
+void ShowConfig();
 
 #ifdef __cplusplus
 }

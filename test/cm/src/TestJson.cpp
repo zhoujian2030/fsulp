@@ -59,7 +59,7 @@ TEST_F(TestJson, Parse_Json_File)
     char jsonBuffer[8192];
     FileRead(fd, jsonBuffer, 8192, &numBytesRead);
     ASSERT_TRUE(numBytesRead > 0);
-    cout << "numBytesRead = " << numBytesRead << endl;
+    cout << "numBytesRead = " << numBytesRead << ", jsonBuffer = " << jsonBuffer << endl;
 
     cJSON* jsonRoot = cJSON_Parse(jsonBuffer);
     ASSERT_TRUE(jsonRoot != 0);

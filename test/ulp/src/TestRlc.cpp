@@ -17,16 +17,15 @@
 #include "lteRlcMacInterface.h"
 #include "UlpTestCommon.h"
 #include "lteKpi.h"
+#include "lteLogger.h"
 
 using namespace std;
-
-extern unsigned int gLogLevel;
 
 extern List gRlcUeContextList;
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Single_Rlc_SDU_Seg_Id_Resp) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -92,7 +91,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Single_Rlc_SDU_Seg_Id_Resp) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Single_Rlc_SDU_Seg_RRC_Setup_Compl) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -168,7 +167,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Single_Rlc_SDU_Seg_RRC_Setup_Compl
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Two_Rlc_SDU_Seg_Id_Resp) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -273,7 +272,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Two_Rlc_SDU_Seg_Id_Resp) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Muti_Ue_Single_Rlc_Sdu_Seg) {
-    gLogLevel = 3;
+    LteLoggerSetLogLevel(3);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -364,7 +363,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Muti_Ue_Single_Rlc_Sdu_Seg) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Muti_Ue_Two_Rlc_Sdu_Seg) {
-    gLogLevel = 3;
+    LteLoggerSetLogLevel(3);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -505,7 +504,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Muti_Ue_Two_Rlc_Sdu_Seg) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_2_Single_Rlc_Sdu_Seg) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -596,7 +595,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_2_Single_Rlc_Sdu_Seg) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_3_Single_Rlc_Sdu_Seg) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -663,7 +662,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_3_Single_Rlc_Sdu_Seg) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Multi_Single_Rlc_Sdu_Seg) {
-    gLogLevel = 3;
+    LteLoggerSetLogLevel(3);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -759,7 +758,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Multi_Single_Rlc_Sdu_Seg) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Seg_Sn_Not_Consecutive) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -859,7 +858,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Seg_Sn_Not_Consecutive) {
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Multi_Rlc_SDU_Seg_Rrc_Setup_Compl) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -1013,7 +1012,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Multi_Rlc_SDU_Seg_Rrc_Setup_Compl)
 
 // -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_No_Rlc_Data) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();

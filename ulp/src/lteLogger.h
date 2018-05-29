@@ -20,6 +20,7 @@ extern "C" {
 #include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
+#include "logger.h"
 #elif defined INTEGRATE_PHY
 #include "system.h"
 #else
@@ -41,7 +42,7 @@ typedef enum
 extern unsigned int gLogLevel;
 
 void InitLogger();
-void LoggerSetLogLevel(unsigned int level);
+void LteLoggerSetLogLevel(unsigned int level);
 
 // -------------------------------------------
 #ifdef INTEGRATE_PHY
@@ -95,87 +96,25 @@ void LoggerSetLogLevel(unsigned int level);
 #elif defined OS_LINUX
 
 #define ULP_LOGGER_NAME "ULP"
-#define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
-#define FUNCNAME __FUNCTION__
-#define LINE     __LINE__
+extern void LteLoggerUpdateConfig(LoggerConfig* pConfig);
 
-int WriteLog(unsigned char moduleId, E_LogLevel eLogLevel, const char* funcName, const char *fmt,...);
-int WriteBuffer(const char* pData, unsigned int dataLen);
+#define LOG_TRACE(moduleId, fmt, args...) \
+        LoggerWriteMsg(moduleId, TRACE, FILENAME, __func__, fmt, ##args);
 
-#define LOG_TRACE(moduleId, fmt, args...){\
-        if (gLogLevel == 0) {\
-                (void)moduleId;\
-                struct timeval tv;\
-                gettimeofday(&tv, 0);\
-                int ms = tv.tv_usec/1000;\
-                struct tm * tmVal =  localtime(&tv.tv_sec);\
-                char date[32];\
-                strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [TRACE] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
-                printf(fmt,##args);\
-        } }
+#define LOG_DBG(moduleId, fmt, args...) \
+        LoggerWriteMsg(moduleId, DEBUG, FILENAME, __func__, fmt, ##args);
 
-#define LOG_DBG(moduleId, fmt, args...){\
-        if (gLogLevel <= 1) {\
-                (void)moduleId;\
-                struct timeval tv;\
-                gettimeofday(&tv, 0);\
-                int ms = tv.tv_usec/1000;\
-                struct tm * tmVal =  localtime(&tv.tv_sec);\
-                char date[32];\
-                strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [DEBUG] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
-                printf(fmt,##args);\
-        } }
+#define LOG_INFO(moduleId,fmt,args...) \
+        LoggerWriteMsg(moduleId, INFO, FILENAME, __func__, fmt, ##args);
 
-#define LOG_INFO(moduleId,fmt,args...){\
-        if (gLogLevel <= 2) {\
-                (void)moduleId;\
-                struct timeval tv;\
-                gettimeofday(&tv, 0);\
-                int ms = tv.tv_usec/1000;\
-                struct tm * tmVal =  localtime(&tv.tv_sec);\
-                char date[32];\
-                strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [INFO ] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
-                printf(fmt,##args);\
-        } }
-#define LOG_WARN(moduleId, fmt,args...){\
-        if (gLogLevel <= 3) {\
-                (void)moduleId;\
-                struct timeval tv;\
-                gettimeofday(&tv, 0);\
-                int ms = tv.tv_usec/1000;\
-                struct tm * tmVal =  localtime(&tv.tv_sec);\
-                char date[32];\
-                strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [WARN ] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
-                printf(fmt,##args);\
-        } }
-#define LOG_ERROR(moduleId, fmt, args...){\
-        if (gLogLevel <= 4) {\
-                (void)moduleId;\
-                struct timeval tv;\
-                gettimeofday(&tv, 0);\
-                int ms = tv.tv_usec/1000;\
-                struct tm * tmVal =  localtime(&tv.tv_sec);\
-                char date[32];\
-                strftime(date, sizeof(date),"%Y-%m-%d %H:%M:%S",tmVal);\
-                printf("[%s.%d] [ERROR] [%3.3s] [%lu] [%s:%d] - [%s], ", date, ms, moduleId, pthread_self(), FILENAME,LINE, FUNCNAME);\
-                printf(fmt,##args);\
-        } }
+#define LOG_WARN(moduleId, fmt,args...) \
+        LoggerWriteMsg(moduleId, WARNING, FILENAME, __func__, fmt, ##args);
 
-#define LOG_BUFFER(pBuffer, length) {\
-        if (gLogLevel <= 0) {\
-            unsigned int i;\
-            for (i=0; i<length; i++) {\
-                printf("%02x ", pBuffer[i]);\
-                if (i%10 == 9) {\
-                    printf("\n");\
-                }\
-            }\
-            printf("\n");\
-        } }
+#define LOG_ERROR(moduleId, fmt, args...) \
+        LoggerWriteMsg(moduleId, ERROR, FILENAME, __func__, fmt, ##args);
+
+#define LOG_BUFFER(pBuffer, length) \
+        LoggerWriteMem(TRACE, (unsigned char*)pBuffer, length);
 
 // ---------------------------------------------------
 #elif defined TI_DSP

@@ -18,14 +18,14 @@
 #include "lteUlpMgr.h"
 #include "lteMac.h"
 #include "lteKpi.h"
+#include "lteLogger.h"
 
 using namespace std;
 
-extern unsigned int gLogLevel;
 extern List gMacRecvdPhyDataList;
 
 TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallMacDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -137,7 +137,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
 }
 
 TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallMacDataInd = 0;
     KpiInit();
     InitMemPool();
@@ -191,7 +191,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
 }
 
 TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
-    gLogLevel = 0;
+    LteLoggerSetLogLevel(0);
     gCallMacDataInd = 0;
     gCallRlcDataInd = 0;
     KpiInit();

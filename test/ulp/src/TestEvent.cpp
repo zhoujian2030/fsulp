@@ -40,7 +40,7 @@ void* TestEntryFunc(void* p)
 
 // -------------------------------
 TEST_F(TestEvent, Basic_wait_Send) {
-    gLogLevel = 1;
+    LteLoggerSetLogLevel(1);
     gTestCount = 0;
     EventInit(&gTestEvent);
     ThreadHandle threadHandle;
