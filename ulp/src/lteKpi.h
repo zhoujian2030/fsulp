@@ -25,6 +25,7 @@ typedef struct
     unsigned int idResp;
     unsigned int attachReq; 
     unsigned int extServReq; 
+    unsigned int servReq; 
     unsigned int detachReq; 
     unsigned int tauReq;
     unsigned int imsi;

@@ -587,6 +587,14 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 }
 
 // --------------------------------
+void RrcDecodeServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
+{
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Service Request (RNTI: %d)\n", rnti);
+    LOG_BUFFER(pNasMsgBuff->msg, pNasMsgBuff->N_bytes);
+    gLteKpi.servReq++;
+}
+
+// --------------------------------
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     UInt8 pd;
@@ -629,6 +637,12 @@ unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
         case NAS_MSG_TYPE_EXTENDED_SERVICE_REQUEST:
         {
             RrcDecodeExtServiceReq(rnti, pNasMsgBuff);
+            break;
+        }
+
+        case LIBLTE_MME_SECURITY_HDR_TYPE_SERVICE_REQUEST:
+        {
+            RrcDecodeServiceReq(rnti, pNasMsgBuff);
             break;
         }
 

@@ -552,3 +552,65 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }
 
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+    Asn1Init();
+
+    unsigned short rnti = 103;
+    unsigned short lcId = 1;
+
+    // RRCConnectionSetupComplete
+    // Type: UL_DCCH
+    // Direction: Uplink
+    // Computer Timestamp: 22:04:21.161
+    // UE Timestamp: 470481 (ms)
+    // Radio Technology: LTE
+    // UL-DCCH-Message
+    //     message
+    //     c1
+    //         rrcConnectionSetupComplete
+    //         rrc-TransactionIdentifier: 1
+    //         criticalExtensions
+    //             c1
+    //             rrcConnectionSetupComplete-r8
+    //                 selectedPLMN-Identity: 1
+    //                 dedicatedInfoNAS: 0xC7869657
+    // Service Request
+    //     Security header type: (12) Security header for the SERVICE REQUEST message  
+    //     protocol_discriminator: EPS Mobility Management
+    //     key set identifier: 4 
+    //     Sequence number (short): 6 
+    //     Message authentication code  (short): 0x9657 
+    unsigned char rrcMsg[] = {
+        0x22, 0x00, 0x09, 0x8f, 0x0d, 0x2c, 0xae
+    };
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+
+    unsigned short dataSize = sizeof(rrcMsg);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ((int)pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_SECURITY_HDR_TYPE_SERVICE_REQUEST);    
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 0); 
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.imsiPresent, 0);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+}
+
