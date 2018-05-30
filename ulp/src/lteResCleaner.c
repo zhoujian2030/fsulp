@@ -25,6 +25,8 @@ void ExecuteCleanup();
 #define TASK_RESOURCE_CLEANER_STACK_SIZE	(32*1024)
 #pragma DATA_SECTION(gTaskResCleanerStack, ".ulpdata");
 UInt8 gTaskResCleanerStack[TASK_RESOURCE_CLEANER_STACK_SIZE];
+#else
+#define TASK_RESOURCE_CLEANER_PRIORITY		95
 #endif
 
 // ---------------------------------
@@ -36,7 +38,11 @@ void InitResCleaner(unsigned char startResCleanerFlag)
 
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
-        ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, 0);
+        ThreadParams threadParams;
+        threadParams.priority = TASK_RESOURCE_CLEANER_PRIORITY;
+        threadParams.policy = RT_SCHED_RR;
+        threadParams.stackSize = 0;
+        ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, &threadParams);
         LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task\n");
 #else 
         ThreadHandle threadHandle;

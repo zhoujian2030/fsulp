@@ -17,11 +17,17 @@ extern "C" {
 
 typedef pthread_t ThreadHandle;
 
-// typedef void* (*ENTRY_FUNC)(void*);
+// real-time schedule policy
+// default is SCHED_OTHER (not real-time)
+typedef enum {
+    RT_SCHED_RR     = SCHED_RR,
+    RT_SCHED_FIFO   = SCHED_FIFO
+} RTSchedPolicy;
 
 typedef struct {
-    unsigned int priority;
-    unsigned int stackSize;
+    unsigned int    priority;
+    RTSchedPolicy   policy;
+    unsigned int    stackSize;
 } ThreadParams;
 
 

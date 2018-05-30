@@ -234,7 +234,7 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             if (pUeCtx->ueIdentity.mTmsiPresent) {
                 LOG_INFO(ULP_LOGGER_NAME, "both M-MSI and IMSI are collected, rnti = %d, M-TMSI = %d\n", rnti, pUeCtx->ueIdentity.mTmsi);
             } else {
-                LOG_WARN(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
+                LOG_INFO(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
             }
             
             // TODO

@@ -123,6 +123,8 @@ typedef struct {
 #define TASK_MAC_HANDLER_STACK_SIZE		(256*1024)
 #pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
 UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
+#else
+#define TASK_MAC_HANDLER_PRIORITY       98
 #endif
 // -----------------------------------------
 
@@ -143,7 +145,11 @@ void InitMacLayer(unsigned char standloneFlag)
 
 #ifdef OS_LINUX 
         ThreadHandle threadHandle;
-        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, 0);
+        ThreadParams threadParams;
+        threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
+        threadParams.policy = RT_SCHED_RR;
+        threadParams.stackSize = 0;
+        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
         LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n");
 #else 
         ThreadHandle threadHandle;

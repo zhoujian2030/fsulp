@@ -31,7 +31,13 @@ int ThreadCreate(void* pEntryFunc, ThreadHandle* pThreadHandle, ThreadParams* pT
             pthread_attr_setstacksize(&attr, pThreadParams->stackSize);
         }
 
-        // TODO set priority
+        if ((pThreadParams->priority > 0) && (pThreadParams->priority < 100)) {
+            LOG_INFO(ULP_LOGGER_NAME, "Create RT thread, priority = %d, policy = %d\n", pThreadParams->priority, pThreadParams->policy);
+            struct sched_param schedParam;
+            schedParam.sched_priority = pThreadParams->priority;
+            pthread_attr_setschedpolicy(&attr, pThreadParams->policy);
+            pthread_attr_setschedparam(&attr, &schedParam);
+        }
     }
 
     ret = pthread_create(pThreadHandle, &attr, pEntryFunc, 0);
