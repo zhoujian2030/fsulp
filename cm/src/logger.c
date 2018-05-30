@@ -49,7 +49,7 @@ void LoggerSetlevel(int loglevel)
 }
 
 // -------------------------------------
-void LoggerUpdateConfig(LoggerConfig* pConfig)
+void LoggerInit(LoggerConfig* pConfig)
 {
     if (pConfig != 0) {
         memcpy((void*)&gLoggerConfig_s, (void*)pConfig, sizeof(LoggerConfig));
@@ -58,7 +58,6 @@ void LoggerUpdateConfig(LoggerConfig* pConfig)
                 fclose(gLoggerStatus_s.fp);
             }
             gLoggerStatus_s.logFileSize = 0;
-            // truncate(gLoggerConfig_s.logFilePath, 0);
             gLoggerStatus_s.fp = fopen(gLoggerConfig_s.logFilePath, "w+");
             if (gLoggerStatus_s.fp == 0) {
                 gLoggerConfig_s.logToFileFlag = 0;

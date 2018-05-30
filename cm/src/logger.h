@@ -39,7 +39,7 @@ typedef struct {
 } LoggerStatus;
 
 void LoggerSetlevel(int loglevel);
-void LoggerUpdateConfig(LoggerConfig* pConfig);
+void LoggerInit();
 
 void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName, const char* funcName, const char *fmt,...);
 void LoggerWriteMem(unsigned int logLevel, unsigned char* pBuffer, unsigned int length);

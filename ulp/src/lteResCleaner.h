@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define MAC_IDLE_COUNT  10000
+extern unsigned int gMaxIdleCount;
 
 void InitResCleaner(unsigned char startResCleanerFlag);
 void NotifyResCleaner();

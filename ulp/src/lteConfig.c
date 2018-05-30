@@ -5,6 +5,8 @@
  *      Author: j.zh
  */
 
+#ifdef OS_LINUX
+
 #include <stdio.h>
 #include "lteConfig.h"
 #include "cJSON.h"
@@ -14,7 +16,8 @@
 
 LteConfig gLteConfig = 
 { 
-    5000,
+    5,
+    10000,
 
     {
         TRACE,
@@ -82,10 +85,18 @@ void ParseConfig(char* configFileName)
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "PollingInterval");
     if (jsonItem != 0) {
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
-            gLteConfig.pollingInterval = jsonItem->valueint * 1000;
+            gLteConfig.pollingInterval = jsonItem->valueint;
         } else {
             printf("Invalid config for PollingInterval\n");
-            gLteConfig.pollingInterval = 5000;
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ResCleanupTimer");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            gLteConfig.resCleanupTimer = jsonItem->valueint;
+        } else {
+            printf("Invalid config for resCleanupTimer\n");
         }
     }
 
@@ -158,11 +169,14 @@ void ParseConfig(char* configFileName)
 void ShowConfig()
 {
     printf("+----------------------------------------+\n");
-    printf("pollingInterval: %d\n", gLteConfig.pollingInterval);
-    printf("logLevel: %d\n", gLteConfig.logConfig.logLevel);
-    printf("logToConsoleFlag: %d\n", gLteConfig.logConfig.logToConsoleFlag);
-    printf("logToFileFlag: %d\n", gLteConfig.logConfig.logToFileFlag);
-    printf("maxLogFileSize: %d\n", gLteConfig.logConfig.maxLogFileSize);
-    printf("logFilePath: %s\n", gLteConfig.logConfig.logFilePath);
+    printf("pollingInterval:    %d\n", gLteConfig.pollingInterval);
+    printf("resCleanupTimer:    %d\n", gLteConfig.resCleanupTimer);
+    printf("logLevel:           %d\n", gLteConfig.logConfig.logLevel);
+    printf("logToConsoleFlag:   %d\n", gLteConfig.logConfig.logToConsoleFlag);
+    printf("logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
+    printf("maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
+    printf("logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
     printf("+----------------------------------------+\n");
 }
+
+#endif

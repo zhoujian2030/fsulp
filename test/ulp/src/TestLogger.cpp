@@ -17,6 +17,6 @@ using namespace std;
 
 // -------------------------------
 TEST_F(TestLogger, WriteLog) {
-    InitLogger();
+    InitLteLogger();
     
 }

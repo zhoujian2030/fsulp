@@ -36,7 +36,7 @@ typedef enum
 
 extern unsigned int gLogLevel;
 
-void InitLogger();
+void InitLteLogger();
 void LteLoggerSetLogLevel(unsigned int level);
 
 // -------------------------------------------
@@ -91,7 +91,6 @@ void LteLoggerSetLogLevel(unsigned int level);
 #elif defined OS_LINUX
 
 #define ULP_LOGGER_NAME "ULP"
-extern void LteLoggerUpdateConfig(LoggerConfig* pConfig);
 
 #define LOG_TRACE(moduleId, fmt, args...) \
         LoggerWriteMsg(moduleId, TRACE, FILENAME, __func__, fmt, ##args);

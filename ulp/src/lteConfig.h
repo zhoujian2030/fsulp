@@ -12,10 +12,13 @@
 extern "C" {
 #endif
 
+#ifdef OS_LINUX
+
 #include "logger.h"
 
 typedef struct {       
-    int  pollingInterval;       // in micro second
+    int  pollingInterval;       // in milli second
+    int  resCleanupTimer;       // in milli second
     LoggerConfig logConfig;     // TRACE, DEBUG, INFO, WARNING, ERROR
 } LteConfig;
 
@@ -25,6 +28,8 @@ extern LteConfig gLteConfig;
 int IsStringEqual(char* src, char* dst);
 void ParseConfig(char* configFileName);
 void ShowConfig();
+
+#endif
 
 #ifdef __cplusplus
 }

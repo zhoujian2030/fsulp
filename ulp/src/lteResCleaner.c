@@ -11,9 +11,16 @@
 #include "lteRlc.h"
 #include "thread.h"
 #include "event.h"
+#include "lteConfig.h"
 
+#ifndef OS_LINUX
+#pragma DATA_SECTION(gIntializedFlag, ".ulpdata");
+#pragma DATA_SECTION(gCleanupEvent, ".ulpdata");
+#pragma DATA_SECTION(gMaxIdleCount, ".ulpdata");
+#endif
 BOOL gIntializedFlag = FALSE;
 Event gCleanupEvent;
+unsigned int gMaxIdleCount = 10000; // 1ms * 10000 = 10s
 
 extern List gRlcUeContextList;
 
@@ -37,13 +44,21 @@ void InitResCleaner(unsigned char startResCleanerFlag)
         gIntializedFlag = TRUE;
 
 #ifdef OS_LINUX 
+        if (gLteConfig.pollingInterval > 0) {
+            gMaxIdleCount = gLteConfig.resCleanupTimer / gLteConfig.pollingInterval;
+            if (gMaxIdleCount == 0) {
+                gMaxIdleCount = 1000;
+            }
+        }
+
         ThreadHandle threadHandle;
         ThreadParams threadParams;
         threadParams.priority = TASK_RESOURCE_CLEANER_PRIORITY;
         threadParams.policy = RT_SCHED_RR;
         threadParams.stackSize = 0;
         ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, &threadParams);
-        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task\n");
+
+        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task, gMaxIdleCount = %d\n", gMaxIdleCount);
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -51,6 +66,8 @@ void InitResCleaner(unsigned char startResCleanerFlag)
         threadParams.stack = gTaskResCleanerStack;
         threadParams.priority = TASK_RESOURCE_CLEANER_PRIORITY;
         ThreadCreate((void*)ResCleanerEntryFunc, &threadHandle, &threadParams);
+
+        LOG_DBG(ULP_LOGGER_NAME, "Create resource cleaner task, gMaxIdleCount = %d\n", gMaxIdleCount);
 #endif
     }
 }
@@ -79,21 +96,23 @@ void* ResCleanerEntryFunc(void* p)
 void ExecuteCleanup()
 {
     UInt32 rlcCtxCount = ListCount(&gRlcUeContextList);
-    RlcUeContext* pRlcUeCtx;
+    RlcUeContext *pRlcUeCtx, *pNextRlcUeCtx;
     
     LOG_TRACE(ULP_LOGGER_NAME, "rlcCtxCount = %d\n", rlcCtxCount);
 
     if (rlcCtxCount > 0) {
         pRlcUeCtx = (RlcUeContext*)ListGetFirstNode(&gRlcUeContextList);
         while (pRlcUeCtx != 0) {
-            if (pRlcUeCtx->idleCount >= MAC_IDLE_COUNT) {
+            pNextRlcUeCtx = (RlcUeContext*)ListGetNextNode(&pRlcUeCtx->node);
+             
+            if (pRlcUeCtx->idleCount >= gMaxIdleCount) {
                 LOG_DBG(ULP_LOGGER_NAME, "clean RLC UE context, rnti = %d\n", pRlcUeCtx->rnti);
                 RlcDeleteUeContext(pRlcUeCtx);
             } else {
                 RlcUpdateUeContextTime(pRlcUeCtx, 1);
             }
 
-            pRlcUeCtx = (RlcUeContext*)ListGetNextNode(&pRlcUeCtx->node);
+            pRlcUeCtx = pNextRlcUeCtx;
         }
     }
 }

@@ -21,7 +21,7 @@
 void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
 {
     KpiInit();
-    InitLogger();
+    InitLteLogger();
     InitMemPool();
     Asn1Init();
     InitMacLayer(standloneMacFlag);

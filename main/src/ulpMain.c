@@ -41,17 +41,17 @@ int main(int argc, char* argv[]) {
 
     ParseConfig(configFileName);
     ShowConfig();
-    LteLoggerUpdateConfig(&gLteConfig.logConfig);
-
+    
     InitUlpLayer(1, 1);
     
     sleep(1);
 
+    unsigned int usleepTime = gLteConfig.pollingInterval * 1000;
     while (1) {
 
         UlpOneMilliSecondIsr();
 
-        usleep(gLteConfig.pollingInterval);
+        usleep(usleepTime);
     }
 
     return 0; 

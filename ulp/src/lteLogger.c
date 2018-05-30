@@ -13,6 +13,8 @@
 #include "thread.h"
 #include "messaging.h"
 #include <string.h>
+#elif defined OS_LINUX
+#include "lteConfig.h"
 #endif
 
 #ifndef OS_LINUX
@@ -58,7 +60,7 @@ List gLogItemList;
 #endif
 
 // -------------------------------
-void InitLogger()
+void InitLteLogger()
 {
 #ifdef TI_DSP
 	EventInit(&gLogEvent);
@@ -81,6 +83,10 @@ void InitLogger()
 	threadParams.stack = gTaskLogHandlerStack;
 	threadParams.priority = TASK_LOG_HANDLER_PRIORITY;
 	ThreadCreate((void*)LogHandlerEntryFunc, &threadHandle, &threadParams);
+
+#elif defined OS_LINUX
+	LoggerInit(&gLteConfig.logConfig);
+	gLogLevel = gLteConfig.logConfig.logLevel;
 #endif
 }
 
@@ -275,17 +281,6 @@ int WriteBuffer(const char* pData, unsigned int dataLen)
 //	return dataLen;
 //#endif
 
-}
-
-#elif defined OS_LINUX
-
-// ----------------------------------------
-void LteLoggerUpdateConfig(LoggerConfig* pConfig)
-{
-	if (pConfig != 0) {
-		gLogLevel = pConfig->logLevel;
-		LoggerUpdateConfig(pConfig);
-	}
 }
 
 #endif
