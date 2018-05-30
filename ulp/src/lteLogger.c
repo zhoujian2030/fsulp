@@ -93,7 +93,9 @@ void LteLoggerSetLogLevel(unsigned int level)
 		gLogLevel = level;
 	}
 
+#ifdef OS_LINUX
 	LoggerSetlevel(gLogLevel);
+#endif
 }
 
 #ifdef TI_DSP

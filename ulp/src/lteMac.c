@@ -19,7 +19,7 @@
 #include "messaging.h"
 #ifndef OS_LINUX
 #include <ti/csl/csl_tsc.h>
-#include <time.h>
+#else
 #include <sys/time.h>
 #endif
 
@@ -256,7 +256,11 @@ void* MacHandlerEntryFunc(void* p)
         } else {
             delta = (curTv.tv_sec + 60 - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
         }
+#ifdef ARM_LINUX
         if (delta > 100) {
+#else 
+        if (delta > 1000) {
+#endif
         	// only print when consuming time is more than 0.1ms
         	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, delta = %d\n", delta);
         }

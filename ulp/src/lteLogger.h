@@ -15,11 +15,6 @@ extern "C" {
 #include "lteCommon.h"
 
 #if defined OS_LINUX
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
-#include <time.h>
-#include <sys/time.h>
 #include "logger.h"
 #elif defined INTEGRATE_PHY
 #include "system.h"

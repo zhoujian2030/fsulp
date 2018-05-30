@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 typedef enum 
 {
