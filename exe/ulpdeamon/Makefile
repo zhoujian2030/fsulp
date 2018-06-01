@@ -1,5 +1,5 @@
 # Target  name
-TARGET = ulp
+TARGET = ulpdeamon
 
 # Directories
 OBJDIR = obj
@@ -8,30 +8,28 @@ INCDIR = inc
 LIBDIR = lib
 
 # Libraries
-INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/ulp/inc
+INC += 
 LIBS =
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
-OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
+OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
-include ../cm/global.mk
+include $(PROJBASE)/cm/global.mk
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/ulp/lib/libulp_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
 else
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
-LIBS += $(PROJBASE)/ulp/lib/libulp.a $(PROJBASE)/cm/lib/libcm.a
 endif
 
 all: $(TARGET)
 
 # Targets
 $(TARGET): buildrepo $(OBJS)
-	$(CC) $(OBJS) -o $@ -lrt -pthread $(LIBS)
+	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBS)
 	@mv $(TARGET) $(OBJDIR)
 
 clean:

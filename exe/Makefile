@@ -1,17 +1,10 @@
-ifeq ($(GTEST_SUPPORT), TRUE)
-SUBDIRS = cm \
-	ulp \
-	test
-else
-SUBDIRS = cm \
-	ulp \
-	exe
-endif
+SUBDIRS = ulp \
+	ulpdeamon
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 CLEANDIRS = $(SUBDIRS:%=clean-%)
- 
+
 # build target
 all: $(BUILDDIRS)
 $(SUBDIRS): $(BUILDDIRS)
@@ -36,4 +29,4 @@ $(INSTALLDIRS):
 .PHONY: all install clean
 
 # specify the dependency here
-test: ulp
+

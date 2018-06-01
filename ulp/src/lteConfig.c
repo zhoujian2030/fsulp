@@ -96,7 +96,7 @@ void ParseConfig(char* configFileName)
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
             gLteConfig.pollingInterval = jsonItem->valueint;
         } else {
-            printf("Invalid config for PollingInterval\n");
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for PollingInterval\n");
         }
     }
 
@@ -105,7 +105,7 @@ void ParseConfig(char* configFileName)
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
             gLteConfig.resCleanupTimer = jsonItem->valueint;
         } else {
-            printf("Invalid config for resCleanupTimer\n");
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for resCleanupTimer\n");
         }
     }
 
@@ -125,11 +125,11 @@ void ParseConfig(char* configFileName)
                 } else if (IsStringEqual(jsonItem->valuestring, "ERROR")) {
                     gLteConfig.logConfig.logLevel = LOG_LEVEL_ERROR;
                 } else {
-                    printf("Invalid value for LogLevel: %s\n", jsonItem->valuestring);
+                    LOG_WARN(ULP_LOGGER_NAME, "Invalid value for LogLevel: %s\n", jsonItem->valuestring);
                     gLteConfig.logConfig.logLevel = LOG_LEVEL_INFO;
                 }
             } else {
-                printf("Invalid config for LogLevel\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogLevel\n");
             }
         }
 
@@ -138,7 +138,7 @@ void ParseConfig(char* configFileName)
             if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
                 gLteConfig.logConfig.logToConsoleFlag = jsonItem->valueint;
             } else {
-                printf("Invalid config for LogToConsole\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogToConsole\n");
             }
         }
 
@@ -147,7 +147,7 @@ void ParseConfig(char* configFileName)
             if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
                 gLteConfig.logConfig.logToFileFlag = jsonItem->valueint;
             } else {
-                printf("Invalid config for LogToFile\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogToFile\n");
             }
         }
 
@@ -156,7 +156,7 @@ void ParseConfig(char* configFileName)
             if (jsonItem->type == cJSON_Number) {                
                 gLteConfig.logConfig.maxLogFileSize = jsonItem->valueint;
             } else {
-                printf("Invalid config for MaxLogFileSize\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for MaxLogFileSize\n");
             }
         }
 
@@ -178,7 +178,7 @@ void ParseConfig(char* configFileName)
                 && (jsonItem->valueint >= KPI_NO_REPORT)) {                
                 gLteConfig.kpiConfig.reportType = jsonItem->valueint;
             } else {
-                printf("Invalid config for kpi reportType\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi reportType\n");
             }
         }
 
@@ -187,7 +187,7 @@ void ParseConfig(char* configFileName)
             if (jsonItem->type == cJSON_Number) {                
                 gLteConfig.kpiConfig.reportFilePeriod = jsonItem->valueint;
             } else {
-                printf("Invalid config for kpi reportFilePeriod\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi reportFilePeriod\n");
             }
         }
 
@@ -198,7 +198,7 @@ void ParseConfig(char* configFileName)
                     strcpy(gLteConfig.kpiConfig.fileName, jsonItem->valuestring);
                 }  
             } else {
-                printf("Invalid config for kpi fileName\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi fileName\n");
             }
         }
 
@@ -207,7 +207,7 @@ void ParseConfig(char* configFileName)
             if (jsonItem->type == cJSON_Number) {                
                 gLteConfig.kpiConfig.udpPort = jsonItem->valueint;
             } else {
-                printf("Invalid config for kpi udpPort\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi udpPort\n");
             }
         }
     }
@@ -216,19 +216,19 @@ void ParseConfig(char* configFileName)
 // -------------------------------
 void ShowConfig()
 {
-    printf("+----------------------------------------+\n");
-    printf("pollingInterval:    %d\n", gLteConfig.pollingInterval);
-    printf("resCleanupTimer:    %d\n", gLteConfig.resCleanupTimer);
-    printf("logLevel:           %d\n", gLteConfig.logConfig.logLevel);
-    printf("logToConsoleFlag:   %d\n", gLteConfig.logConfig.logToConsoleFlag);
-    printf("logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
-    printf("maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
-    printf("logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
-    printf("reportType:         %d\n", gLteConfig.kpiConfig.reportType);
-    printf("reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
-    printf("fileName:           %s\n", gLteConfig.kpiConfig.fileName);
-    printf("udpPort:            %d\n", gLteConfig.kpiConfig.udpPort);
-    printf("+----------------------------------------+\n");
+    LOG_INFO(ULP_LOGGER_NAME, "+----------------------------------------+\n");
+    LOG_INFO(ULP_LOGGER_NAME, "pollingInterval:    %d\n", gLteConfig.pollingInterval);
+    LOG_INFO(ULP_LOGGER_NAME, "resCleanupTimer:    %d\n", gLteConfig.resCleanupTimer);
+    LOG_INFO(ULP_LOGGER_NAME, "logLevel:           %d\n", gLteConfig.logConfig.logLevel);
+    LOG_INFO(ULP_LOGGER_NAME, "logToConsoleFlag:   %d\n", gLteConfig.logConfig.logToConsoleFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
+    LOG_INFO(ULP_LOGGER_NAME, "logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
+    LOG_INFO(ULP_LOGGER_NAME, "reportType:         %d\n", gLteConfig.kpiConfig.reportType);
+    LOG_INFO(ULP_LOGGER_NAME, "reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
+    LOG_INFO(ULP_LOGGER_NAME, "fileName:           %s\n", gLteConfig.kpiConfig.fileName);
+    LOG_INFO(ULP_LOGGER_NAME, "udpPort:            %d\n", gLteConfig.kpiConfig.udpPort);
+    LOG_INFO(ULP_LOGGER_NAME, "+----------------------------------------+\n");
 }
 
 #endif

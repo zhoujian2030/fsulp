@@ -22,7 +22,8 @@ elif [[ $COMMAND = "install" ]]; then
     make install
 else
     make
-    cp main/obj/ulp /mnt/hgfs/c/share/ 
+    cp exe/ulp/obj/ulp /mnt/hgfs/c/share/ 
+    cp exe/ulpdeamon/obj/ulpdeamon /mnt/hgfs/c/share/ 
 fi
 
 
