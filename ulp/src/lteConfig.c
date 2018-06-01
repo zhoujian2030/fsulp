@@ -16,15 +16,24 @@
 
 LteConfig gLteConfig = 
 { 
-    5,
-    10000,
+    5,      // 5ms
+    10000,  // 10000ms
 
+    // log config, default log to console only
     {
         TRACE,
         1, 
         0,
         1024*1024*5,
         ""
+    },
+
+    // KPI config, default not report
+    {
+        0,
+        10000,  // 10ms
+        "",
+        0
     }
 };
 
@@ -66,7 +75,7 @@ void ParseConfig(char* configFileName)
     int numBytesRead = 0;
     char jsonBuffer[8192];
     int ret;
-    cJSON *jsonRoot, *jsonLoggerRoot, *jsonItem;
+    cJSON *jsonRoot, *jsonRoot2, *jsonItem;
     
     ret = FileRead(fd, jsonBuffer, 8192, &numBytesRead);
     if (ret != FILE_SUCC || numBytesRead <= 0) {
@@ -100,9 +109,9 @@ void ParseConfig(char* configFileName)
         }
     }
 
-    jsonLoggerRoot = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
-    if (jsonLoggerRoot != 0) {
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogLevel");
+    jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
+    if (jsonRoot2 != 0) {
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogLevel");
         if (jsonItem != 0) {
             if (jsonItem->type == cJSON_String) {
                 if (IsStringEqual(jsonItem->valuestring, "TRACE")) {
@@ -121,31 +130,28 @@ void ParseConfig(char* configFileName)
                 }
             } else {
                 printf("Invalid config for LogLevel\n");
-                gLteConfig.logConfig.logLevel = LOG_LEVEL_INFO;
             }
         }
 
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogToConsole");
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogToConsole");
         if (jsonItem != 0) {
-            if (jsonItem->type == cJSON_True) {                
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
                 gLteConfig.logConfig.logToConsoleFlag = jsonItem->valueint;
             } else {
                 printf("Invalid config for LogToConsole\n");
-                gLteConfig.logConfig.logToConsoleFlag = 0;
             }
         }
 
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogToFile");
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogToFile");
         if (jsonItem != 0) {
-            if (jsonItem->type == cJSON_True) {                
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
                 gLteConfig.logConfig.logToFileFlag = jsonItem->valueint;
             } else {
                 printf("Invalid config for LogToFile\n");
-                gLteConfig.logConfig.logToFileFlag = 0;
             }
         }
 
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "MaxLogFileSize");
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "MaxLogFileSize");
         if (jsonItem != 0) {
             if (jsonItem->type == cJSON_Number) {                
                 gLteConfig.logConfig.maxLogFileSize = jsonItem->valueint;
@@ -154,12 +160,54 @@ void ParseConfig(char* configFileName)
             }
         }
 
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonLoggerRoot, "LogFilePath");
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogFilePath");
         if (jsonItem != 0) {
             if (jsonItem->type == cJSON_String) {      
                 if (strlen(jsonItem->valuestring) < MAX_LOG_FILE_PATH_LENGTH) {
                     strcpy(gLteConfig.logConfig.logFilePath, jsonItem->valuestring);
                 }       
+            }
+        }
+    }
+
+    jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "KpiConfig");
+    if (jsonRoot2 != 0) {
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "ReportType");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint <= KPI_REPORT_UDP) 
+                && (jsonItem->valueint >= KPI_NO_REPORT)) {                
+                gLteConfig.kpiConfig.reportType = jsonItem->valueint;
+            } else {
+                printf("Invalid config for kpi reportType\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "ReportFilePeriod");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.kpiConfig.reportFilePeriod = jsonItem->valueint;
+            } else {
+                printf("Invalid config for kpi reportFilePeriod\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "KpiFileName");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_String) {               
+                if (strlen(jsonItem->valuestring) < MAX_KPI_FILE_NAME_LENGTH) {
+                    strcpy(gLteConfig.kpiConfig.fileName, jsonItem->valuestring);
+                }  
+            } else {
+                printf("Invalid config for kpi fileName\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "UdpPort");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.kpiConfig.udpPort = jsonItem->valueint;
+            } else {
+                printf("Invalid config for kpi udpPort\n");
             }
         }
     }
@@ -176,6 +224,10 @@ void ShowConfig()
     printf("logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
     printf("maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
     printf("logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
+    printf("reportType:         %d\n", gLteConfig.kpiConfig.reportType);
+    printf("reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
+    printf("fileName:           %s\n", gLteConfig.kpiConfig.fileName);
+    printf("udpPort:            %d\n", gLteConfig.kpiConfig.udpPort);
     printf("+----------------------------------------+\n");
 }
 

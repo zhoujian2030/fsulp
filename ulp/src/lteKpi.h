@@ -14,23 +14,45 @@ extern "C" {
 
 typedef struct 
 {
+    unsigned int imsi;
+    unsigned int mTmsi;
+    unsigned int idResp;
+    unsigned int rrcSetupCompl;
+    unsigned int attachReq; 
+    unsigned int tauReq;
+    unsigned int servReq; 
+    unsigned int extServReq; 
+    unsigned int detachReq; 
+    unsigned int lcIdArray[11];
+    unsigned int activeRlcCtx;
     unsigned int semLock;
     unsigned int mem;
-    unsigned int activeRlcCtx;
-    unsigned int lcIdArray[11];
     unsigned int macInd;
     unsigned int rlcInd;
     unsigned int pdcpInd;
-    unsigned int rrcSetupCompl;
-    unsigned int idResp;
-    unsigned int attachReq; 
-    unsigned int extServReq; 
-    unsigned int servReq; 
-    unsigned int detachReq; 
-    unsigned int tauReq;
-    unsigned int imsi;
-    unsigned int mTmsi;
 } LteKpi;
+
+#ifdef OS_LINUX
+typedef enum {
+    KPI_NO_REPORT   = 0,
+    KPI_REPORT_FILE = 1,
+    KPI_REPORT_UDP  = 2
+} KpiReportType;
+
+#define MAX_KPI_FILE_NAME_LENGTH    128
+
+typedef struct {
+    unsigned int reportType;
+
+    unsigned int reportFilePeriod;              // for report type 1
+    char fileName[MAX_KPI_FILE_NAME_LENGTH];    
+
+    unsigned short udpPort;                     // for report type 2
+} LteKpiConfig;
+
+extern void NotifyKpi();
+
+#endif
 
 extern LteKpi gLteKpi;
 

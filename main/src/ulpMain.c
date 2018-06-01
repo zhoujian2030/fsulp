@@ -2,6 +2,7 @@
 #include "lteLogger.h"
 #include "lteUlpMgr.h"
 #include "lteConfig.h"
+#include "lteTrigger.h"
 #include <stdio.h>
 
 
@@ -46,13 +47,7 @@ int main(int argc, char* argv[]) {
     
     sleep(1);
 
-    unsigned int usleepTime = gLteConfig.pollingInterval * 1000;
-    while (1) {
-
-        UlpOneMilliSecondIsr();
-
-        usleep(usleepTime);
-    }
+    StartLteTrigger();
 
     return 0; 
 }

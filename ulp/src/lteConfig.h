@@ -15,11 +15,13 @@ extern "C" {
 #ifdef OS_LINUX
 
 #include "logger.h"
+#include "lteKpi.h"
 
 typedef struct {       
     int  pollingInterval;       // in milli second
     int  resCleanupTimer;       // in milli second
     LoggerConfig logConfig;     // TRACE, DEBUG, INFO, WARNING, ERROR
+    LteKpiConfig kpiConfig;
 } LteConfig;
 
 

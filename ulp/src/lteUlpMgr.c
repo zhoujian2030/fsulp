@@ -20,8 +20,8 @@
 // -------------------------
 void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
 {
-    KpiInit();
     InitLteLogger();
+    KpiInit();
     InitMemPool();
     Asn1Init();
     InitMacLayer(standloneMacFlag);
@@ -39,6 +39,10 @@ void UlpOneMilliSecondIsr()
 
 	NotifyMacHandler();
 	NotifyResCleaner();
+
+#ifdef OS_LINUX
+    NotifyKpi();
+#endif
 
 #ifdef TI_DSP
 	NotifyLogHandler();
