@@ -22,7 +22,7 @@ typedef enum
 	INFO			= 2,		/* Informational message */
 	WARNING			= 3,		/* Non-critical, but important comment reveals possible future problems */
 	ERROR			= 4,		/* The program cannot continue and will exit immediatelly */
-	E_LOG_LVL_MAX	= 5,
+	E_LOG_LVL_MAX	= 5
 }E_CMLogLevel;
 
 #define MAX_LOG_FILE_PATH_LENGTH 128
@@ -47,9 +47,10 @@ void LoggerWriteMem(unsigned int logLevel, unsigned char* pBuffer, unsigned int 
 #define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
 #define FUNCNAME __FUNCTION__
 #define LINE     __LINE__
+#define LOGGER_MODULE_CM	"CM"
 
 #define LOG_MSG(moduleId, eLogLevel, fmt, args...) \
-    LoggerWriteMsg(moduleId, eLoglevel, FILENAME, __func__, fmt, ##args);
+    LoggerWriteMsg(moduleId, eLogLevel, FILENAME, __func__, fmt, ##args);
 
 #define LOG_MEM(eLogLevel, pBuffer, length) \
 	LoggerWriteMem(eLogLevel, pBuffer, length);
