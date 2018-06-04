@@ -133,7 +133,11 @@ void InitMacLayer(unsigned char standloneFlag)
 {
     gMacStandloneFlag = standloneFlag;
     if (gMacStandloneFlag) {
+#ifdef INTEGRATE_PHY        
         ListInit(&gMacRecvdPhyDataList, 1);
+#else
+        ListInit(&gMacRecvdPhyDataList, 0);
+#endif
         EventInit(&gMacHandlerEvent);
 
 #ifdef TI_DSP

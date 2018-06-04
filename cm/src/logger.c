@@ -13,6 +13,11 @@
 #include "logger.h"
 #include <unistd.h>
 
+// #define LOG_MODULE_NAME
+#define LOG_THREAD_ID
+// #define LOG_FILE_NAME
+#define LOG_FUNC_NAME
+
 static LoggerStatus gLoggerStatus_s = {
     0,
     0
@@ -35,6 +40,7 @@ static char gLoggerLevelName_s[E_LOG_LVL_MAX][6] = {
 #define MAX_LOG_ITEM_LENGTH 4096
 
 static void LoggerOutputLog(char* logBuff);
+static void LoggerGetTimestamp(char* logBuf);
 
 // -------------------------------------
 void LoggerSetlevel(int loglevel)
@@ -74,17 +80,34 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
         char logBuff[MAX_LOG_ITEM_LENGTH] = { };
         int offset = 0;
 
-        struct timeval tv;
-        gettimeofday(&tv, 0);
+        LoggerGetTimestamp(logBuff + offset);
+        offset = strlen(logBuff);
+
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", gLoggerLevelName_s[logLevel]);
+        offset = strlen(logBuff);
+
+#ifdef LOG_MODULE_NAME
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%3.3s] ", moduleId);
+        offset = strlen(logBuff);
+#endif
+#ifdef LOG_THREAD_ID
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%lu] ", pthread_self());
+        offset = strlen(logBuff);
+#endif
+#ifdef LOG_FILE_NAME
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", fileName);
+        offset = strlen(logBuff);
+#endif
+
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "- ");
+        offset = strlen(logBuff);
+
+#ifdef LOG_FUNC_NAME
+        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s], ", funcName);
+        offset = strlen(logBuff);
+#endif       
 
         va_list args;
-
-        strftime(logBuff, MAX_LOG_ITEM_LENGTH, "[%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
-        offset = strlen(logBuff);
-        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, ".%03d] [%s] [%3.3s] [%lu] [%s] - [%s], ", (int)tv.tv_usec/1000, 
-            gLoggerLevelName_s[logLevel], moduleId, pthread_self(), fileName,funcName);
-        offset = strlen(logBuff);
-
         va_start(args, fmt);
         vsnprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, fmt, args);
         va_end(args);
@@ -138,6 +161,57 @@ void LoggerWriteMem(unsigned int logLevel, unsigned char* pBuffer, unsigned int 
 
         LoggerOutputLog(logBuff);
     }
+}
+
+// --------------------------------------
+#define MAX_TIMESTAMP_LENGTH            32
+#define TIMESTAMP_SAMPLE                "1970-01-01 08:19:38.554"
+#define TIMESTAMP_MILLI_SECOND_OFFSET   (strlen(TIMESTAMP_SAMPLE) - 3)
+#define TIMESTAMP_SECOND_OFFSET         (strlen(TIMESTAMP_SAMPLE) - 6)
+static char gCachedTimeStamp[MAX_TIMESTAMP_LENGTH];
+static __time_t gPrevSysSecond = 0;
+static unsigned int gPrevSysMilliSecond = 0;
+static void LoggerGetTimestamp(char* logBuff)
+{
+    if (logBuff == 0) {
+        return;
+    }
+
+    int offset = 0;
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+    unsigned int currMilliSecond = tv.tv_usec/1000;
+
+    if (gPrevSysSecond == 0) {
+        // timestamp is not initialized yet
+        strftime(gCachedTimeStamp, MAX_TIMESTAMP_LENGTH, "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
+        offset = strlen(gCachedTimeStamp);
+        snprintf(gCachedTimeStamp + offset, MAX_TIMESTAMP_LENGTH - offset, ".%03d", currMilliSecond);
+    } else {
+        if (gPrevSysSecond == tv.tv_sec) {            
+            if (gPrevSysMilliSecond != currMilliSecond) {
+                // update millisecond
+                snprintf(gCachedTimeStamp + TIMESTAMP_MILLI_SECOND_OFFSET, MAX_TIMESTAMP_LENGTH - TIMESTAMP_MILLI_SECOND_OFFSET, "%03d", currMilliSecond);
+            }
+        } else {
+            // second is changed
+            __time_t prevSysMin = gPrevSysSecond/60;
+            __time_t currSysMin = tv.tv_sec/60;
+            if (prevSysMin == currSysMin) {
+                // update second and millisecond
+                snprintf(gCachedTimeStamp + TIMESTAMP_SECOND_OFFSET, MAX_TIMESTAMP_LENGTH - TIMESTAMP_SECOND_OFFSET, "%02d.%03d", (int)tv.tv_sec%60, currMilliSecond);
+            } else {
+                // update the whole timestamp
+                strftime(gCachedTimeStamp, 32, "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
+                offset = strlen(gCachedTimeStamp);
+                snprintf(gCachedTimeStamp + offset, MAX_TIMESTAMP_LENGTH - offset, ".%03d", currMilliSecond);
+            }
+        }
+    }
+
+    gPrevSysSecond = tv.tv_sec;
+    gPrevSysMilliSecond = currMilliSecond;
+    snprintf(logBuff, MAX_LOG_ITEM_LENGTH, "[%s] ", gCachedTimeStamp);
 }
 
 // --------------------------------------

@@ -8,6 +8,7 @@
 using namespace std;
 
 // ---------------------------------
+int gContinueFailCount = 0;
 int main(int argc, char* argv[]) {
     char* child_argv[32] = {0};
 
@@ -29,18 +30,29 @@ int main(int argc, char* argv[]) {
         pid = fork();
         if (pid == -1) {
             printf("fail to fork\n");
+            gContinueFailCount++;
+            if (gContinueFailCount == 10) {
+                break;
+            }
             sleep(1);
         } else if (pid == 0) {
             printf("start child process\n");
             if (execv(child_argv[0], (char**)child_argv) < 0) {
                 printf("fail to execv\n");
+                gContinueFailCount++;
+                if (gContinueFailCount == 10) {
+                    break;
+                }
+
                 sleep(1);
                 continue;
             }
+            gContinueFailCount = 0;
             exit(0);
         } else {
             pid = wait(&status);
             printf("status = %d, try to restart\n", status);
+            gContinueFailCount = 0;
         }
     }
 

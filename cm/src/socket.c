@@ -15,8 +15,10 @@
 int SocketClose(int fd)
 {
     if (fd >= 0) {
-        close(fd);
+        return close(fd);
     }
+
+    return -1;
 }
 
 // ------------------------------------------------
