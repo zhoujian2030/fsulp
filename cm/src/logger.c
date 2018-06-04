@@ -13,11 +13,6 @@
 #include "logger.h"
 #include <unistd.h>
 
-// #define LOG_MODULE_NAME
-#define LOG_THREAD_ID
-// #define LOG_FILE_NAME
-#define LOG_FUNC_NAME
-
 static LoggerStatus gLoggerStatus_s = {
     0,
     0
@@ -27,7 +22,11 @@ static LoggerConfig gLoggerConfig_s = {
     1, 
     0,
     1024*1024*5,    // 5M bytes
-    ""
+    "",
+    0,  // default not log module name
+    1,  // log file name
+    1,  // log function name
+    1,  // log thread id
 };
 
 static char gLoggerLevelName_s[E_LOG_LVL_MAX][6] = {
@@ -86,26 +85,28 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
         snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", gLoggerLevelName_s[logLevel]);
         offset = strlen(logBuff);
 
-#ifdef LOG_MODULE_NAME
-        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%3.3s] ", moduleId);
-        offset = strlen(logBuff);
-#endif
-#ifdef LOG_THREAD_ID
-        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%lu] ", pthread_self());
-        offset = strlen(logBuff);
-#endif
-#ifdef LOG_FILE_NAME
-        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", fileName);
-        offset = strlen(logBuff);
-#endif
+        if (gLoggerConfig_s.logModuleNameFlag) {
+            snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%3.3s] ", moduleId);
+            offset = strlen(logBuff);
+        }
+
+        if (gLoggerConfig_s.logThreadIdFlag) {
+            snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%lu] ", pthread_self());
+            offset = strlen(logBuff);
+        }
+        
+        if (gLoggerConfig_s.logFileNameFlag) {
+            snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", fileName);
+            offset = strlen(logBuff);
+        }
 
         snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "- ");
         offset = strlen(logBuff);
 
-#ifdef LOG_FUNC_NAME
-        snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s], ", funcName);
-        offset = strlen(logBuff);
-#endif       
+        if (gLoggerConfig_s.logFuncNameFlag) {
+            snprintf(logBuff + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s], ", funcName);
+            offset = strlen(logBuff);
+        }     
 
         va_list args;
         va_start(args, fmt);

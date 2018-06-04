@@ -32,6 +32,10 @@ typedef struct {
 	unsigned char logToFileFlag;
 	unsigned int maxLogFileSize;
 	char logFilePath[MAX_LOG_FILE_PATH_LENGTH];
+	unsigned char logModuleNameFlag;
+	unsigned char logFileNameFlag;
+	unsigned char logFuncNameFlag;
+	unsigned char logThreadIdFlag;
 } LoggerConfig;
 typedef struct {
 	FILE* fp;

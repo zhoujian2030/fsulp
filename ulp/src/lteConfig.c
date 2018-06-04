@@ -168,6 +168,42 @@ void ParseConfig(char* configFileName)
                 }       
             }
         }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogModuleName");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.logConfig.logModuleNameFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogModuleName\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogFileName");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.logConfig.logFileNameFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogFileName\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogFuncName");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.logConfig.logFuncNameFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogFuncName\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogThreadId");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.logConfig.logThreadIdFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogThreadId\n");
+            }
+        }
     }
 
     jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "KpiConfig");
@@ -224,6 +260,10 @@ void ShowConfig()
     LOG_INFO(ULP_LOGGER_NAME, "logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
     LOG_INFO(ULP_LOGGER_NAME, "maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
     LOG_INFO(ULP_LOGGER_NAME, "logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
+    LOG_INFO(ULP_LOGGER_NAME, "logModuleNameFlag:  %d\n", gLteConfig.logConfig.logModuleNameFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "logFileNameFlag:    %d\n", gLteConfig.logConfig.logFileNameFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "logFuncNameFlag:    %d\n", gLteConfig.logConfig.logFuncNameFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "logThreadIdFlag:    %d\n", gLteConfig.logConfig.logThreadIdFlag);
     LOG_INFO(ULP_LOGGER_NAME, "reportType:         %d\n", gLteConfig.kpiConfig.reportType);
     LOG_INFO(ULP_LOGGER_NAME, "reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
     LOG_INFO(ULP_LOGGER_NAME, "fileName:           %s\n", gLteConfig.kpiConfig.fileName);
