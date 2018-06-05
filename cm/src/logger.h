@@ -29,18 +29,34 @@ typedef enum
 typedef struct {
 	unsigned int logLevel;
 	unsigned char logToConsoleFlag;
+
+	// logger file config
 	unsigned char logToFileFlag;
 	unsigned int maxLogFileSize;
 	char logFilePath[MAX_LOG_FILE_PATH_LENGTH];
+
+	// log format config
 	unsigned char logModuleNameFlag;
 	unsigned char logFileNameFlag;
 	unsigned char logFuncNameFlag;
 	unsigned char logThreadIdFlag;
+
+	// for async logging
+	unsigned char asyncLoggingFlag;
+	unsigned int logBufferingSize;	// 0 if no buffering
 } LoggerConfig;
 typedef struct {
 	FILE* fp;
 	unsigned int logFileSize;
 } LoggerStatus;
+
+#define MAX_LOG_BLOCK_SIZE	(1024*16)
+typedef struct {
+	void* next;	
+	unsigned char fullFlag;
+	unsigned int length;
+	char logData[MAX_LOG_BLOCK_SIZE];
+} LogBufferCache;
 
 void LoggerSetlevel(int loglevel);
 void LoggerInit();

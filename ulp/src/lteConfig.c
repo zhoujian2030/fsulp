@@ -23,9 +23,18 @@ LteConfig gLteConfig =
     {
         TRACE,
         1, 
+
         0,
-        1024*1024*5,
-        ""
+        1024*1024*5,    // 5M bytes
+        "",
+
+        0,  // default not log module name
+        0,  // log file name
+        1,  // log function name
+        1,  // log thread id
+
+        0,
+        1024*4, // default 4k bytes buffering
     },
 
     // KPI config, default not report
@@ -204,6 +213,24 @@ void ParseConfig(char* configFileName)
                 LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogThreadId\n");
             }
         }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogAsync");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.logConfig.asyncLoggingFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogAsync\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogBufferingSize");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.logConfig.logBufferingSize = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogBufferingSize\n");
+            }
+        }
     }
 
     jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "KpiConfig");
@@ -264,6 +291,8 @@ void ShowConfig()
     LOG_INFO(ULP_LOGGER_NAME, "logFileNameFlag:    %d\n", gLteConfig.logConfig.logFileNameFlag);
     LOG_INFO(ULP_LOGGER_NAME, "logFuncNameFlag:    %d\n", gLteConfig.logConfig.logFuncNameFlag);
     LOG_INFO(ULP_LOGGER_NAME, "logThreadIdFlag:    %d\n", gLteConfig.logConfig.logThreadIdFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "asyncLoggingFlag:   %d\n", gLteConfig.logConfig.asyncLoggingFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "logBufferingSize:   %d\n", gLteConfig.logConfig.logBufferingSize);
     LOG_INFO(ULP_LOGGER_NAME, "reportType:         %d\n", gLteConfig.kpiConfig.reportType);
     LOG_INFO(ULP_LOGGER_NAME, "reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
     LOG_INFO(ULP_LOGGER_NAME, "fileName:           %s\n", gLteConfig.kpiConfig.fileName);

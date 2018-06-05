@@ -12,7 +12,7 @@
 #include "lteConfig.h"
 #include "lteUlpMgr.h"
 
-#define TASK_LTE_TRIGGER    90
+#define TASK_LTE_TRIGGER_PRIORITY    90
 
 // ---------------------------------
 void* LteTriggerEntryFunc(void* p)
@@ -32,7 +32,7 @@ void StartLteTrigger()
 {
     ThreadHandle threadHandle;
     ThreadParams threadParams;
-    threadParams.priority = TASK_LTE_TRIGGER;
+    threadParams.priority = TASK_LTE_TRIGGER_PRIORITY;
     threadParams.policy = RT_SCHED_RR;
     threadParams.stackSize = 0;
     ThreadCreate((void*)LteTriggerEntryFunc, &threadHandle, &threadParams);

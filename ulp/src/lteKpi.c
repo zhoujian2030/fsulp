@@ -26,7 +26,7 @@ LteKpi gLteKpi = {0};
 
 #ifdef OS_LINUX
 
-#define KPI_TASK_PRIOSITY   85
+#define KPI_TASK_PRIORITY   85
 int gKpiNotifyCount = 1;
 
 Event gKpiEvent;
@@ -155,7 +155,7 @@ void KpiInit()
 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
-        threadParams.priority = KPI_TASK_PRIOSITY;
+        threadParams.priority = KPI_TASK_PRIORITY;
         threadParams.policy = RT_SCHED_RR;
         threadParams.stackSize = 0;
         ThreadCreate((void*)LteKpiEntryFunc, &threadHandle, &threadParams);
