@@ -16,7 +16,6 @@ extern "C" {
 
 typedef struct _ListNode_ ListNode;
 typedef struct _List_ List;
-typedef struct _List_ Queue;
 
 struct _ListNode_ {
     ListNode *next;

@@ -14,6 +14,9 @@ extern "C" {
 
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <pthread.h>
+#include "queue.h"
 
 typedef enum 
 {
@@ -25,14 +28,22 @@ typedef enum
 	E_LOG_LVL_MAX	= 5
 }E_CMLogLevel;
 
+typedef enum {
+	SYNC_LOG		= 0,
+	AYNC_LOG_TYPE_1 = 1,
+	AYNC_LOG_TYPE_2 = 2,
+	INVALID_LOG_TYPE = 3
+} E_LogType;
 #define MAX_LOG_FILE_PATH_LENGTH 128
 typedef struct {
-	unsigned int logLevel;
+	unsigned int  logLevel;	
+	unsigned int  logType;
+
 	unsigned char logToConsoleFlag;
 
 	// logger file config
 	unsigned char logToFileFlag;
-	unsigned int maxLogFileSize;
+	unsigned int  maxLogFileSize;
 	char logFilePath[MAX_LOG_FILE_PATH_LENGTH];
 
 	// log format config
@@ -42,9 +53,10 @@ typedef struct {
 	unsigned char logThreadIdFlag;
 
 	// for async logging
-	unsigned char asyncLoggingFlag;
-	unsigned int logBufferingSize;	// 0 if no buffering
+	unsigned int asyncWaitTime;
+	unsigned int logBufferingSize;	// for async log type 1, 0 if no buffering
 } LoggerConfig;
+
 typedef struct {
 	FILE* fp;
 	unsigned int logFileSize;
@@ -57,6 +69,27 @@ typedef struct {
 	unsigned int length;
 	char logData[MAX_LOG_BLOCK_SIZE];
 } LogBufferCache;
+
+#define MAX_TIMESTAMP_LENGTH	32
+#define MAX_LOG_CONTENT_LENGTH	256
+#define MAX_LOG_ARGS_NUM		6
+typedef struct {
+	QNode node;
+	char timestamp[MAX_TIMESTAMP_LENGTH];
+	char moduleId[6];
+	int  logLevel;
+	char* fileName;
+	char* funcName;
+	unsigned long threadId;
+
+	unsigned char logContentFlag;
+
+	char* fmt;
+	unsigned int args[MAX_LOG_ARGS_NUM];
+	// va_list args;
+
+	char logContent[MAX_LOG_CONTENT_LENGTH];
+} LogInfo;
 
 void LoggerSetlevel(int loglevel);
 void LoggerInit();

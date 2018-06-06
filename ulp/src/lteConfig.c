@@ -22,9 +22,10 @@ LteConfig gLteConfig =
     // log config, default log to console only
     {
         TRACE,
-        1, 
+        0,  // log type
+        1,  // log to console flag
 
-        0,
+        0,  // log to file flag
         1024*1024*5,    // 5M bytes
         "",
 
@@ -33,7 +34,7 @@ LteConfig gLteConfig =
         1,  // log function name
         1,  // log thread id
 
-        0,
+        5,      // async wait time
         1024*4, // default 4k bytes buffering
     },
 
@@ -78,6 +79,7 @@ void ParseConfig(char* configFileName)
 
     int fd = FileOpen(configFileName, FILE_OPEN, FILE_READ_ONLY);
     if (fd == -1) {
+        printf("FileOpen error\n");
         return;
     }
 
@@ -88,15 +90,18 @@ void ParseConfig(char* configFileName)
     
     ret = FileRead(fd, jsonBuffer, 8192, &numBytesRead);
     if (ret != FILE_SUCC || numBytesRead <= 0) {
+        printf("FileRead error\n");
         return;
     }
 
     if (numBytesRead == 8192) {
+        printf("numBytesRead = 8192\n");
         return;
     }
 
     jsonRoot = cJSON_Parse(jsonBuffer);
     if (jsonRoot == 0) {
+        printf("cJSON_Parse\n");
         return;
     }
 
@@ -139,6 +144,15 @@ void ParseConfig(char* configFileName)
                 }
             } else {
                 LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogLevel\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogType");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint >= SYNC_LOG) && (jsonItem->valueint < INVALID_LOG_TYPE)) {                
+                gLteConfig.logConfig.logType = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogType\n");
             }
         }
 
@@ -214,18 +228,18 @@ void ParseConfig(char* configFileName)
             }
         }
 
-        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogAsync");
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogAsyncWaitTime");
         if (jsonItem != 0) {
-            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
-                gLteConfig.logConfig.asyncLoggingFlag = jsonItem->valueint;
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.logConfig.asyncWaitTime = jsonItem->valueint;
             } else {
-                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogAsync\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogAsyncWaitTime\n");
             }
         }
 
         jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogBufferingSize");
         if (jsonItem != 0) {
-            if (jsonItem->type == cJSON_Number) {                
+            if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint <= MAX_LOG_BLOCK_SIZE)) {                
                 gLteConfig.logConfig.logBufferingSize = jsonItem->valueint;
             } else {
                 LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogBufferingSize\n");
@@ -283,6 +297,7 @@ void ShowConfig()
     LOG_INFO(ULP_LOGGER_NAME, "pollingInterval:    %d\n", gLteConfig.pollingInterval);
     LOG_INFO(ULP_LOGGER_NAME, "resCleanupTimer:    %d\n", gLteConfig.resCleanupTimer);
     LOG_INFO(ULP_LOGGER_NAME, "logLevel:           %d\n", gLteConfig.logConfig.logLevel);
+    LOG_INFO(ULP_LOGGER_NAME, "logType:            %d\n", gLteConfig.logConfig.logType);
     LOG_INFO(ULP_LOGGER_NAME, "logToConsoleFlag:   %d\n", gLteConfig.logConfig.logToConsoleFlag);
     LOG_INFO(ULP_LOGGER_NAME, "logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
     LOG_INFO(ULP_LOGGER_NAME, "maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
@@ -291,7 +306,7 @@ void ShowConfig()
     LOG_INFO(ULP_LOGGER_NAME, "logFileNameFlag:    %d\n", gLteConfig.logConfig.logFileNameFlag);
     LOG_INFO(ULP_LOGGER_NAME, "logFuncNameFlag:    %d\n", gLteConfig.logConfig.logFuncNameFlag);
     LOG_INFO(ULP_LOGGER_NAME, "logThreadIdFlag:    %d\n", gLteConfig.logConfig.logThreadIdFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "asyncLoggingFlag:   %d\n", gLteConfig.logConfig.asyncLoggingFlag);
+    LOG_INFO(ULP_LOGGER_NAME, "asyncWaitTime:      %d\n", gLteConfig.logConfig.asyncWaitTime);
     LOG_INFO(ULP_LOGGER_NAME, "logBufferingSize:   %d\n", gLteConfig.logConfig.logBufferingSize);
     LOG_INFO(ULP_LOGGER_NAME, "reportType:         %d\n", gLteConfig.kpiConfig.reportType);
     LOG_INFO(ULP_LOGGER_NAME, "reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);

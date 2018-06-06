@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
-#include <stdarg.h>
 #include "logger.h"
 #include <unistd.h>
 
@@ -19,9 +18,10 @@ static LoggerStatus gLoggerStatus_s = {
 };
 static LoggerConfig gLoggerConfig_s = {
     TRACE,
-    1, 
+    0,  // log type
+    1,  // log to console flag
 
-    0,
+    0,  // log to file flag
     1024*1024*5,    // 5M bytes
     "",
 
@@ -30,7 +30,7 @@ static LoggerConfig gLoggerConfig_s = {
     1,  // log function name
     1,  // log thread id
 
-    0,
+    5,      // async wait time
     1024*4, // default 4k bytes buffering
 };
 
@@ -55,6 +55,13 @@ static LogBufferCache* gpWriteBuffer = 0;
 static LogBufferCache* gpReadBuffer = 0;
 pthread_cond_t gLoggerCondition;
 pthread_mutex_t gLoggerMutex;
+
+#define MAX_NUM_LOG_INFO_NODE       4096
+#define MAX_NUM_LOG_ITEM_TO_WRITE   32  // when count of gBusyLogInfoQueue reaches, notify logger
+LogInfo gLogInfoNodeArray[MAX_NUM_LOG_INFO_NODE];
+Queue gIdleLogInfoQueue;
+Queue gBusyLogInfoQueue;
+static void ProcessLogQueue();
 
 static void InitAsyncLogger();
 void* LoggerEntryFunc(void* p);
@@ -89,54 +96,64 @@ void LoggerInit(LoggerConfig* pConfig)
             gLoggerStatus_s.fp = fopen(gLoggerConfig_s.logFilePath, "w+");
             if (gLoggerStatus_s.fp == 0) {
                 gLoggerConfig_s.logToFileFlag = 0;
-                // gLoggerConfig_s.asyncLoggingFlag = 0;
                 printf("Fail to create log file : %s\n", gLoggerConfig_s.logFilePath);
                 return;
             }
         }
     }
 
-    InitAsyncLogger();
-
-    if (!gLoggerConfig_s.asyncLoggingFlag) {
+    if (gLoggerConfig_s.logType == SYNC_LOG) {
         if (pthread_mutex_init(&gLoggerMutex, 0) != 0) {
             printf("Fail to init pthread_mutex_t\n"); 
         }
+    } else {
+        InitAsyncLogger();
     }
 }
 
 // -------------------------------------
 static void InitAsyncLogger()
 {
-    if (gLoggerConfig_s.asyncLoggingFlag) {
+    if (gLoggerConfig_s.logType != SYNC_LOG) {
         unsigned int i;
         int ret;
-        LogBufferCache* ptr = &gLogBufferQueue[0];
-        for (i=0; i<MAX_NUM_LOG_BUFFER_BLOCK; i++) {
-            gLogBufferQueue[i].fullFlag = 0;
-            gLogBufferQueue[i].length = 0;
 
-            if (i == 0) {
-                gpWriteBuffer = ptr;
-                gpReadBuffer = ptr;
-            } else {
-                ptr->next = (void*)&gLogBufferQueue[i];
-                ptr = &gLogBufferQueue[i];
+        if (gLoggerConfig_s.logType == AYNC_LOG_TYPE_1) {
+            LogBufferCache* ptr = &gLogBufferQueue[0];
+            for (i=0; i<MAX_NUM_LOG_BUFFER_BLOCK; i++) {
+                gLogBufferQueue[i].fullFlag = 0;
+                gLogBufferQueue[i].length = 0;
+
+                if (i == 0) {
+                    gpWriteBuffer = ptr;
+                    gpReadBuffer = ptr;
+                } else {
+                    ptr->next = (void*)&gLogBufferQueue[i];
+                    ptr = &gLogBufferQueue[i];
+                }
+            }
+            ptr->next = (void*)gpWriteBuffer;
+        } else {
+            QueueInit(&gIdleLogInfoQueue);
+            QueueInit(&gBusyLogInfoQueue);
+            QNode* pNode;
+            for (i=0; i<MAX_NUM_LOG_INFO_NODE; i++) {
+                pNode = &gLogInfoNodeArray[i].node;
+                QueuePushNode(&gIdleLogInfoQueue, pNode);
             }
         }
-        ptr->next = (void*)gpWriteBuffer;
 
         ret = pthread_mutex_init(&gLoggerMutex, 0);
         if (ret == 0) {
             ret = pthread_cond_init(&gLoggerCondition, 0);
             if (ret != 0) {
                 pthread_mutex_destroy(&gLoggerMutex);
-                gLoggerConfig_s.asyncLoggingFlag = 0;
+                gLoggerConfig_s.logType = SYNC_LOG;
                 printf("Fail to init pthread_cond_t\n"); 
                 return;
             }
         } else {
-            gLoggerConfig_s.asyncLoggingFlag = 0;
+            gLoggerConfig_s.logType = SYNC_LOG;
             printf("Fail to init pthread_mutex_t\n"); 
             return;
         }
@@ -175,43 +192,58 @@ void* LoggerEntryFunc(void* p)
 {
     int ret;
 
+    struct timespec outtime;
+    struct timeval now;
+
     while (1) {
         ret = pthread_mutex_lock(&gLoggerMutex);
         if (ret != 0) {
             printf("Fail to lock on mutex\n");
             break;
         }
-
+        
         // wait if current log buffer is not full
-        while (!gpReadBuffer->fullFlag) {
-            ret = pthread_cond_wait(&gLoggerCondition, &gLoggerMutex);
-            if (ret != 0) {
-                printf("Fail to wait on condition\n");
-                pthread_mutex_unlock(&gLoggerMutex);
-                break;
+        while (((gLoggerConfig_s.logType == AYNC_LOG_TYPE_2) && (!QueueCount(&gBusyLogInfoQueue))) ||
+            ((gLoggerConfig_s.logType == AYNC_LOG_TYPE_1) && (gpReadBuffer->length == 0))) {
+
+            if (gLoggerConfig_s.asyncWaitTime > 0) {
+                gettimeofday(&now, 0);
+                now.tv_usec += gLoggerConfig_s.asyncWaitTime * 1000;
+                if(now.tv_usec >= 1000000)
+                {
+                    now.tv_sec += now.tv_usec / 1000000;
+                    now.tv_usec %= 1000000;
+                }
+                outtime.tv_nsec = now.tv_usec * 1000;
+                outtime.tv_sec = now.tv_sec;
+
+                pthread_cond_timedwait(&gLoggerCondition, &gLoggerMutex, &outtime);  
+            } else {
+                pthread_cond_wait(&gLoggerCondition, &gLoggerMutex);
             }
         }
 
-        // write to file
-        // printf("gpReadBuffer = %p\n", gpReadBuffer);
-        LoggerOutputLog(gpReadBuffer->logData, gpReadBuffer->length);
-        gpReadBuffer->fullFlag = 0;
-        gpReadBuffer->length = 0;
-        gpReadBuffer = (LogBufferCache*)gpReadBuffer->next;
-
-        pthread_mutex_unlock(&gLoggerMutex);
-
-        // // sleep 1ms in case too much log
-        // if (gpReadBuffer->fullFlag) {
-        //     usleep(1000);
-        // }
+        if (gLoggerConfig_s.logType == AYNC_LOG_TYPE_1) {
+            // write to file
+            // printf("gpReadBuffer = %p\n", gpReadBuffer);
+            LoggerOutputLog(gpReadBuffer->logData, gpReadBuffer->length);
+            gpReadBuffer->length = 0;
+            // if full, the write ptr is moved to next buffer, so also move read ptr
+            if (gpReadBuffer->fullFlag) {
+                gpReadBuffer->fullFlag = 0;
+                gpReadBuffer = (LogBufferCache*)gpReadBuffer->next;
+            }
+            pthread_mutex_unlock(&gLoggerMutex);
+        } else {
+            pthread_mutex_unlock(&gLoggerMutex);
+            ProcessLogQueue();
+        }
     }
 
     return 0;
 }
 
 // --------------------------------------
-#define MAX_TIMESTAMP_LENGTH            32
 #define TIMESTAMP_SAMPLE                "1970-01-01 08:19:38.554"
 #define TIMESTAMP_MILLI_SECOND_OFFSET   (strlen(TIMESTAMP_SAMPLE) - 3)
 #define TIMESTAMP_SECOND_OFFSET         (strlen(TIMESTAMP_SAMPLE) - 6)
@@ -233,8 +265,8 @@ static void LoggerGetTimestamp(char* logBuff)
         // timestamp is not changed
         snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
     } else {    
-        // when async logging, the memory is protected outside
-        if (!gLoggerConfig_s.asyncLoggingFlag) {
+        // when async logging type 1, the memory is protected outside
+        if (gLoggerConfig_s.logType != AYNC_LOG_TYPE_1) {
             pthread_mutex_lock(&gLoggerMutex);
         }
 
@@ -267,7 +299,7 @@ static void LoggerGetTimestamp(char* logBuff)
         gPrevSysMilliSecond = currMilliSecond;
         snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
 
-        if (!gLoggerConfig_s.asyncLoggingFlag) {
+        if (gLoggerConfig_s.logType != AYNC_LOG_TYPE_1) {
             pthread_mutex_unlock(&gLoggerMutex);
         }      
     }
@@ -282,10 +314,60 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
         char* logPtr;
         va_list args;
 
-        if (gLoggerConfig_s.asyncLoggingFlag) {
+        if (gLoggerConfig_s.logType != SYNC_LOG) {
             va_start(args, fmt);
-            AsyncWriteMsg(moduleId, logLevel, fileName, funcName, fmt, args);
-            va_end(args);
+            if (gLoggerConfig_s.logType == AYNC_LOG_TYPE_1) {
+                AsyncWriteMsg(moduleId, logLevel, fileName, funcName, fmt, args);
+            } else {
+                LogInfo* pLogInfoNode = (LogInfo*)QueuePopNode(&gIdleLogInfoQueue);
+                if (pLogInfoNode == 0) {               
+                    va_end(args);
+                    pthread_mutex_lock(&gLoggerMutex);
+                    pthread_cond_signal(&gLoggerCondition);
+                    pthread_mutex_unlock(&gLoggerMutex); 
+                    // printf("no idle log item, drop this log\n");    
+                    return;
+                }
+
+                // LoggerGetTimestamp(pLogInfoNode->timestamp);
+                pLogInfoNode->logLevel = logLevel;
+                if (gLoggerConfig_s.logModuleNameFlag) {
+                    memcpy(pLogInfoNode->moduleId, moduleId, 6);
+                }
+                pLogInfoNode->fileName = (char*)fileName;
+                pLogInfoNode->funcName = (char*)funcName;
+                pLogInfoNode->threadId = pthread_self();
+                int length = strlen(fmt);
+                int i = 0, n = 0, s = 0;
+                while (i < length) {
+                    if (fmt[i++] == '%') {
+                        n++;
+                        if (n > MAX_LOG_ARGS_NUM) {
+                            break;
+                        }
+
+                        if (fmt[i++] == 's') {
+                            s++;
+                            break;
+                        }
+                    }
+                }
+
+                if ((n > MAX_LOG_ARGS_NUM) || (s > 0)) {
+                    vsnprintf(pLogInfoNode->logContent, MAX_LOG_CONTENT_LENGTH, fmt, args);
+                    pLogInfoNode->logContentFlag = 1;
+                    // printf("logContentFlag = 1\n");
+                } else {
+                    for (i=0; i<n; i++) {
+                        pLogInfoNode->args[i] = va_arg(args, unsigned int);
+                    }
+                    pLogInfoNode->logContentFlag = 0;
+                    pLogInfoNode->fmt = (char*)fmt;
+                }
+                va_end(args);
+
+                QueuePushNode(&gBusyLogInfoQueue, &pLogInfoNode->node);
+            }
         } else {
             logPtr = logBuff;
 
@@ -434,6 +516,76 @@ static void AsyncWriteMsg(char* moduleId, unsigned int logLevel, const char *fil
     }
 
     pthread_mutex_unlock(&gLoggerMutex);
+}
+
+// --------------------------------------
+static void ProcessLogQueue()
+{
+    LogInfo* pLogInfoNode;
+    char logBuff[4096] = {0};
+    char timestamp[MAX_TIMESTAMP_LENGTH];
+    int remainBufferSize = 4095;
+    int offset = 0;
+    unsigned int count = QueueCount(&gBusyLogInfoQueue);
+    LoggerGetTimestamp(timestamp);
+
+    // printf("count = %d\n", count);
+    while (count > 0) {
+        pLogInfoNode = (LogInfo*)QueuePopNode(&gBusyLogInfoQueue);
+        if (pLogInfoNode == 0) {
+            break;
+        }
+#if 1
+        memcpy(logBuff + offset, timestamp, strlen(timestamp));
+        offset += strlen(timestamp);
+
+        snprintf(logBuff + offset, remainBufferSize - offset, "[%s] ", gLoggerLevelName_s[pLogInfoNode->logLevel]);
+        offset = strlen(logBuff);        
+
+        if (gLoggerConfig_s.logModuleNameFlag) {
+            snprintf(logBuff + offset, remainBufferSize - offset, "[%3.3s] ", pLogInfoNode->moduleId);
+            offset = strlen(logBuff);
+        }
+
+        if (gLoggerConfig_s.logThreadIdFlag) {
+            snprintf(logBuff + offset, remainBufferSize - offset, "[%lu] ", pLogInfoNode->threadId);
+            offset = strlen(logBuff);
+        }
+        
+        if (gLoggerConfig_s.logFileNameFlag) {
+            snprintf(logBuff + offset, remainBufferSize - offset, "[%s] ", pLogInfoNode->fileName);
+            offset = strlen(logBuff);
+        }
+
+        snprintf(logBuff + offset, remainBufferSize - offset, "- ");
+        offset = strlen(logBuff);
+
+        if (gLoggerConfig_s.logFuncNameFlag) {
+            snprintf(logBuff + offset, remainBufferSize - offset, "[%s], ", pLogInfoNode->funcName);
+            offset = strlen(logBuff);
+        }     
+
+        if (!pLogInfoNode->logContentFlag) {
+            snprintf(logBuff + offset, remainBufferSize - offset, (const char*)pLogInfoNode->fmt,  
+                pLogInfoNode->args[0], pLogInfoNode->args[1], pLogInfoNode->args[2],
+                pLogInfoNode->args[3], pLogInfoNode->args[4], pLogInfoNode->args[5]);
+        } else {
+            snprintf(logBuff + offset, remainBufferSize - offset, "%s", pLogInfoNode->logContent);
+        }
+        offset = strlen(logBuff);
+#endif
+        QueuePushNode(&gIdleLogInfoQueue, &pLogInfoNode->node);
+        
+        count--;
+
+        if ((strlen(logBuff) + MAX_TIMESTAMP_LENGTH + 128) >= 4096) {
+            break;
+        }
+    }
+
+    if (strlen(logBuff) > 0) {
+        LoggerOutputLog(logBuff, strlen(logBuff));
+    }
 }
 
 // --------------------------------------

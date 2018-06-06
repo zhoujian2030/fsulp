@@ -1,0 +1,45 @@
+---------------
+LogType设置建议：
+1. 在业务线程实时性要求不严格时，可设置为type 0，业务线程直接写log到file，耗时最长，进程CPU占用率也较高
+2. 在业务线程实时性要求极高时，可设置为type 2，log参数保存到队列，由logger线程定期分析处理，业务线程优先级高于logger线程时，业务线程耗时最短，约为同等条件下type 0 的30%，
+   但是进程CPU占用率最高，且在大量输出log的情况下会丢log， 需要优化logger线程
+3. 在能满足业务线程的业务量和实时性前提下，推荐设置为type 1， 由业务线程把log数据保存到缓冲区，缓冲区长度建议设置为4k，缓冲区满则通知logger线程写入到文件，业务线程耗时比同步log小，
+   同等条件下，约为其60%~70%，进程CPU占用率最低，约为type 2的60%
+
+----------------
+logger配置参数说明
+
+{
+    "PollingInterval"       : 5,    # The business worker threads are invoked every 5ms by default
+
+    "ResCleanupTimer"       : 5000, # RLC context is cleanup if it is idle more than 5s
+
+    "LoggerConfig" : 
+    {
+        "LogLevel"          : "INFO",   
+        "LogType"           : 1,        # 0: sync logging
+                                        # 1: logger users parse and prepare log parameters and save formated data in buffer for logger thread to write; 
+                                        # 2: logger users save log parameters in queue, logger thread parse each log in queue, then prepare formated log data and write 
+        "LogToConsole"      : false,    # default not print to console  
+
+        "LogToFile"         : true,     # default log to file
+        "MaxLogFileSize"    : 5242880,  # default log file rotate size if 5M bytes
+        "LogFilePath"       : "/mnt/memlog/lte_ulp.log",    # log file path
+
+        "LogModuleName"     : false,    # default not log module name
+        "LogFileName"       : false,    # default not log src file name
+        "LogFuncName"       : true,     # default log function name
+        "LogThreadId"       : true,     # default log thread id
+
+        "LogAsyncWaitTime"  : 5,        # the logger thread wait notification to write log, or write log after timeout if the value is not set to 0, default is 10ms
+        "LogBufferingSize"  : 4096      # logger user will notify logger thread to write buffering log data if it reaches target size, default is 4k bytes, range [0, 16k]
+    },
+
+    "KpiConfig" :
+    {
+        "ReportType"        : 1,
+        "ReportFilePeriod"  : 10000,
+        "KpiFileName"       : "/tmp/kpi.txt",
+        "UdpPort"           : 0
+    }
+}

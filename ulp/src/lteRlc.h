@@ -77,7 +77,7 @@ typedef struct {
     ListNode node;
     unsigned int soStart;
     unsigned int soEnd;
-    Queue dfeQ; 
+    List dfeQ; 
     unsigned char lsf;
 } AmdPduSegment;
 
