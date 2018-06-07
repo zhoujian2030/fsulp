@@ -21,20 +21,20 @@
 #endif
 List gRrcUeContextList;
 UInt8 gUlRRcMsgName[17][50] = {
-    "Csfb Params Request CDMA2000",
+    "Csfb Params Req CDMA2000",
     "Measurement Report",
-    "RRC Connection Reconfig Complete",
-    "RRC Connection Reestablish Complete",
-    "RRC Connection Setup Complete",
-    "Security Mode Complete",
-    "Security Mode Failure",
-    "UE Capability Info",
-    "UL Handover Prepare Transfer",
-    "UL Information Transfer",
-    "Counter Check Response",
-    "UE Information Response",
-    "Proximity Indication",
-    "RN Reconfig Complete",
+    "RRC Conn Reconfig Compl",
+    "RRC Conn Reestab Compl",
+    "RRC Conn Setup Compl",
+    "Sec Mode Compl",
+    "Sec Mode Failure",
+    "UE Cap Info",
+    "UL HO Prep Trans",
+    "UL Info Trans",
+    "Counter Check Resp",
+    "UE Info Resp",
+    "Proximity Ind",
+    "RN Reconfig Compl",
     "Spare2",
     "Spare1",
     "N Items"};
@@ -73,7 +73,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
         LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context\n");
         return 0;
     }
-    LOG_INFO(ULP_LOGGER_NAME, "pUeCtx = %p, rnti = %d\n", pUeCtx, rnti);
+    LOG_DBG(ULP_LOGGER_NAME, "pUeCtx = %p, rnti = %d\n", pUeCtx, rnti);
     memset(pUeCtx, 0, sizeof(RrcUeContext));
     pUeCtx->rnti = rnti; 
     // SemInit(&pUeCtx->lockOfCount, 1);
@@ -88,7 +88,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
 void RrcDeleteUeContext(RrcUeContext* pRrcUeCtx)
 {
     if (pRrcUeCtx != 0) {
-        LOG_INFO(ULP_LOGGER_NAME, "pRrcUeCtx = %p, rnti = %d\n", pRrcUeCtx, pRrcUeCtx->rnti);
+        LOG_DBG(ULP_LOGGER_NAME, "pRrcUeCtx = %p, rnti = %d\n", pRrcUeCtx, pRrcUeCtx->rnti);
         // KpiCountRrcUeCtx(FALSE);
         // SemDestroy(&pRlcUeCtx->lockOfCount);
         ListDeleteNode(&gRrcUeContextList, &pRrcUeCtx->node);
@@ -129,8 +129,8 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
     UInt8 nasMsgType = 0xff;
     LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, rrcMsgType = %d\n", rnti, rrcMsgType);
 
-    if (rrcMsgType <= RRC_UL_DCCH_MSG_TYPE_N_ITEMS) {
-        LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: %s (RNTI: %d)\n", gUlRRcMsgName[rrcMsgType], rnti);
+    if ((rrcMsgType <= RRC_UL_DCCH_MSG_TYPE_N_ITEMS) && (rrcMsgType != RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER)) {
+        LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: %s (%d)\n", gUlRRcMsgName[rrcMsgType], rnti);
     }
 
     if (RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER == rrcMsgType) {
@@ -184,7 +184,7 @@ void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 // --------------------------------
 void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Identity Response (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Id Resp (%d)\n", rnti);
     RrcUeContext* pUeCtx;
     UInt32 i;
     LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp = (LIBLTE_MME_ID_RESPONSE_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
@@ -232,9 +232,9 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %07x%08x\n", rnti, imsi0, imsi1);
 #endif
             if (pUeCtx->ueIdentity.mTmsiPresent) {
-                LOG_INFO(ULP_LOGGER_NAME, "both M-MSI and IMSI are collected, rnti = %d, M-TMSI = %d\n", rnti, pUeCtx->ueIdentity.mTmsi);
+                LOG_DBG(ULP_LOGGER_NAME, "both M-MSI and IMSI are collected, rnti = %d, M-TMSI = %d\n", rnti, pUeCtx->ueIdentity.mTmsi);
             } else {
-                LOG_INFO(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
+                LOG_DBG(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
             }
             
             // TODO
@@ -253,7 +253,7 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
 // --------------------------------
 void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Attach Request (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Attach Req (%d)\n", rnti);
     RrcUeContext* pUeCtx;
     UInt32 i;
     LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT* pAttachReq = (LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT));
@@ -335,7 +335,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 // --------------------------------
 void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Detach Request (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Detach Req (%d)\n", rnti);
     RrcUeContext* pUeCtx;
     LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT* pDetachReq = (LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT));
     UInt32 i;
@@ -422,7 +422,7 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 // --------------------------------
 void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Extended Service Request (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Ext Serv Req (%d)\n", rnti);
     LOG_BUFFER(pNasMsgBuff->msg, pNasMsgBuff->N_bytes);
 
     RrcUeContext* pUeCtx;
@@ -506,7 +506,7 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 // --------------------------------
 void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: TAU Request (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: TAU Req (%d)\n", rnti);
 
     RrcUeContext* pUeCtx;
     UInt32 i;
@@ -589,7 +589,7 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 // --------------------------------
 void RrcDecodeServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Service Request (RNTI: %d)\n", rnti);
+    LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Serv Req (%d)\n", rnti);
     LOG_BUFFER(pNasMsgBuff->msg, pNasMsgBuff->N_bytes);
     gLteKpi.servReq++;
 }
@@ -648,7 +648,7 @@ unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 
         default:
         {
-            LOG_WARN(ULP_LOGGER_NAME, "msgType = 0x%02x, rnti = %d\n", msgType, rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "NAS msgType = 0x%02x, rnti = %d\n", msgType, rnti);
             break;
         }
     }
@@ -667,7 +667,7 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, 
         pRrcUeCtx->ueIdentity.detachFlag, pRrcUeCtx->rnti);
     
-    LOG_INFO(ULP_LOGGER_NAME, "KPI: idResp = %d, attachReq = %d\n", gLteKpi.idResp, gLteKpi.attachReq);
+    // LOG_INFO(ULP_LOGGER_NAME, "KPI: idResp = %d, attachReq = %d\n", gLteKpi.idResp, gLteKpi.attachReq);
     
     if (!IP_RRC_DATA_IND(pRrcUeCtx)) {
         return;

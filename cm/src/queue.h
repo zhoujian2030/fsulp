@@ -34,6 +34,7 @@ void QueueDeInit(Queue* pQueue);
 unsigned int QueueCount(const Queue *pQueue);
 
 void QueuePushNode(Queue *pQueue, QNode *pNode);
+void QueuePushNodeHead(Queue *pQueue, QNode *pNode);
 QNode* QueuePopNode(Queue *pQueue);
 
 

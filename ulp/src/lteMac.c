@@ -229,7 +229,7 @@ void* MacHandlerEntryFunc(void* p)
         }
 #elif defined ARM_LINUX
         count = MessageQCount(&gMscRecvMessageQ);
-        LOG_TRACE(ULP_LOGGER_NAME, "count = %d\n", count);
+        // LOG_TRACE(ULP_LOGGER_NAME, "count = %d\n", count);
         if (count > 10) {
             count = 10;
         }
@@ -270,6 +270,8 @@ void* MacHandlerEntryFunc(void* p)
         }
 #endif
     }
+
+    return 0;
 }
 
 // ---------------------------

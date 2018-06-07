@@ -4,7 +4,41 @@ LogType设置建议：
 2. 在业务线程实时性要求极高时，可设置为type 2，log参数保存到队列，由logger线程定期分析处理，业务线程优先级高于logger线程时，业务线程耗时最短，约为同等条件下type 0 的30%，
    但是进程CPU占用率最高，且在大量输出log的情况下会丢log， 需要优化logger线程
 3. 在能满足业务线程的业务量和实时性前提下，推荐设置为type 1， 由业务线程把log数据保存到缓冲区，缓冲区长度建议设置为4k，缓冲区满则通知logger线程写入到文件，业务线程耗时比同步log小，
-   同等条件下，约为其60%~70%，进程CPU占用率最低，约为type 2的60%
+   同等条件下，约为其60%~70%，进程CPU占用率最低，约为type 2的60%。在大量输出log的情况下，也会出现丢log。
+
+LogLevel设置建议：
+1. TRACE: 只适合用于问题查找调试，业务量很小的情况下（1~2 user/5ms），如果需要确保不丢log，且业务线程执行效率满足测试要求，则设置LogType为0；如果可忍受丢较多log
+   且最大限度保证业务线程实时性，则设置LogType为2；折中方案则是设置LogType为1，会丢少量log，业务线程效率介于0和2之间
+2. DEBUG: 在外场测试验证阶段，业务压力正常的情况下（每5ms不超过8个上行用户数据），业务量峰值较小时（低于4 user/5ms）可优先设置LogType为0或1确保不丢log；峰值不大于
+   6 user/5ms时优先设置LogType 1，既保证效率也尽可能不丢log； 峰值大于6 user/5ms优先设置LogType 2，确保业务线程的效率，容忍丢log， 如果设置为type 2因为CPU占用率
+   过高导致丢log太多影响问题调试， 可根据实际情况调整为type 1
+3. INFO: 正常使用时配置，一般建议配置LogType为1
+
+参考配置
+-----------
+场景1： 需要收集详细码流，业务量不大于2 user/5ms
+LogLevel: TRACE, LogType: 0
+
+场景2： 需要收集详细码流，业务量3~4 user/5ms
+LogLevel: TRACE, LogType: 2 （CPU占用率过高，不能长时间配置TRACE）
+
+场景3： 外场测试，需要收集尽量充分的log信息并且确保log的完整性， 不影响业务处理，业务量不大于4 user/5ms
+LogLevel: DEBUG, LogType: 0
+
+场景4： 外场测试，需要收集尽量充分的log信息，尽量少丢log， 不影响业务处理，业务量4 ~ 6 user/5ms
+LogLevel: DEBUG, LogType: 1
+
+场景5： 外场测试，需要收集尽量充分的log信息，容忍丢log， 不影响业务处理，业务量 6 ~ 8 user/5ms
+LogLevel: DEBUG, LogType: 2/1
+
+场景6： 客户正常使用场景，不影响业务处理，保留必要的log信息，确保尽量不丢log，业务量不大于 16 user/5ms
+LogLevel: INFO, LogType: 1
+
+场景7： 客户正常使用场景，不影响业务处理，保留必要的log信息，容忍丢log，业务量大于 16 user/5ms
+LogLevel: INFO, LogType: 2/1
+
+场景8： 客户正常使用场景，不影响业务处理，只记录错误log信息，业务量大于 24 user/5ms
+LogLevel: WARNING, LogType: 1/0
 
 ----------------
 logger配置参数说明

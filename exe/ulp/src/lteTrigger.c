@@ -25,6 +25,8 @@ void* LteTriggerEntryFunc(void* p)
         UlpOneMilliSecondIsr();
         usleep(usleepTime);
     }
+
+    return 0;
 }
 
 // --------------------------------

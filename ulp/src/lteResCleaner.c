@@ -90,6 +90,8 @@ void* ResCleanerEntryFunc(void* p)
 
         ExecuteCleanup();
     }
+
+    return 0;
 }
 
 // ---------------------------------
@@ -98,7 +100,7 @@ void ExecuteCleanup()
     UInt32 rlcCtxCount = ListCount(&gRlcUeContextList);
     RlcUeContext *pRlcUeCtx, *pNextRlcUeCtx;
     
-    LOG_TRACE(ULP_LOGGER_NAME, "rlcCtxCount = %d\n", rlcCtxCount);
+    // LOG_TRACE(ULP_LOGGER_NAME, "rlcCtxCount = %d\n", rlcCtxCount);
 
     if (rlcCtxCount > 0) {
         pRlcUeCtx = (RlcUeContext*)ListGetFirstNode(&gRlcUeContextList);

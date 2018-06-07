@@ -72,10 +72,11 @@ typedef struct {
 
 #define MAX_TIMESTAMP_LENGTH	32
 #define MAX_LOG_CONTENT_LENGTH	256
+#define MAX_LOG_MEMORY_LENGTH	2048
 #define MAX_LOG_ARGS_NUM		6
+
 typedef struct {
-	QNode node;
-	char timestamp[MAX_TIMESTAMP_LENGTH];
+	//char timestamp[MAX_TIMESTAMP_LENGTH];
 	char moduleId[6];
 	int  logLevel;
 	char* fileName;
@@ -86,9 +87,39 @@ typedef struct {
 
 	char* fmt;
 	unsigned int args[MAX_LOG_ARGS_NUM];
-	// va_list args;
 
 	char logContent[MAX_LOG_CONTENT_LENGTH];
+} LogMsgInfo;
+
+typedef struct {
+	char logMem[MAX_LOG_MEMORY_LENGTH];
+} LogMemInfo;
+
+typedef enum {
+	LOG_MSG_TYPE = 1,
+	LOG_MEM_TYPE = 2
+} E_LogContentType;
+
+typedef struct {
+	QNode node;
+	// char timestamp[MAX_TIMESTAMP_LENGTH];
+	// char moduleId[6];
+	// int  logLevel;
+	// char* fileName;
+	// char* funcName;
+	// unsigned long threadId;
+
+	// unsigned char logContentFlag;
+
+	// char* fmt;
+	// unsigned int args[MAX_LOG_ARGS_NUM];
+
+	// char logContent[MAX_LOG_CONTENT_LENGTH];
+	E_LogContentType contentType;
+	union {
+		LogMsgInfo logMsgInfo;
+		LogMemInfo logMemInfo;
+	} u;
 } LogInfo;
 
 void LoggerSetlevel(int loglevel);

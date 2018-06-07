@@ -70,7 +70,7 @@ int EventWait(Event* pEvent)
     }
 
 #ifdef OS_LINUX
-    LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p, setFlag = %d\n", pEvent, pEvent->setFlag); 
+    // LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p, setFlag = %d\n", pEvent, pEvent->setFlag); 
 
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
@@ -106,7 +106,7 @@ int EventSend(Event* pEvent)
     }
 
 #ifdef OS_LINUX
-    LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p\n", pEvent);
+    // LOG_TRACE(ULP_LOGGER_NAME, "pEvent = %p\n", pEvent);
     
     int result = pthread_mutex_lock(&pEvent->mutex);
     if (result != 0) {
