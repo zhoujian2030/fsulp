@@ -326,7 +326,7 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
 {
     if ((logLevel >= gLoggerConfig_s.logLevel) && (logLevel < E_LOG_LVL_MAX)) {
         char logBuff[MAX_LOG_ITEM_LENGTH] = { };
-        int offset = 0;
+        int offset = 0, length = 0;
         char* logPtr;
         va_list args;
 
@@ -388,52 +388,82 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
         } else {
             logPtr = logBuff;
 
-            LoggerGetTimestamp(logPtr + offset);
-            offset = strlen(logPtr);
+            LoggerGetTimestamp(logPtr);
+            length = strlen(logPtr);
+            logPtr += length;
+            offset += length;
 
-            snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", gLoggerLevelName_s[logLevel]);
-            offset = strlen(logPtr);
+            *logPtr++ = '[';
+            length = strlen(gLoggerLevelName_s[logLevel]);
+            memcpy(logPtr, gLoggerLevelName_s[logLevel], length);
+            logPtr += length;
+            *logPtr++ = ']';
+            *logPtr++ = ' ';            
+            offset = offset + length + 3;
 
             if (gLoggerConfig_s.logModuleNameFlag) {
-                snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "[%3.3s] ", moduleId);
-                offset = strlen(logPtr);
+                *logPtr++ = '[';
+                length = strlen(moduleId);
+                memcpy(logPtr, moduleId, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ' ';            
+                offset = offset + length + 3;
             }
 
             if (gLoggerConfig_s.logThreadIdFlag) {
-                snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "[%lu] ", pthread_self());
-                offset = strlen(logPtr);
+                snprintf(logPtr, MAX_LOG_ITEM_LENGTH - offset, "[%lu] ", pthread_self());
+                length = strlen(logPtr);
+                logPtr += length;          
+                offset += length;
             }
             
             if (gLoggerConfig_s.logFileNameFlag) {
-                snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s] ", fileName);
-                offset = strlen(logPtr);
+                *logPtr++ = '[';
+                length = strlen(fileName);
+                memcpy(logPtr, fileName, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ' ';            
+                offset = offset + length + 3;
             }
 
-            snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "- ");
-            offset = strlen(logPtr);
+            *logPtr++ = '-';
+            *logPtr++ = ' ';
+            offset += 2;
 
             if (gLoggerConfig_s.logFuncNameFlag) {
-                snprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, "[%s], ", funcName);
-                offset = strlen(logPtr);
+                *logPtr++ = '[';
+                length = strlen(funcName);
+                memcpy(logPtr, funcName, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ',';
+                *logPtr++ = ' ';            
+                offset = offset + length + 4;
             }     
 
             va_start(args, fmt);
-            vsnprintf(logPtr + offset, MAX_LOG_ITEM_LENGTH - offset, fmt, args);
+            vsnprintf(logPtr, MAX_LOG_ITEM_LENGTH - offset, fmt, args);
             va_end(args);
+            length = strlen(logPtr);
+            logPtr += length;
+            offset += length;
+            *logPtr = '\0';
 
-            offset = strlen(logPtr);
-            if ((offset >= 1) && (logPtr[offset - 1] != '\n')) {
-                if (offset < MAX_LOG_ITEM_LENGTH - 1)
-                {
-                    logPtr[offset] = '\n';
-                    logPtr[offset + 1] = '\0';
-                }
-                else
-                {
-                    logPtr[offset - 1] = '\n';
-                    logPtr[offset] = '\0';
-                }
-            }
+            // offset = strlen(logPtr);
+            // if ((offset >= 1) && (logPtr[offset - 1] != '\n')) {
+            //     if (offset < MAX_LOG_ITEM_LENGTH - 1)
+            //     {
+            //         logPtr[offset] = '\n';
+            //         logPtr[offset + 1] = '\0';
+            //     }
+            //     else
+            //     {
+            //         logPtr[offset - 1] = '\n';
+            //         logPtr[offset] = '\0';
+            //     }
+            // }
 
             LoggerOutputLog(logBuff, strlen(logBuff));
         }
