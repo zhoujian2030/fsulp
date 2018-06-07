@@ -257,13 +257,21 @@ static void LoggerGetTimestamp(char* logBuff)
     }
 
     int offset = 0;
+    char* logPtr = logBuff;
     struct timeval tv;
     gettimeofday(&tv, 0);
     unsigned int currMilliSecond = tv.tv_usec/1000;
 
     if ((gPrevSysSecond == tv.tv_sec) && (gPrevSysMilliSecond == currMilliSecond)) {
         // timestamp is not changed
-        snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
+        // snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
+        *logPtr++ = '[';
+        offset = strlen(gCachedTimeStamp);
+        memcpy(logPtr, gCachedTimeStamp, offset);
+        logPtr += offset;
+        *logPtr++ = ']';
+        *logPtr++ = ' ';
+        *logPtr = '\0';
     } else {    
         // when async logging type 1, the memory is protected outside
         if (gLoggerConfig_s.logType != AYNC_LOG_TYPE_1) {
@@ -297,7 +305,15 @@ static void LoggerGetTimestamp(char* logBuff)
 
         gPrevSysSecond = tv.tv_sec;
         gPrevSysMilliSecond = currMilliSecond;
-        snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
+
+        // snprintf(logBuff, MAX_TIMESTAMP_LENGTH + 3, "[%s] ", gCachedTimeStamp);
+        *logPtr++ = '[';
+        offset = strlen(gCachedTimeStamp);
+        memcpy(logPtr, gCachedTimeStamp, offset);
+        logPtr += offset;
+        *logPtr++ = ']';
+        *logPtr++ = ' ';
+        *logPtr = '\0';
 
         if (gLoggerConfig_s.logType != AYNC_LOG_TYPE_1) {
             pthread_mutex_unlock(&gLoggerMutex);
@@ -427,7 +443,7 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
 // --------------------------------------
 static void AsyncWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName, const char* funcName, const char *fmt, va_list args)
 {
-    int offset = 0;
+    int offset = 0, length = 0;
     unsigned char fullFlag = 0;
     // unsigned char dropFlag = 0;
     char* logPtr;
@@ -459,56 +475,84 @@ static void AsyncWriteMsg(char* moduleId, unsigned int logLevel, const char *fil
     logPtr = gpWriteBuffer->logData + gpWriteBuffer->length;
     int remainBufferSize = gLoggerConfig_s.logBufferingSize - gpWriteBuffer->length;
 
-    LoggerGetTimestamp(logPtr + offset);
-    offset = strlen(logPtr);
+    LoggerGetTimestamp(logPtr);
+    length = strlen(logPtr);
+    logPtr += length;
+    offset += length;
 
-    snprintf(logPtr + offset, remainBufferSize - offset, "[%s] ", gLoggerLevelName_s[logLevel]);
-    offset = strlen(logPtr);
+    *logPtr++ = '[';
+    length = strlen(gLoggerLevelName_s[logLevel]);
+    memcpy(logPtr, gLoggerLevelName_s[logLevel], length);
+    logPtr += length;
+    *logPtr++ = ']';
+    *logPtr++ = ' ';            
+    offset = offset + length + 3;
 
     if (gLoggerConfig_s.logModuleNameFlag) {
-        snprintf(logPtr + offset, remainBufferSize - offset, "[%3.3s] ", moduleId);
-        offset = strlen(logPtr);
+        *logPtr++ = '[';
+        length = strlen(moduleId);
+        memcpy(logPtr, moduleId, length);
+        logPtr += length;
+        *logPtr++ = ']';
+        *logPtr++ = ' ';            
+        offset = offset + length + 3;
     }
 
     if (gLoggerConfig_s.logThreadIdFlag) {
-        snprintf(logPtr + offset, remainBufferSize - offset, "[%lu] ", pthread_self());
-        offset = strlen(logPtr);
+        snprintf(logPtr, remainBufferSize - offset, "[%lu] ", pthread_self());
+        length = strlen(logPtr);
+        logPtr += length;          
+        offset += length;
     }
     
     if (gLoggerConfig_s.logFileNameFlag) {
-        snprintf(logPtr + offset, remainBufferSize - offset, "[%s] ", fileName);
-        offset = strlen(logPtr);
+        *logPtr++ = '[';
+        length = strlen(fileName);
+        memcpy(logPtr, fileName, length);
+        logPtr += length;
+        *logPtr++ = ']';
+        *logPtr++ = ' ';            
+        offset = offset + length + 3;
     }
 
-    snprintf(logPtr + offset, remainBufferSize - offset, "- ");
-    offset = strlen(logPtr);
+    *logPtr++ = '-';
+    *logPtr++ = ' ';
+    offset += 2;
 
     if (gLoggerConfig_s.logFuncNameFlag) {
-        snprintf(logPtr + offset, remainBufferSize - offset, "[%s], ", funcName);
-        offset = strlen(logPtr);
+        *logPtr++ = '[';
+        length = strlen(funcName);
+        memcpy(logPtr, funcName, length);
+        logPtr += length;
+        *logPtr++ = ']';
+        *logPtr++ = ',';
+        *logPtr++ = ' ';            
+        offset = offset + length + 4;
     }     
 
-    vsnprintf(logPtr + offset, remainBufferSize - offset, fmt, args);
+    vsnprintf(logPtr, remainBufferSize - offset, fmt, args);
+    length = strlen(logPtr);
+    logPtr += length;
+    offset += length;
 
-    offset = strlen(logPtr);
-    if ((offset >= 1) && (logPtr[offset - 1] != '\n')) {
-        if (offset < MAX_LOG_ITEM_LENGTH - 1)
-        {
-            logPtr[offset] = '\n';
-            logPtr[offset + 1] = '\0';
-        }
-        else
-        {
-            logPtr[offset - 1] = '\n';
-            logPtr[offset] = '\0';
-        }
-    }
+    // offset = strlen(logPtr);
+    // if ((offset >= 1) && (logPtr[offset - 1] != '\n')) {
+    //     if (offset < MAX_LOG_ITEM_LENGTH - 1)
+    //     {
+    //         logPtr[offset] = '\n';
+    //         logPtr[offset + 1] = '\0';
+    //     }
+    //     else
+    //     {
+    //         logPtr[offset - 1] = '\n';
+    //         logPtr[offset] = '\0';
+    //     }
+    // }
 
-    gpWriteBuffer->length += strlen(logPtr);
+    gpWriteBuffer->length += offset;
     if (gpWriteBuffer->length >= gLoggerConfig_s.logBufferingSize) {
         fullFlag = 1;
         gpWriteBuffer->fullFlag = 1;
-        // printf("%lu, gpWriteBuffer = %p\n", pthread_self(), gpWriteBuffer);
         gpWriteBuffer = (LogBufferCache*)gpWriteBuffer->next;
     }
 
@@ -592,7 +636,7 @@ static void ProcessLogQueue()
                 *logPtr++ = ']';
                 *logPtr++ = ',';
                 *logPtr++ = ' ';            
-                offset = offset + length + 3;
+                offset = offset + length + 4;
             }     
 
             if (!pLogInfoNode->u.logMsgInfo.logContentFlag) {
