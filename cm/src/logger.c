@@ -524,9 +524,11 @@ static void ProcessLogQueue()
 {
     LogInfo* pLogInfoNode;
     char logBuff[4096] = {0};
+    char* logPtr = logBuff;
     char timestamp[MAX_TIMESTAMP_LENGTH];
     int remainBufferSize = 4095;
     int offset = 0;
+    int length = 0;
     unsigned int count = QueueCount(&gBusyLogInfoQueue);
     LoggerGetTimestamp(timestamp);
 
@@ -538,54 +540,84 @@ static void ProcessLogQueue()
         }
 
         if (pLogInfoNode->contentType == LOG_MSG_TYPE) {
-#if 1
-            memcpy(logBuff + offset, timestamp, strlen(timestamp));
-            offset += strlen(timestamp);
-
-            snprintf(logBuff + offset, remainBufferSize - offset, "[%s] ", gLoggerLevelName_s[pLogInfoNode->u.logMsgInfo.logLevel]);
-            offset = strlen(logBuff);        
+            length = strlen(timestamp);
+            memcpy(logPtr, timestamp, length);
+            logPtr += length;
+            offset += length; 
+            
+            *logPtr++ = '[';
+            length = strlen(gLoggerLevelName_s[pLogInfoNode->u.logMsgInfo.logLevel]);
+            memcpy(logPtr, gLoggerLevelName_s[pLogInfoNode->u.logMsgInfo.logLevel], length);
+            logPtr += length;
+            *logPtr++ = ']';
+            *logPtr++ = ' ';            
+            offset = offset + length + 3;
 
             if (gLoggerConfig_s.logModuleNameFlag) {
-                snprintf(logBuff + offset, remainBufferSize - offset, "[%3.3s] ", pLogInfoNode->u.logMsgInfo.moduleId);
-                offset = strlen(logBuff);
+                *logPtr++ = '[';
+                length = strlen(pLogInfoNode->u.logMsgInfo.moduleId);
+                memcpy(logPtr, pLogInfoNode->u.logMsgInfo.moduleId, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ' ';            
+                offset = offset + length + 3;
             }
 
             if (gLoggerConfig_s.logThreadIdFlag) {
-                snprintf(logBuff + offset, remainBufferSize - offset, "[%lu] ", pLogInfoNode->u.logMsgInfo.threadId);
-                offset = strlen(logBuff);
+                snprintf(logPtr, remainBufferSize - offset, "[%lu] ", pLogInfoNode->u.logMsgInfo.threadId);
+                length = strlen(logPtr);
+                logPtr += length;          
+                offset += length;
             }
             
             if (gLoggerConfig_s.logFileNameFlag) {
-                snprintf(logBuff + offset, remainBufferSize - offset, "[%s] ", pLogInfoNode->u.logMsgInfo.fileName);
-                offset = strlen(logBuff);
+                *logPtr++ = '[';
+                length = strlen(pLogInfoNode->u.logMsgInfo.fileName);
+                memcpy(logPtr, pLogInfoNode->u.logMsgInfo.fileName, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ' ';            
+                offset = offset + length + 3;
             }
 
-            snprintf(logBuff + offset, remainBufferSize - offset, "- ");
-            offset = strlen(logBuff);
+            *logPtr++ = '-';
+            *logPtr++ = ' ';
+            offset += 2;
 
             if (gLoggerConfig_s.logFuncNameFlag) {
-                snprintf(logBuff + offset, remainBufferSize - offset, "[%s], ", pLogInfoNode->u.logMsgInfo.funcName);
-                offset = strlen(logBuff);
+                *logPtr++ = '[';
+                length = strlen(pLogInfoNode->u.logMsgInfo.funcName);
+                memcpy(logPtr, pLogInfoNode->u.logMsgInfo.funcName, length);
+                logPtr += length;
+                *logPtr++ = ']';
+                *logPtr++ = ',';
+                *logPtr++ = ' ';            
+                offset = offset + length + 3;
             }     
 
             if (!pLogInfoNode->u.logMsgInfo.logContentFlag) {
-                snprintf(logBuff + offset, remainBufferSize - offset, (const char*)pLogInfoNode->u.logMsgInfo.fmt,  
+                snprintf(logPtr, remainBufferSize - offset, (const char*)pLogInfoNode->u.logMsgInfo.fmt,  
                     pLogInfoNode->u.logMsgInfo.args[0], pLogInfoNode->u.logMsgInfo.args[1], pLogInfoNode->u.logMsgInfo.args[2],
                     pLogInfoNode->u.logMsgInfo.args[3], pLogInfoNode->u.logMsgInfo.args[4], pLogInfoNode->u.logMsgInfo.args[5]);
+                length = strlen(logPtr);
+                logPtr += length;
+                offset += length;
             } else {
-                snprintf(logBuff + offset, remainBufferSize - offset, "%s", pLogInfoNode->u.logMsgInfo.logContent);
+                length = strlen(pLogInfoNode->u.logMsgInfo.logContent);
+                memcpy(logPtr, pLogInfoNode->u.logMsgInfo.logContent, length);
+                logPtr += length;
+                offset += length;
             }
-            offset = strlen(logBuff);
-#endif
+
         } else {
-            int memLen = strlen(pLogInfoNode->u.logMemInfo.logMem);
-            if ((offset + memLen) >= 4096) {
+            length = strlen(pLogInfoNode->u.logMemInfo.logMem);
+            if ((offset + length) >= 4096) {
                 QueuePushNodeHead(&gBusyLogInfoQueue, &pLogInfoNode->node);
                 break;
             } else {
-                memcpy(logBuff + offset, pLogInfoNode->u.logMemInfo.logMem, memLen);
-                offset += memLen;
-                logBuff[offset] = '\0';
+                memcpy(logPtr, pLogInfoNode->u.logMemInfo.logMem, length);
+                offset += length;
+                logPtr += length;
             }
         }
 
@@ -593,11 +625,12 @@ static void ProcessLogQueue()
         
         count--;
 
-        if ((strlen(logBuff) + MAX_TIMESTAMP_LENGTH + 128) >= 4096) {
+        if ((offset + MAX_TIMESTAMP_LENGTH + 128) >= remainBufferSize) {
             break;
         }
     }
 
+    *logPtr = '\0';
     if (strlen(logBuff) > 0) {
         LoggerOutputLog(logBuff, strlen(logBuff));
     }
