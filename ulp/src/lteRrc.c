@@ -14,8 +14,8 @@
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
-#include "socket.h"
-#include "lteConfig.h"
+// #include "socket.h"
+// #include "lteConfig.h"
 #include "sync.h"
 
 #ifndef OS_LINUX
@@ -42,11 +42,6 @@ UInt8 gUlRRcMsgName[17][50] = {
     "Spare1",
     "N Items"};
 
-#ifdef OS_LINUX
-int gSendOamUdpFd = -1;
-struct sockaddr_in gOamAddress;
-#endif
-
 void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff);
@@ -55,10 +50,6 @@ unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 void InitRrcLayer()
 {
     ListInit(&gRrcUeContextList, 1);
-#ifdef OS_LINUX
-    gSendOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
-    SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
-#endif
 }
 
 // --------------------------------
@@ -112,6 +103,20 @@ void RrcDeleteUeContext(RrcUeContext* pRrcUeCtx)
 int RrcGetUeContextCount()
 {
     return ListCount(&gRrcUeContextList);
+}
+
+// -----------------------------------
+void RrcUpdateUeContextTime(RrcUeContext* pRrcUeCtx, unsigned int value)
+{
+    if (pRrcUeCtx != 0) {
+        // SemWait(&pRlcUeCtx->lockOfCount);
+        if (value == 0) {
+            pRrcUeCtx->idleCount = 0;
+        } else {
+            pRrcUeCtx->idleCount += value;
+        }
+        // SemPost(&pRlcUeCtx->lockOfCount);
+    }
 }
 
 // --------------------------------
@@ -675,17 +680,7 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         return;
     }
 
-#ifdef OS_LINUX
-    LteUlpDataInd ueDataInd;
-    ueDataInd.msgType = MSG_ULP_UE_IDENTITY_IND;
-    ueDataInd.u.ueIdentityInd.count = 1;
-    memcpy((void*)&ueDataInd.u.ueIdentityInd.ueIdentityArray[0], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
-    ueDataInd.u.ueIdentityInd.ueIdentityArray[0].rnti = pRrcUeCtx->rnti;
-    ueDataInd.length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH + sizeof(UeIdentity);
-    SocketUdpSend(gSendOamUdpFd, (char*)&ueDataInd, ueDataInd.length, &gOamAddress);
-#endif
-
     // if send data to OAM, delete the UE context
-    RrcDeleteUeContext(pRrcUeCtx);
+    // RrcDeleteUeContext(pRrcUeCtx);
 }
 

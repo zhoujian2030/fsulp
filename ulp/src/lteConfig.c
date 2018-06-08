@@ -18,8 +18,10 @@ LteConfig gLteConfig =
 { 
     5,      // 5ms
     10000,  // 10000ms
+    1000,   // 1000ms
     "127.0.0.1",
     55012,
+    1, 
 
     // log config, default log to console only
     {
@@ -125,6 +127,15 @@ void ParseConfig(char* configFileName)
         }
     }
 
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "UeIdentityWaitTime");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            gLteConfig.ueIdentityWaitTime = jsonItem->valueint;
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for UeIdentityWaitTime\n");
+        }
+    }
+
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "OamServerIp");
     if (jsonItem != 0) {
         if (jsonItem->type == cJSON_String) {      
@@ -144,6 +155,15 @@ void ParseConfig(char* configFileName)
             LOG_WARN(ULP_LOGGER_NAME, "Invalid config for OamServerUdpPort\n");
         }
     }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ExplicitInitQmss");
+        if (jsonItem != 0) {
+            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+                gLteConfig.explicitInitQmssFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for ExplicitInitQmss\n");
+            }
+        }
 
     jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
     if (jsonRoot2 != 0) {
@@ -315,26 +335,30 @@ void ParseConfig(char* configFileName)
 // -------------------------------
 void ShowConfig()
 {
-    LOG_INFO(ULP_LOGGER_NAME, "+----------------------------------------+\n");
-    LOG_INFO(ULP_LOGGER_NAME, "pollingInterval:    %d\n", gLteConfig.pollingInterval);
-    LOG_INFO(ULP_LOGGER_NAME, "resCleanupTimer:    %d\n", gLteConfig.resCleanupTimer);
-    LOG_INFO(ULP_LOGGER_NAME, "logLevel:           %d\n", gLteConfig.logConfig.logLevel);
-    LOG_INFO(ULP_LOGGER_NAME, "logType:            %d\n", gLteConfig.logConfig.logType);
-    LOG_INFO(ULP_LOGGER_NAME, "logToConsoleFlag:   %d\n", gLteConfig.logConfig.logToConsoleFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "logToFileFlag:      %d\n", gLteConfig.logConfig.logToFileFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "maxLogFileSize:     %d\n", gLteConfig.logConfig.maxLogFileSize);
-    LOG_INFO(ULP_LOGGER_NAME, "logFilePath:        %s\n", gLteConfig.logConfig.logFilePath);
-    LOG_INFO(ULP_LOGGER_NAME, "logModuleNameFlag:  %d\n", gLteConfig.logConfig.logModuleNameFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "logFileNameFlag:    %d\n", gLteConfig.logConfig.logFileNameFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "logFuncNameFlag:    %d\n", gLteConfig.logConfig.logFuncNameFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "logThreadIdFlag:    %d\n", gLteConfig.logConfig.logThreadIdFlag);
-    LOG_INFO(ULP_LOGGER_NAME, "asyncWaitTime:      %d\n", gLteConfig.logConfig.asyncWaitTime);
-    LOG_INFO(ULP_LOGGER_NAME, "logBufferingSize:   %d\n", gLteConfig.logConfig.logBufferingSize);
-    LOG_INFO(ULP_LOGGER_NAME, "reportType:         %d\n", gLteConfig.kpiConfig.reportType);
-    LOG_INFO(ULP_LOGGER_NAME, "reportFilePeriod:   %d\n", gLteConfig.kpiConfig.reportFilePeriod);
-    LOG_INFO(ULP_LOGGER_NAME, "fileName:           %s\n", gLteConfig.kpiConfig.fileName);
-    LOG_INFO(ULP_LOGGER_NAME, "udpPort:            %d\n", gLteConfig.kpiConfig.udpPort);
-    LOG_INFO(ULP_LOGGER_NAME, "+----------------------------------------+\n");
+    printf("+----------------------------------------+\n");
+    printf("pollingInterval:        %d\n", gLteConfig.pollingInterval);
+    printf("resCleanupTimer:        %d\n", gLteConfig.resCleanupTimer);
+    printf("ueIdentityWaitTime:     %d\n", gLteConfig.ueIdentityWaitTime);
+    printf("oamIp:                  %s\n", gLteConfig.oamIp);
+    printf("oamUdpPort:             %d\n", gLteConfig.oamUdpPort);
+    printf("explicitInitQmssFlag:   %d\n", gLteConfig.explicitInitQmssFlag);
+    printf("logLevel:               %d\n", gLteConfig.logConfig.logLevel);
+    printf("logType:                %d\n", gLteConfig.logConfig.logType);
+    printf("logToConsoleFlag:       %d\n", gLteConfig.logConfig.logToConsoleFlag);
+    printf("logToFileFlag:          %d\n", gLteConfig.logConfig.logToFileFlag);
+    printf("maxLogFileSize:         %d\n", gLteConfig.logConfig.maxLogFileSize);
+    printf("logFilePath:            %s\n", gLteConfig.logConfig.logFilePath);
+    printf("logModuleNameFlag:      %d\n", gLteConfig.logConfig.logModuleNameFlag);
+    printf("logFileNameFlag:        %d\n", gLteConfig.logConfig.logFileNameFlag);
+    printf("logFuncNameFlag:        %d\n", gLteConfig.logConfig.logFuncNameFlag);
+    printf("logThreadIdFlag:        %d\n", gLteConfig.logConfig.logThreadIdFlag);
+    printf("asyncWaitTime:          %d\n", gLteConfig.logConfig.asyncWaitTime);
+    printf("logBufferingSize:       %d\n", gLteConfig.logConfig.logBufferingSize);
+    printf("reportType:             %d\n", gLteConfig.kpiConfig.reportType);
+    printf("reportFilePeriod:       %d\n", gLteConfig.kpiConfig.reportFilePeriod);
+    printf("fileName:               %s\n", gLteConfig.kpiConfig.fileName);
+    printf("udpPort:                %d\n", gLteConfig.kpiConfig.udpPort);
+    printf("+----------------------------------------+\n");
 }
 
 #endif

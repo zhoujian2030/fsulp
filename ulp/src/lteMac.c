@@ -6,24 +6,14 @@
  */
 
 #include "lteMac.h"
-#include "lteCommon.h"
 #include "lteMacPhyInterface.h"
 #include "lteRlcMacInterface.h"
 #include "mempool.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
-#include "list.h"
-#include "event.h"
-#include "thread.h"
-#include "messaging.h"
-#ifndef OS_LINUX
-#include <ti/csl/csl_tsc.h>
-#else
-#include <sys/time.h>
-#endif
+#include "lteCommon.h"
 
-void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length); 
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
 void MacProcessMacLcId(UInt8 startPaddingFlag,
     UInt8 extnFlag,
@@ -90,228 +80,14 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
     RlcUlData **dataToRlc_p,
     UInt8 *ulDataReceivedFlag);
 
-// ----------------------------------------
-// standlone configurations
-#ifndef OS_LINUX
-#pragma DATA_SECTION(gMacStandloneFlag, ".ulpdata");
-#pragma DATA_SECTION(gMacRecvdPhyDataList, ".ulpdata");
-#pragma DATA_SECTION(gMacHandlerEvent, ".ulpdata");
-#endif
-
-unsigned char gMacStandloneFlag = FALSE;
-List gMacRecvdPhyDataList;
-Event gMacHandlerEvent;
-
-#ifdef TI_DSP
-#pragma DATA_SECTION(gMscRecvMessageQ, ".ulpdata");
-MessageQueue gMscRecvMessageQ;
-#elif defined ARM_LINUX
-#define MAX_MESSAGEQ_BUFFER_LENGTH  4096
-MessageQueue gMscRecvMessageQ;
-#endif
-
-void* MacHandlerEntryFunc(void* p);
-
-typedef struct {
-    ListNode node;
-    UInt32 length;
-    UInt8* pBuffer;
-} PhyDataIndNode;
-
-#ifndef OS_LINUX
-#define TASK_MAC_HANDLER_PRIORITY		5
-#define TASK_MAC_HANDLER_STACK_SIZE		(256*1024)
-#pragma DATA_SECTION(gTaskMacHandlerStack, ".ulpdata");
-UInt8 gTaskMacHandlerStack[TASK_MAC_HANDLER_STACK_SIZE];
-#else
-#define TASK_MAC_HANDLER_PRIORITY       98
-#endif
-// -----------------------------------------
-
 // ---------------------------
-void InitMacLayer(unsigned char standloneFlag)
+void InitMacLayer()
 {
-    gMacStandloneFlag = standloneFlag;
-    if (gMacStandloneFlag) {
-#ifdef INTEGRATE_PHY        
-        ListInit(&gMacRecvdPhyDataList, 1);
-#else
-        ListInit(&gMacRecvdPhyDataList, 0);
-#endif
-        EventInit(&gMacHandlerEvent);
-
-#ifdef TI_DSP
-        gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
-#elif defined ARM_LINUX
-        gMscRecvMessageQ.qid = QMSS_RX_HAND_ULP_FROM_L1_DATA;
-        Init_Netcp();
-#endif
-
-#ifdef OS_LINUX 
-        ThreadHandle threadHandle;
-        ThreadParams threadParams;
-        threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
-        threadParams.policy = RT_SCHED_RR;
-        threadParams.stackSize = 0;
-        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
-        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n");
-#else 
-        ThreadHandle threadHandle;
-        ThreadParams threadParams;
-        threadParams.stackSize = TASK_MAC_HANDLER_STACK_SIZE;
-        threadParams.stack = gTaskMacHandlerStack;
-        threadParams.priority = TASK_MAC_HANDLER_PRIORITY;
-        ThreadCreate((void*)MacHandlerEntryFunc, &threadHandle, &threadParams);
-        LOG_DBG(ULP_LOGGER_NAME, "Create mac handler task\n");
-#endif 
-    }
+    // TODO
 }
 
 // ---------------------------
-void* MacHandlerEntryFunc(void* p)
-{
-    LOG_TRACE(ULP_LOGGER_NAME, "Entry\n");
-    UInt32 count = 0;
-    PhyDataIndNode* pPhyDataNode;
-
-#ifdef TI_DSP
-    UInt8* pMsgQBuffer;
-    void* pFd = 0;
-    UInt32 byteRecvd;
-#elif defined ARM_LINUX
-    UInt8 recvMsgQBuffer[MAX_MESSAGEQ_BUFFER_LENGTH];
-    UInt32 byteRecvd;
-#endif
-
-#ifndef OS_LINUX
-    UInt32 prevTime, curTime;
-#else 
-    struct timeval prevTv, curTv;
-    UInt32 delta;
-#endif
-
-    while (1) {
-        EventWait(&gMacHandlerEvent);
-
-#ifndef OS_LINUX
-        prevTime = CSL_tscRead();
-#else
-        gettimeofday(&prevTv, 0);
-#endif
-        // process received messages in queue
-        count = ListCount(&gMacRecvdPhyDataList);
-        if (count > 0) {
-			pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
-			while (pPhyDataNode != 0) {
-				MacProcessPhyDataInd(pPhyDataNode->pBuffer, pPhyDataNode->length);
-				MemFree(pPhyDataNode->pBuffer);
-				MemFree(pPhyDataNode);
-				pPhyDataNode = (PhyDataIndNode*)ListPopNode(&gMacRecvdPhyDataList);
-			}
-        }
-
-#ifdef TI_DSP
-        // receive msg from message queue
-        count = 0;
-        while (count < 4) {
-        	byteRecvd = MessageQGetData(&gMscRecvMessageQ, &pMsgQBuffer, &pFd);
-
-        	if (byteRecvd == 0) {
-        		MessageQFreeRecvFd(pFd);
-        		break;
-        	}
-
-        	PhyUlDataInd(pMsgQBuffer, byteRecvd);
-
-        	MessageQFreeRecvFd(pFd);
-
-        	count++;
-        }
-#elif defined ARM_LINUX
-        count = MessageQCount(&gMscRecvMessageQ);
-        // LOG_TRACE(ULP_LOGGER_NAME, "count = %d\n", count);
-        if (count > 10) {
-            count = 10;
-        }
-        while (count--) {
-            byteRecvd = MessageQRecv(&gMscRecvMessageQ, (char*)recvMsgQBuffer, MAX_MESSAGEQ_BUFFER_LENGTH);
-
-            if (byteRecvd == 0) {
-                break;
-            }
-
-            PhyUlDataInd(recvMsgQBuffer, byteRecvd);
-        }
-#elif defined OS_LINUX
-        LOG_TRACE(ULP_LOGGER_NAME, "Task running\n");
-#endif
-
-#ifndef OS_LINUX
-        curTime = CSL_tscRead();
-        if ((curTime - prevTime) > 10000) {
-        	// only print when consuming time is more than 0.1ms
-        	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, time = %d\n", (curTime - prevTime));
-        }
-#else
-        gettimeofday(&curTv, 0);
-
-        if (curTv.tv_sec >= prevTv.tv_sec) {
-            delta = (curTv.tv_sec - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
-        } else {
-            delta = (curTv.tv_sec + 60 - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
-        }
-#ifdef ARM_LINUX
-        if (delta > 100) {
-#else 
-        if (delta > 1000) {
-#endif
-        	// only print when consuming time is more than 0.1ms
-        	LOG_WARN(ULP_LOGGER_NAME, "end scheduling, delta = %d\n", delta);
-        }
-#endif
-    }
-
-    return 0;
-}
-
-// ---------------------------
-void NotifyMacHandler() {
-    if (gMacStandloneFlag) {
-        EventSend(&gMacHandlerEvent);
-    }
-}
-
-// ---------------------------
-void PhyUlDataInd(unsigned char* pBuffer, unsigned short length) 
-{
-    if (pBuffer == 0) {
-        return;
-    }
-
-    LOG_TRACE(ULP_LOGGER_NAME, "length = %d\n", length);
-    // LOG_BUFFER(pBuffer, length);
-
-    if (gMacStandloneFlag) {
-        PhyDataIndNode* pPhyDataInd = (PhyDataIndNode*)MemAlloc(sizeof(PhyDataIndNode));
-        if (pPhyDataInd == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for PhyDataIndNode\n");
-            return;
-        }
-        pPhyDataInd->length = length;
-        pPhyDataInd->pBuffer = MemAlloc(length);
-        if (pPhyDataInd == 0) {
-            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for phy data, length = %d\n", length);
-            return;
-        }
-        memcpy(pPhyDataInd->pBuffer, pBuffer, length);
-        ListPushNode(&gMacRecvdPhyDataList, &pPhyDataInd->node);
-    } else {
-        MacProcessPhyDataInd(pBuffer, length);
-    }
-}
-
-// ---------------------------
-void MacProcessPhyDataInd(UInt8* pBuffer, UInt16 length)
+void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 {
     if (pBuffer == 0) {
         return;

@@ -15,18 +15,20 @@
 #include "lteMac.h"
 #include "lteRrc.h"
 #include "asn1.h"
+#include "lteUlpWorker.h"
 
 
 // -------------------------
-void InitUlpLayer(unsigned char standloneMacFlag, unsigned char startResCleanerFlag)
+void InitUlpLayer(unsigned char startUlpWorkerFlag, unsigned char startResCleanerFlag)
 {
     InitLteLogger();
     KpiInit();
     InitMemPool();
     Asn1Init();
-    InitMacLayer(standloneMacFlag);
+    InitMacLayer();
     InitRlcLayer();
     InitRrcLayer();
+    InitUlpWorker(startUlpWorkerFlag);
     InitResCleaner(startResCleanerFlag);
 }
 
@@ -37,7 +39,7 @@ void UlpOneMilliSecondIsr()
 	UpdateSystemTime();
 #endif
 
-	NotifyMacHandler();
+	NotifyUlpWorker();
 	NotifyResCleaner();
 
 #ifdef OS_LINUX

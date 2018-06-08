@@ -17,6 +17,7 @@ extern "C" {
 
 typedef struct {
     ListNode node;
+    UInt16 idleCount;
     UInt16 rnti;
     UeIdentity ueIdentity;
 } RrcUeContext;
@@ -29,6 +30,7 @@ extern RrcUeContext* RrcGetUeContext(UInt16 rnti);
 extern RrcUeContext* RrcCreateUeContext(UInt16 rnti);
 extern void RrcDeleteUeContext(RrcUeContext* pRrcUeCtx);
 extern int RrcGetUeContextCount();
+extern void RrcUpdateUeContextTime(RrcUeContext* pRrcUeCtx, unsigned int value);
 
 #ifdef __cplusplus
 }
