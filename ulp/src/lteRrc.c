@@ -14,6 +14,9 @@
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
+#include "socket.h"
+#include "lteConfig.h"
+#include "sync.h"
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gUlRRcMsgName, ".ulpdata");
@@ -39,6 +42,11 @@ UInt8 gUlRRcMsgName[17][50] = {
     "Spare1",
     "N Items"};
 
+#ifdef OS_LINUX
+int gSendOamUdpFd = -1;
+struct sockaddr_in gOamAddress;
+#endif
+
 void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff);
@@ -47,6 +55,10 @@ unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 void InitRrcLayer()
 {
     ListInit(&gRrcUeContextList, 1);
+#ifdef OS_LINUX
+    gSendOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
+    SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
+#endif
 }
 
 // --------------------------------
@@ -212,17 +224,15 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, pIdResp->mobile_id.imsi, 15);
+            
+            for (i = 0; i < 15; i++) {
+                pUeCtx->ueIdentity.imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
+            }
+            pUeCtx->ueIdentity.imsi[15] = '\0';
 
             // for print test
 #ifdef OS_LINUX
-            UInt8 imsi[16];
-            for (i = 0; i < 15; i++) {
-                imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
-            }
-            imsi[15] = '\0'; 
-
-            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pUeCtx->ueIdentity.imsi);
 #else
             UInt8* imsiOctect = pIdResp->mobile_id.imsi;
             i = 0;
@@ -296,16 +306,14 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, pAttachReq->eps_mobile_id.imsi, 15);
+
+            for (i = 0; i < 15; i++) {
+                pUeCtx->ueIdentity.imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;
+            }
+            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
-            UInt8 imsi[16];
-            // for test print
-            for (i = 0; i < 15; i++) {
-                imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            imsi[15] = '\0';
-            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pUeCtx->ueIdentity.imsi);
 #else
             UInt8* imsiOctect = pAttachReq->eps_mobile_id.imsi;
             i = 0;
@@ -384,16 +392,14 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, pDetachReq->eps_mobile_id.imsi, 15);
+
+            for (i = 0; i < 15; i++) {
+                pUeCtx->ueIdentity.imsi[i] = pDetachReq->eps_mobile_id.imsi[i] + 0x30;
+            }
+            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
-            UInt8 imsi[16];
-            // for test print
-            for (i = 0; i < 15; i++) {
-                imsi[i] = pDetachReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            imsi[15] = '\0';
-            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pDetachReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pDetachReq->eps_mobile_id.imsi;
             i = 0;
@@ -468,16 +474,14 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, pExtServReq->eps_mobile_id.imsi, 15);
+
+            for (i = 0; i < 15; i++) {
+                pUeCtx->ueIdentity.imsi[i] = pExtServReq->eps_mobile_id.imsi[i] + 0x30;
+            }
+            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
-            UInt8 imsi[16];
-            // for test print
-            for (i = 0; i < 15; i++) {
-                imsi[i] = pExtServReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            imsi[15] = '\0';
-            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pExtServReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pExtServReq->eps_mobile_id.imsi;
             i = 0;
@@ -550,16 +554,14 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             } else {
                 pUeCtx->ueIdentity.imsiPresent = TRUE;
             }
-            memcpy(pUeCtx->ueIdentity.imsi, pTauReq->eps_mobile_id.imsi, 15);
+
+            for (i = 0; i < 15; i++) {
+                pUeCtx->ueIdentity.imsi[i] = pTauReq->eps_mobile_id.imsi[i] + 0x30;
+            }
+            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
-            UInt8 imsi[16];
-            // for test print
-            for (i = 0; i < 15; i++) {
-                imsi[i] = pTauReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            imsi[15] = '\0';
-            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, imsi);
+            LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pTauReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pTauReq->eps_mobile_id.imsi;
             i = 0;
@@ -673,8 +675,17 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         return;
     }
 
-    // TODO send data to OAM
+#ifdef OS_LINUX
+    LteUlpDataInd ueDataInd;
+    ueDataInd.msgType = MSG_ULP_UE_IDENTITY_IND;
+    ueDataInd.u.ueIdentityInd.count = 1;
+    memcpy((void*)&ueDataInd.u.ueIdentityInd.ueIdentityArray[0], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
+    ueDataInd.u.ueIdentityInd.ueIdentityArray[0].rnti = pRrcUeCtx->rnti;
+    ueDataInd.length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH + sizeof(UeIdentity);
+    SocketUdpSend(gSendOamUdpFd, (char*)&ueDataInd, ueDataInd.length, &gOamAddress);
+#endif
 
     // if send data to OAM, delete the UE context
     RrcDeleteUeContext(pRrcUeCtx);
 }
+

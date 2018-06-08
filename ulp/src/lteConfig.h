@@ -17,9 +17,12 @@ extern "C" {
 #include "logger.h"
 #include "lteKpi.h"
 
+#define MAX_IP_ADDR_LENGTH  64
 typedef struct {       
     int  pollingInterval;       // in milli second
     int  resCleanupTimer;       // in milli second
+    char oamIp[MAX_IP_ADDR_LENGTH];             
+    unsigned short oamUdpPort;  //
     LoggerConfig logConfig;     // TRACE, DEBUG, INFO, WARNING, ERROR
     LteKpiConfig kpiConfig;
 } LteConfig;

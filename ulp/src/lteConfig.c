@@ -18,6 +18,8 @@ LteConfig gLteConfig =
 { 
     5,      // 5ms
     10000,  // 10000ms
+    "127.0.0.1",
+    55012,
 
     // log config, default log to console only
     {
@@ -120,6 +122,26 @@ void ParseConfig(char* configFileName)
             gLteConfig.resCleanupTimer = jsonItem->valueint;
         } else {
             LOG_WARN(ULP_LOGGER_NAME, "Invalid config for resCleanupTimer\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "OamServerIp");
+    if (jsonItem != 0) {
+        if (jsonItem->type == cJSON_String) {      
+            if (strlen(jsonItem->valuestring) < MAX_IP_ADDR_LENGTH) {
+                strcpy(gLteConfig.oamIp, jsonItem->valuestring);
+            }       
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for OamServerIp\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "OamServerUdpPort");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            gLteConfig.oamUdpPort = jsonItem->valueint;
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for OamServerUdpPort\n");
         }
     }
 
