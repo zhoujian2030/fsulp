@@ -45,7 +45,7 @@ MessageQueue gUlpRecvMessageQ;
 #endif
 
 #ifdef OS_LINUX
-int gSendOamUdpFd = -1;
+int gOamUdpFd = -1;
 struct sockaddr_in gOamAddress;
 #endif
 
@@ -108,7 +108,8 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
     }
 
 #ifdef OS_LINUX
-    gSendOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
+    gOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
+    SocketMakeNonBlocking(gOamUdpFd);
     SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
 #endif
 }
@@ -216,14 +217,36 @@ void UlpRecvAndHandlePhyData()
 //---------------------------------
 void UlpRecvAndHandleOamData()
 {
+    char buffer[MAX_UDP_OAM_DATA_BUFFER];
+    LteOamDataReq* pOamDataReq = (LteOamDataReq*)buffer;
+    LteUlpDataInd* pUlpDataInd = (LteUlpDataInd*)buffer;
+    
+    // handle heartbeat
+#ifdef OS_LINUX
+    struct sockaddr_in remoteAddr;
+    int byteRecvd = SocketUdpRecv(gOamUdpFd, buffer, MAX_UDP_OAM_DATA_BUFFER, &remoteAddr);
+    if (byteRecvd >= LTE_OAM_DATA_REQ_HEAD_LEHGTH) {
+        if (pOamDataReq->msgType == MSG_ULP_HEARTBEAT_REQ) {
+            pUlpDataInd->msgType = MSG_ULP_HEARTBEAT_RESP;
+            pUlpDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH;
+            SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &remoteAddr);  
+            LOG_INFO(ULP_LOGGER_NAME, "Send Heartbeat response to OAM\n");
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "invalid msgType = %d\n", pOamDataReq->msgType);
+            LOG_BUFFER(buffer, byteRecvd);
+        }
+    }
+#else
+    // TODO in DSP
+#endif
+
+    // handle UE identity
     UInt32 rrcCtxCount = ListCount(&gRrcUeContextList);    
     if (rrcCtxCount == 0) {
         return;
-    }
-    
-    LteUlpDataInd ueDataInd;
-    ueDataInd.msgType = MSG_ULP_UE_IDENTITY_IND;
-    ueDataInd.length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH;
+    }   
+    pUlpDataInd->msgType = MSG_ULP_UE_IDENTITY_IND;
+    pUlpDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH;
     int ueIndex = 0;
     RrcUeContext *pRrcUeCtx, *pNextRrcUeCtx;
 
@@ -234,9 +257,9 @@ void UlpRecvAndHandleOamData()
         if ((pRrcUeCtx->ueIdentity.imsiPresent && pRrcUeCtx->ueIdentity.mTmsiPresent) 
             || (pRrcUeCtx->idleCount >= gMaxRrcCtxIdleCount)) 
         {
-            memcpy((void*)&ueDataInd.u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
-            ueDataInd.u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
-            ueDataInd.length += sizeof(UeIdentity);
+            memcpy((void*)&pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
+            pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
+            pUlpDataInd->length += sizeof(UeIdentity);
             RrcDeleteUeContext(pRrcUeCtx);
             ueIndex++;
             if (ueIndex == MAX_NUM_UE_INFO_REPORT) {
@@ -250,10 +273,10 @@ void UlpRecvAndHandleOamData()
         pRrcUeCtx = pNextRrcUeCtx;
     }
 
-    ueDataInd.u.ueIdentityInd.count = ueIndex;
+    pUlpDataInd->u.ueIdentityInd.count = ueIndex;
     if (ueIndex > 0) {
 #ifdef OS_LINUX
-        SocketUdpSend(gSendOamUdpFd, (char*)&ueDataInd, sizeof(LteUlpDataInd), &gOamAddress);  
+        SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &gOamAddress);  
 #endif
     }
 }

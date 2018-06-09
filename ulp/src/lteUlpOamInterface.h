@@ -16,6 +16,7 @@ extern "C" {
 
 #define LTE_ULP_DATA_IND_HEAD_LEHGTH    4
 #define LTE_UE_ID_IND_MSG_HEAD_LEHGTH   4
+#define LTE_OAM_DATA_REQ_HEAD_LEHGTH    4
 
 #define MAX_NUM_UE_INFO_REPORT  32
 
@@ -55,6 +56,15 @@ typedef struct {
         UeIdentityIndMsg ueIdentityInd;
     } u;
 } LteUlpDataInd;
+
+#define MAX_UDP_OAM_DATA_BUFFER     (sizeof(LteUlpDataInd) + 4)
+
+typedef struct {
+    unsigned short msgType;
+    unsigned short length;
+    char* data;
+} LteOamDataReq;
+
 
 
 #ifdef __cplusplus

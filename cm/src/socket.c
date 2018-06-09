@@ -142,7 +142,7 @@ int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRe
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // For non-blocking socket, it would return EAGAIN or EWOULDBLOCK 
             // when no data read from socket
-            LOG_MSG(LOGGER_MODULE_CM, TRACE, "no data received from the socket now, fd = %d, %s\n", fd, strerror(errno));           
+            // LOG_MSG(LOGGER_MODULE_CM, TRACE, "no data received from the socket now, fd = %d, %s\n", fd, strerror(errno));           
             return 0;
         } else {
             LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to recv data from socket: %d, errno = %d - %s\n", fd, errno, strerror(errno));
@@ -167,7 +167,7 @@ int SocketUdpSend(int fd, char* pBuffer, int numBytesToSend, struct sockaddr_in*
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // For non-blocking socket, it would return EAGAIN or EWOULDBLOCK 
             // when send buffer is full
-            LOG_MSG(LOGGER_MODULE_CM, TRACE, "no data send to the socket now, fd = %d\n", fd);
+            LOG_MSG(LOGGER_MODULE_CM, WARNING, "no data send to the socket now, fd = %d\n", fd);
             return 0;
         } else {
             LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to send data to socket: %d. errno = %d - %s\n", fd, errno, strerror(errno));    
