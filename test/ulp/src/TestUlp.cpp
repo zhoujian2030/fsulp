@@ -142,9 +142,9 @@ TEST_F(TestUlp, Rlc_Reassamble_Single_SDU) {
     // check RRC decode result
     unsigned char expectImsiStr[] = "460041143702947";
     RrcUeContext* pRrcUeCtx;
-    for (unsigned i=0; i<15; i++) {
-        expectImsiStr[i] -= 0x30;
-    }
+    // for (unsigned i=0; i<15; i++) {
+    //     expectImsiStr[i] -= 0x30;
+    // }
     EXPECT_EQ(gRrcUeDataInd.numUe, 1);
     RrcUeDataInd_test* pRrcUeDataInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[0];
     EXPECT_EQ(pRrcUeDataInd->rnti, 124);
@@ -342,9 +342,9 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     // check RRC decode result
     unsigned char expectImsiStr[] = "460041143702947";
     RrcUeContext* pRrcUeCtx;
-    for (unsigned i=0; i<15; i++) {
-        expectImsiStr[i] -= 0x30;
-    }
+    // for (unsigned i=0; i<15; i++) {
+    //     expectImsiStr[i] -= 0x30;
+    // }
     EXPECT_EQ(gRrcUeDataInd.numUe, 1);
     RrcUeDataInd_test* pRrcUeDataInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[0];
     EXPECT_EQ(pRrcUeDataInd->rnti, 125);

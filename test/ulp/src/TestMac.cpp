@@ -19,17 +19,20 @@
 #include "lteMac.h"
 #include "lteKpi.h"
 #include "lteLogger.h"
+#include "lteUlpWorker.h"
 
 using namespace std;
 
-extern List gMacRecvdPhyDataList;
+extern List gRecvdPhyDataList;
+extern unsigned char gUlpWorkerInitilized;
 
 TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
     LteLoggerSetLogLevel(0);
     gCallMacDataInd = 0;
     KpiInit();
     InitMemPool();
-    InitMacLayer(1);
+    InitMacLayer();
+    InitUlpWorker(1);
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -83,21 +86,21 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
 
     // Pre-check status
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); // 10 for mempool, 1 for MAC phy data list
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
     ASSERT_EQ((int)gLteKpi.mem, 0);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
     PhyUlDataInd(gMsgBuffer, length);
     usleep(10);
 
     // check before notify
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
     ASSERT_EQ((int)gLteKpi.mem, 2);
     ASSERT_EQ(gMacUeDataInd.numUe, 0);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 1);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 1);
 
-    NotifyMacHandler();
+    NotifyUlpWorker();
     usleep(10000);
 
     // check after notify
@@ -107,10 +110,10 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
         0xC8, 0x02, 0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 
         0x00};     
     KpiRefresh();   
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
     ASSERT_EQ((int)gLteKpi.mem, 4); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 2 for pMacUeDataInd->rlcData->rlcDataArray[0]&[1]
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 2);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
     ASSERT_EQ(gMacUeDataInd.numUe, 1);
     MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
     ASSERT_EQ(pMacUeDataInd->rnti, 124);
@@ -134,6 +137,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
     // check RLC to PDCP indication
     ASSERT_EQ(gRlcUeDataInd.numUe, 0);
 
+    gUlpWorkerInitilized = FALSE;
 }
 
 TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
@@ -141,7 +145,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
     gCallMacDataInd = 0;
     KpiInit();
     InitMemPool();
-    InitMacLayer(0);
+    InitMacLayer();
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -173,7 +177,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
     ASSERT_EQ((int)gLteKpi.mem, 0);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
     PhyUlDataInd(gMsgBuffer, length);
 
@@ -182,7 +186,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
     ASSERT_EQ((int)gLteKpi.mem, 1); // 1 for MacUeDataInd_t
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 0);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
     ASSERT_EQ(gMacUeDataInd.numUe, 1);
     MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
     ASSERT_EQ(pMacUeDataInd->rnti, 124);
@@ -196,7 +200,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
     gCallRlcDataInd = 0;
     KpiInit();
     InitMemPool();
-    InitMacLayer(0);
+    InitMacLayer();
 
     // Identity Response, imsi = 460041143702947
     unsigned char macPdu[] = {
@@ -230,7 +234,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
     ASSERT_EQ((int)gLteKpi.mem, 0);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
     PhyUlDataInd(gMsgBuffer, length);
 
@@ -243,7 +247,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
     ASSERT_EQ((int)gLteKpi.mem, 3); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 1 for pMacUeDataInd->rlcData->rlcDataArray[0]
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 1);
-    ASSERT_EQ((int)ListCount(&gMacRecvdPhyDataList), 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
     ASSERT_EQ(gMacUeDataInd.numUe, 1);
     MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
     ASSERT_EQ(pMacUeDataInd->rnti, 124);

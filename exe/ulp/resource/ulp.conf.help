@@ -26,19 +26,19 @@ LogLevel: TRACE, LogType: 2 （CPU占用率过高，不能长时间配置TRACE�
 LogLevel: DEBUG, LogType: 0
 
 场景4： 外场测试，需要收集尽量充分的log信息，尽量少丢log， 不影响业务处理，业务量4 ~ 6 user/5ms
-LogLevel: DEBUG, LogType: 1
+LogLevel: DEBUG, LogType: 2
 
 场景5： 外场测试，需要收集尽量充分的log信息，容忍丢log， 不影响业务处理，业务量 6 ~ 8 user/5ms
 LogLevel: DEBUG, LogType: 2/1
 
 场景6： 客户正常使用场景，不影响业务处理，保留必要的log信息，确保尽量不丢log，业务量不大于 16 user/5ms
-LogLevel: INFO, LogType: 1
+LogLevel: INFO, LogType: 2
 
 场景7： 客户正常使用场景，不影响业务处理，保留必要的log信息，容忍丢log，业务量大于 16 user/5ms
 LogLevel: INFO, LogType: 2/1
 
 场景8： 客户正常使用场景，不影响业务处理，只记录错误log信息，业务量大于 24 user/5ms
-LogLevel: WARNING, LogType: 1/0
+LogLevel: WARNING, LogType: 2/0
 
 ----------------
 logger配置参数说明

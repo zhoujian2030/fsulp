@@ -42,9 +42,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
     RrcUeDataInd_test* pRrcUeDataInd;
     RrcUeContext* pRrcUeCtx;
     unsigned char expectImsiStr[] = "460041143702947";
-    for (unsigned i=0; i<15; i++) {
-        expectImsiStr[i] -= 0x30;
-    }
+    // for (unsigned i=0; i<15; i++) {
+    //     expectImsiStr[i] -= 0x30;
+    // }
 
     unsigned short dataSize = sizeof(rrcMsg);
     unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);

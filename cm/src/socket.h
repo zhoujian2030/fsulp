@@ -27,10 +27,14 @@ int SocketBind(unsigned short port, char* localIp);
 int SocketUdpInitAndBind(unsigned short port, char* localIp);
 int SocketUdpInit();
 
+void SocketMakeNonBlocking(int fd);
+void SocketMakeBlocking(int fd);
+
 // Recv UDP data
 // return :
 //      -1 if error
 //      num bytes received if success
+//      0 if no data received
 int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRemoteAddr);
 
 int SocketUdpSend(int fd, char* pBuffer, int numBytesToSend, struct sockaddr_in* pRemoteAddr);

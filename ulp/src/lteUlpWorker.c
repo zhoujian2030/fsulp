@@ -221,10 +221,6 @@ void UlpRecvAndHandleOamData()
         return;
     }
     
-    // if (rrcCtxCount > MAX_NUM_UE_INFO_REPORT) {
-    //     LOG_INFO(ULP_LOGGER_NAME, "rrcCtxCount = %d, only handle %d\n", rrcCtxCount, MAX_NUM_UE_INFO_REPORT);
-    //     rrcCtxCount = MAX_NUM_UE_INFO_REPORT;
-    // }
     LteUlpDataInd ueDataInd;
     ueDataInd.msgType = MSG_ULP_UE_IDENTITY_IND;
     ueDataInd.length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH;

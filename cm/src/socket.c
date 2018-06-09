@@ -10,6 +10,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <assert.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 // ---------------------------------
 int SocketClose(int fd)
@@ -98,9 +101,37 @@ int SocketUdpInit()
 }
 
 // ---------------------------------
+void SocketMakeNonBlocking(int fd)
+{
+    if (fd <= 0) {
+        LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid fd = %d\n", fd);
+        return;
+    }
+
+    int option = 1;
+    if (ioctl(fd, FIONBIO, &option) == -1) {
+        LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to set non-blocking by ioctl. errno = %d - %s\n", errno, strerror(errno));
+    }
+}
+
+// ---------------------------------
+void SocketMakeBlocking(int fd)
+{
+    if (fd <= 0) {
+        LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid fd = %d\n", fd);
+        return;
+    }
+
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (fcntl(fd, F_SETFL, flags & (~O_NONBLOCK)) == -1) {
+        LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to set blocking by fcntl.  errno = %d - %s", errno, strerror(errno));
+    }
+}
+
+// ---------------------------------
 int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRemoteAddr)
 {
-    if (pBuffer == 0 || pRemoteAddr == 0 || bufferSize == 0) {
+    if (pBuffer == 0 || pRemoteAddr == 0 || bufferSize == 0 || fd <= 0) {
         LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid parameters\n");
         return -1;
     }
@@ -111,7 +142,7 @@ int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRe
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // For non-blocking socket, it would return EAGAIN or EWOULDBLOCK 
             // when no data read from socket
-            LOG_MSG(LOGGER_MODULE_CM, DEBUG, "no data received from the socket now, fd = %d, %s\n", fd, strerror(errno));           
+            LOG_MSG(LOGGER_MODULE_CM, TRACE, "no data received from the socket now, fd = %d, %s\n", fd, strerror(errno));           
             return 0;
         } else {
             LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to recv data from socket: %d, errno = %d - %s\n", fd, errno, strerror(errno));
@@ -125,7 +156,7 @@ int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRe
 // ---------------------------------
 int SocketUdpSend(int fd, char* pBuffer, int numBytesToSend, struct sockaddr_in* pRemoteAddr)
 {
-    if (pBuffer == 0 || pRemoteAddr == 0 || numBytesToSend == 0) {
+    if (pBuffer == 0 || pRemoteAddr == 0 || numBytesToSend == 0 || fd <= 0) {
         LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid parameters\n");
         return -1;
     }
@@ -136,7 +167,7 @@ int SocketUdpSend(int fd, char* pBuffer, int numBytesToSend, struct sockaddr_in*
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // For non-blocking socket, it would return EAGAIN or EWOULDBLOCK 
             // when send buffer is full
-            LOG_MSG(LOGGER_MODULE_CM, DEBUG, "no data send to the socket now, fd = %d\n", fd);
+            LOG_MSG(LOGGER_MODULE_CM, TRACE, "no data send to the socket now, fd = %d\n", fd);
             return 0;
         } else {
             LOG_MSG(LOGGER_MODULE_CM, ERROR, "fail to send data to socket: %d. errno = %d - %s\n", fd, errno, strerror(errno));    
