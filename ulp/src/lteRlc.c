@@ -298,7 +298,7 @@ void RlcProcessUmOrTmRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         return;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
+    LOG_TRACE(ULP_LOGGER_NAME, "TODO, This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
 
     //TODO
     MemFree(pRlcDataInfo->rlcdataBuffer);
@@ -375,7 +375,7 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
         if (amdHeader.rf) {
             // handle AMD PDU segment
-            LOG_WARN(ULP_LOGGER_NAME, "TODO handle first AMD PDU segment, rnti = %d\n", rnti);
+            LOG_DBG(ULP_LOGGER_NAME, "TODO, handle first AMD PDU segment, rnti = %d\n", rnti);
             ret = RlcProcessAmdPduSegment(pAmdPdu, &amdHeader, pRlcDataInfo);
             // TODO
         } else {
@@ -520,8 +520,8 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         RlcSetAmdPduAndDfeStatus(pAmdPdu, pAmdHeader, pDfe);
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
-        // TODO need to check
-        LOG_ERROR(ULP_LOGGER_NAME, "TODO\n");
+        // Concatenation
+        LOG_TRACE(ULP_LOGGER_NAME, "TODO, handle Concatenation\n");
         MemFree(pRlcDataInfo->rlcdataBuffer);
     }
 
@@ -538,6 +538,7 @@ BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataIn
     // TODO
 
     MemFree(pRlcDataInfo->rlcdataBuffer);
+    RlcDeleteAmdPdu(pAmdPdu);
 
     return ret;
 }

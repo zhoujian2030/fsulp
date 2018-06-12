@@ -226,8 +226,10 @@ unsigned char* MemJoin(unsigned char* pSrcBuffer, unsigned char* pDstBuffer)
             pRetBuffer = pDstBuffer;
         } else {
             pRetBuffer = MemAlloc(pSrcNode->length + pDstNode->length);
-            memcpy(pRetBuffer, pSrcNode->pData, pSrcNode->length);
-            memcpy(pRetBuffer + pSrcNode->length, pDstNode->pData, pDstNode->length);
+            if (pRetBuffer != 0) {
+                memcpy(pRetBuffer, pSrcNode->pData, pSrcNode->length);
+                memcpy(pRetBuffer + pSrcNode->length, pDstNode->pData, pDstNode->length);
+            }
             MemFree(pSrcBuffer);
             MemFree(pDstBuffer);
         }
