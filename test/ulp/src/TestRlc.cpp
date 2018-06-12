@@ -24,6 +24,61 @@ using namespace std;
 extern List gRlcUeContextList;
 
 // -------------------------------
+TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Pdu_Multi_Li) {
+    LteLoggerSetLogLevel(0);
+    gCallRlcDataInd = 0;
+    KpiInit();
+    InitMemPool();
+    InitRlcLayer();
+
+    // Create test data
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rlcPdu[] = {
+        0xa4, 0x12, 0x81, 0x08, 0x10, 0x00, 0xd0, 0x07, 0xd7, 0x1d, 0x81, 0x31, 0x30, 0xb4, 0x9d, 0xb3,
+        0x9c, 0x98, 0x13, 0xec, 0x3f, 0x17, 0x73, 0x08, 0x5f, 0x91, 0xe1, 0xa6, 0x7c, 0xf1, 0x9a, 0x8d,
+        0xee, 0x91, 0x50, 0x47, 0x06, 0xfd, 0x35, 0x09, 0xf8, 0xd3, 0xc0, 0x85, 0x21, 0xa7, 0x6d, 0xe1,
+        0x1f, 0x9a, 0x02, 0x31, 0x0a, 0x01, 0xec, 0x6e, 0xc1, 0x99, 0x78, 0xa1, 0xb5};
+    MacUeDataInd_t* pMacDataInd = (MacUeDataInd_t*)MemAlloc(sizeof(MacUeDataInd_t));
+    ASSERT_TRUE(pMacDataInd != 0);
+    pMacDataInd->rnti = rnti;
+    pMacDataInd->rlcData = (RlcUlData*)MemAlloc(sizeof(RlcUlData));
+    RlcUlData* pRlcUlData = pMacDataInd->rlcData;
+    ASSERT_TRUE(pRlcUlData != 0);
+    pRlcUlData->numLCInfo = 1;
+    RlcUlDataInfo* pLcIdInfo = &pRlcUlData->rlcDataArray[0];
+    pLcIdInfo->lcId = lcId;
+    pLcIdInfo->length = sizeof(rlcPdu);
+    pLcIdInfo->rlcdataBuffer = MemAlloc(pLcIdInfo->length);
+    memcpy(pLcIdInfo->rlcdataBuffer, rlcPdu, pLcIdInfo->length);
+
+    // Pre-check status
+    KpiRefresh();
+    RlcUeContext* pRlcUeCtx = RlcGetUeContext(rnti);
+    ASSERT_TRUE(pRlcUeCtx == 0);
+    ASSERT_EQ((int)gLteKpi.activeRlcCtx, 0);
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1); // 10 for mempool, 1 for RLC context list
+    ASSERT_EQ((int)gLteKpi.mem, 3);
+
+    MacUeDataInd(pMacDataInd);
+
+    // Check status
+    KpiRefresh();
+    pRlcUeCtx = RlcGetUeContext(rnti);
+    ASSERT_TRUE(pRlcUeCtx != 0);
+    ASSERT_TRUE(pRlcUeCtx->rxAMEntityArray[lcId] != 0);
+    ASSERT_EQ((int)gLteKpi.activeRlcCtx, 1);
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1+1); // add one for RLC context
+    ASSERT_EQ((int)gLteKpi.mem, 2); // 1 RLC ctx, 1 AM Entity
+    ASSERT_EQ(gRlcUeDataInd.numUe, 0);
+    
+    RlcDeleteUeContext(pRlcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1);
+    ASSERT_EQ((int)gLteKpi.mem, 0); // 1 PDCP buffer   
+}
+
+// -------------------------------
 TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Single_Rlc_SDU_Seg_Id_Resp) {
     LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
@@ -847,7 +902,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Seg_Sn_Not_Consecutive) {
     ASSERT_TRUE(pRlcUeCtx->rxAMEntityArray[lcId] != 0);
     ASSERT_EQ((int)gLteKpi.activeRlcCtx, 1);
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1+1);
-    numMemCreated = 2; // for rlc ctx + AM entity 
+    numMemCreated = 3; // for rlc ctx + AM entity + 1st RLC SDU seg, segment 2 is dropped
     ASSERT_EQ(gLteKpi.mem, numMemCreated); 
 
     RlcDeleteUeContext(pRlcUeCtx);

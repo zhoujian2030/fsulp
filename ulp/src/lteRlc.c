@@ -522,6 +522,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     } else {
         // TODO need to check
         LOG_ERROR(ULP_LOGGER_NAME, "TODO\n");
+        MemFree(pRlcDataInfo->rlcdataBuffer);
     }
 
     ListPushNode(&pAmdPdu->segList, &pAmdPduSegment->node);
