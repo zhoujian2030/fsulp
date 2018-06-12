@@ -88,7 +88,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg( LIBLTE_BIT_MSG_
         	liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr,
                                                     &ul_info_transfer->dedicated_info);
         }else{
-            printf("Invalid dedicated_info_type = %d\n", ul_info_transfer->dedicated_info_type);
+            //printf("Invalid dedicated_info_type = %d\n", ul_info_transfer->dedicated_info_type);
         }
 
         liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);
@@ -1240,8 +1240,8 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_tau_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUC
         // EPS Mobile ID
         liblte_mme_unpack_eps_mobile_id_ie(&msg_ptr, &tau_req->eps_mobile_id);
 
-        printf("[%s], eps_update_type.value = %d, eps_update_type.activeFlag = %d, tsc_flag = %d, nas_ksi = %d\n", __func__, tau_req->eps_update_type.value,
-            tau_req->eps_update_type.activeFlag, tau_req->nas_ksi.tsc_flag, tau_req->nas_ksi.nas_ksi);
+        // printf("[%s], eps_update_type.value = %d, eps_update_type.activeFlag = %d, tsc_flag = %d, nas_ksi = %d\n", __func__, tau_req->eps_update_type.value,
+        //     tau_req->eps_update_type.activeFlag, tau_req->nas_ksi.tsc_flag, tau_req->nas_ksi.nas_ksi);
 
         err = LIBLTE_SUCCESS;
     }

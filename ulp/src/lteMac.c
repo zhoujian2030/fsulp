@@ -149,7 +149,7 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 
 				MacProcessUlSchPdu(&ulSchPdu);
 			} else {
-		    	LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
+		    	//LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
 			}
 
 			tempLen += (pUlSchPduHead->wordLen << 2);

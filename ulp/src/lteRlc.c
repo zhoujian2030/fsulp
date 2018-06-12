@@ -298,7 +298,7 @@ void RlcProcessUmOrTmRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         return;
     }
 
-    LOG_INFO(ULP_LOGGER_NAME, "This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
+    LOG_TRACE(ULP_LOGGER_NAME, "This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
 
     //TODO
     MemFree(pRlcDataInfo->rlcdataBuffer);
@@ -520,7 +520,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         RlcSetAmdPduAndDfeStatus(pAmdPdu, pAmdHeader, pDfe);
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
-        // TODO
+        // TODO need to check
         LOG_ERROR(ULP_LOGGER_NAME, "TODO\n");
     }
 
@@ -671,15 +671,21 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             {                
                 LOG_DBG(ULP_LOGGER_NAME, "receive middle SDU segment, rnti = %d, sn = %d\n", pRxAmEntity->rnti, sn);
 
-                pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
-                if (pTmpBuffer == 0) {
-                    LOG_ERROR(ULP_LOGGER_NAME, "AM_PDU_MAP_SDU_MID MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
-                        pPrevBuffer->pData, pCurrBuffer->pData);
-                    return;
-                }
-                pPrevBuffer->size += pCurrBuffer->size;
-                pPrevBuffer->pData = pTmpBuffer;
-                pRawSdu->sn = sn;
+                if (!isSNEqual(sn, pRawSdu->sn)) {
+                    pTmpBuffer = MemJoin(pPrevBuffer->pData, pCurrBuffer->pData);
+                    if (pTmpBuffer == 0) {
+                        LOG_ERROR(ULP_LOGGER_NAME, "AM_PDU_MAP_SDU_MID MemJoin failure, pPrevBuffer->pData = %p, pCurrBuffer->pData = %p\n", 
+                            pPrevBuffer->pData, pCurrBuffer->pData);
+                        return;
+                    }
+                    pPrevBuffer->size += pCurrBuffer->size;
+                    pPrevBuffer->pData = pTmpBuffer;
+                    pRawSdu->sn = sn;
+                } else {
+                    LOG_WARN(ULP_LOGGER_NAME, "sn is the same with previous sn, might be retransmit segment, drop it, sn = %d, pRawSdu->sn = %d, rnti = %d, status = %d\n",
+                        sn, pRawSdu->sn, pRxAmEntity->rnti, pAmdDfe->status);
+                    MemFree(pAmdDfe->buffer.pData);
+                }               
 
                 break;
             }
@@ -708,13 +714,21 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             }
         }
     } else {
-        LOG_WARN(ULP_LOGGER_NAME, "seq num not consecutive, discard previous received SDU segment, sn = %d, pRawSdu->sn = %d, rnti = %d\n",
-            sn, pRawSdu->sn, pRxAmEntity->rnti);
-        MemFree(pRawSdu->rawSdu.pData);
-        pRawSdu->rawSdu.pData = 0;
-        pRawSdu->rawSdu.size = 0;
+        if (pAmdDfe->status == AM_PDU_MAP_SDU_FULL || pAmdDfe->status == AM_PDU_MAP_SDU_START) {
+            // previous segment might be lost, so drop all previous incomplete segments
+            LOG_WARN(ULP_LOGGER_NAME, "seq num not consecutive, discard previous received SDU segment, sn = %d, pRawSdu->sn = %d, rnti = %d\n",
+                sn, pRawSdu->sn, pRxAmEntity->rnti);
+            MemFree(pRawSdu->rawSdu.pData);
+            pRawSdu->rawSdu.pData = 0;
+            pRawSdu->rawSdu.size = 0;
 
-        RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
+            RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
+        } else {
+            // this might be previous HARQ retransmit data or RLC ARQ retransmit data, so drop it
+            LOG_WARN(ULP_LOGGER_NAME, "segment seq num not valid, drop this segment, sn = %d, pRawSdu->sn = %d, rnti = %d, status = %d\n",
+                sn, pRawSdu->sn, pRxAmEntity->rnti, pAmdDfe->status);
+            MemFree(pAmdDfe->buffer.pData);
+        }
     }
 }
 
@@ -743,7 +757,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 
         default:
         {
-            LOG_WARN(ULP_LOGGER_NAME, "should not come here, status = %d, rnti = %d\n", pAmdDfe->status, pRxAmEntity->rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "should not come here, could be HARQ retransmit or RLC ARQ retransmit PDU, status = %d, rnti = %d\n", pAmdDfe->status, pRxAmEntity->rnti);
             MemFree(pAmdDfe->buffer.pData);
             break;
         }

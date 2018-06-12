@@ -59,7 +59,7 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 // -----------------------------
 void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size)
 {
-    LOG_WARN(ULP_LOGGER_NAME, "TODO, rnti = %d, lcId = %d, data size = %d\n", rnti, lcId, size);
+    // LOG_TRACE(ULP_LOGGER_NAME, "TODO, rnti = %d, lcId = %d, data size = %d\n", rnti, lcId, size);
 
 
     if (pData != 0) {

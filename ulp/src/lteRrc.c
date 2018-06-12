@@ -80,7 +80,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
     memset(pUeCtx, 0, sizeof(RrcUeContext));
     pUeCtx->rnti = rnti; 
     // SemInit(&pUeCtx->lockOfCount, 1);
-    // pUeCtx->idleCount = 0;
+    pUeCtx->idleCount = 0;
     ListPushNode(&gRrcUeContextList, &pUeCtx->node);
     // KpiCountRrcUeCtx(TRUE);
 
@@ -247,7 +247,7 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %07x%08x\n", rnti, imsi0, imsi1);
 #endif
             if (pUeCtx->ueIdentity.mTmsiPresent) {
-                LOG_DBG(ULP_LOGGER_NAME, "both M-MSI and IMSI are collected, rnti = %d, M-TMSI = %d\n", rnti, pUeCtx->ueIdentity.mTmsi);
+                LOG_DBG(ULP_LOGGER_NAME, "both M-MSI and IMSI are collected, rnti = %d, M-TMSI = 0x%x\n", rnti, pUeCtx->ueIdentity.mTmsi);
             } else {
                 LOG_DBG(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
             }

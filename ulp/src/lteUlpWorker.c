@@ -320,7 +320,7 @@ void* UlpWorkerEntryFunc(void* p)
             delta = (curTv.tv_sec + 60 - prevTv.tv_sec) * 1000000 + curTv.tv_usec - prevTv.tv_usec;
         }
 #ifdef ARM_LINUX
-        if (delta > 100) {
+        if (delta > 500) {
 #else 
         if (delta > 1000) {
 #endif
