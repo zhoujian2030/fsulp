@@ -375,7 +375,7 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
         if (amdHeader.rf) {
             // handle AMD PDU segment
-            LOG_DBG(ULP_LOGGER_NAME, "TODO, handle first AMD PDU segment, rnti = %d\n", rnti);
+            LOG_INFO(ULP_LOGGER_NAME, "TODO, handle first AMD PDU segment, rnti = %d\n", rnti);
             ret = RlcProcessAmdPduSegment(pAmdPdu, &amdHeader, pRlcDataInfo);
             // TODO
         } else {
@@ -403,11 +403,11 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
 
         if (amdHeader.rf) {
             // handle AMD segment
-            LOG_WARN(ULP_LOGGER_NAME, "TODO handle AMD segment, rnti = %d\n", rnti);
+            LOG_INFO(ULP_LOGGER_NAME, "TODO handle AMD segment, rnti = %d\n", rnti);
             ret = RlcProcessAmdPduSegment(pAmdPdu, &amdHeader, pRlcDataInfo);
             // TODO
         } else {
-            LOG_WARN(ULP_LOGGER_NAME, "TODO handle last AMD PDU segment, rnti = %d\n", rnti);
+            LOG_INFO(ULP_LOGGER_NAME, "TODO handle last AMD PDU segment, rnti = %d\n", rnti);
             pAmdPdu->status = PDU_AM_COMPLETE;            
         }
 
@@ -521,7 +521,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
         // Concatenation
-        LOG_TRACE(ULP_LOGGER_NAME, "TODO, handle Concatenation\n");
+        LOG_INFO(ULP_LOGGER_NAME, "TODO, handle Concatenation\n");
         MemFree(pRlcDataInfo->rlcdataBuffer);
     }
 

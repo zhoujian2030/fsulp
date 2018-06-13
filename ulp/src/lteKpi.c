@@ -183,6 +183,9 @@ void ShowKpi()
 void KpiRefresh()
 {
     gLteKpi.mem = MemGetNumMemBlock() - MemGetAvailableMemBlock();
+    if (gLteKpi.mem < 0) {
+        MemDumpStatus();
+    }
 }
 
 // ----------------------------

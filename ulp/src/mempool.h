@@ -70,7 +70,8 @@ typedef struct {
 typedef struct {
     ListNode node;
     unsigned int  magicNo;
-    unsigned int  poolId;
+    unsigned short poolId;
+    unsigned short isInUsed;
     unsigned short size;    // size of allocated memory
     unsigned short length;  // actual length of data buffer
     unsigned char* pData;
@@ -111,6 +112,7 @@ extern int MemRemove(unsigned char* pBuffer, unsigned int where, unsigned int co
 // Get mempool status
 extern unsigned int MemGetNumMemBlock();
 extern unsigned int MemGetAvailableMemBlock();
+extern void MemDumpStatus();
 
 #ifdef __cplusplus
 }

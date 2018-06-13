@@ -76,6 +76,7 @@ void InitMemPool()
             pMem->magicNo = MAGIC_NUMBER;
             pMem->pData = (unsigned char*)pMem + MEM_NODE_SIZE;
             pMem->length = 0;
+            pMem->isInUsed = 0;
 
             ListPushNode(&gMemPool.pool[i], &pMem->node);
         }
@@ -107,8 +108,8 @@ inline int findMatchPool(unsigned int size) {
     unsigned int i = 0;
     for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
         if (size <= gMemPoolConfig[i].size) {
-            LOG_TRACE(ULP_LOGGER_NAME, "find poolId = %d, pool size = %d, actual size = %d\n", 
-                i, gMemPoolConfig[i].size, size);
+            // LOG_TRACE(ULP_LOGGER_NAME, "find poolId = %d, pool size = %d, actual size = %d\n", 
+            //     i, gMemPoolConfig[i].size, size);
             return i;
         }
     }
@@ -138,9 +139,10 @@ unsigned char* MemAlloc(unsigned int length)
     }   
 
     if (pNode != 0) {
-        LOG_TRACE(ULP_LOGGER_NAME, "length = %d, pBuffer = %p, mem size = %d\n", 
-            length, pNode->pData, pNode->size);
+        // LOG_TRACE(ULP_LOGGER_NAME, "length = %d, pBuffer = %p, mem size = %d\n", 
+        //     length, pNode->pData, pNode->size);
         pNode->length = length;
+        pNode->isInUsed = 1;
         return pNode->pData;
     } else {
         LOG_ERROR(ULP_LOGGER_NAME, "no available node, length = %d\n", length);
@@ -158,7 +160,7 @@ inline MemNode* CheckNode(void* pBuffer)
 
     MemNode* pNode = (MemNode*)((unsigned char*)pBuffer - MEM_NODE_SIZE);
     if ((pNode == 0) || (pNode->magicNo != MAGIC_NUMBER) || (pNode->poolId >= MAX_NUM_POOL_SIZE)) {
-        LOG_ERROR(ULP_LOGGER_NAME, "invalid MemNode  = %p\n", pNode);
+        LOG_ERROR(ULP_LOGGER_NAME, "invalid MemNode = %p\n", pNode);
         return 0;
     }    
 
@@ -171,10 +173,15 @@ void MemFree(void* pBuffer)
 {
     MemNode* pNode = CheckNode(pBuffer);
     if (pNode) {
-        LOG_TRACE(ULP_LOGGER_NAME, "free memory, length = %d, poolId = %d\n", 
-            pNode->length, pNode->poolId);
-        pNode->length = 0;
-        ListPushNode(&gMemPool.pool[pNode->poolId], &pNode->node);
+        if (pNode->isInUsed) {
+            // LOG_TRACE(ULP_LOGGER_NAME, "free memory, length = %d, poolId = %d\n", 
+            //     pNode->length, pNode->poolId);
+            pNode->length = 0;
+            pNode->isInUsed = 0;
+            ListPushNode(&gMemPool.pool[pNode->poolId], &pNode->node);
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "pNode = %p is already free\n", pNode);
+        }
     }
 }
 
@@ -273,4 +280,21 @@ int MemRemove(unsigned char* pBuffer, unsigned int where, unsigned int count)
     pNode->length -= count;
 
     return count;
+}
+
+// ---------------------------------
+void MemDumpStatus()
+{
+    LOG_DBG(ULP_LOGGER_NAME, "----------------------------\n");
+    LOG_DBG(ULP_LOGGER_NAME, "Total Mem:    %d\n", NUM_MEM_BLOCK);
+    LOG_DBG(ULP_LOGGER_NAME, "Pool %02d:    %d\n", NUM_MEM_BLOCK);
+
+    unsigned int totalUsed = 0, count = 0, i;
+    for(i=0; i<MAX_NUM_POOL_SIZE; i++) {
+        count = ListCount(&gMemPool.pool[i]);
+        totalUsed += count;
+        LOG_DBG(ULP_LOGGER_NAME, "Pool %02d:    %d\n", NUM_MEM_BLOCK);
+    }
+    LOG_DBG(ULP_LOGGER_NAME, "Total Used:   %d\n", totalUsed);
+    LOG_DBG(ULP_LOGGER_NAME, "----------------------------\n");
 }

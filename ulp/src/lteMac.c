@@ -129,7 +129,7 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
     if (pMsgHead->opc == RX_ULSCH_INDICATION) {
     	pUlIndHead = (S_UlIndHead*)(pBuffer + tempLen);
     	tempLen += sizeof(S_UlIndHead);
-        LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs);
+        // LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs);
 
 		while ((tempLen < length) && (numPdu < pUlIndHead->numOfPDUs)) {
 			pUlSchPduHead = (S_RxUlschIndHeadPdu*)(pBuffer + tempLen);
@@ -143,6 +143,7 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 
 			// only handle crc correct data
 			if (pUlSchPduHead->CRCFlag == 1) {
+                LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d, numPdu = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs, numPdu);
 				ulSchPdu.rnti = pUlSchPduHead->RNTI;
 				ulSchPdu.length = (pUlSchPduHead->bitLen + 7) >> 3;
 				ulSchPdu.buffer = pBuffer + tempLen;

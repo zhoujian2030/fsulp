@@ -128,7 +128,7 @@ void PhyUlDataInd(unsigned char* pBuffer, unsigned short length)
         return;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "length = %d\n", length);
+    // LOG_TRACE(ULP_LOGGER_NAME, "length = %d\n", length);
     // LOG_BUFFER(pBuffer, length);
 
     if (gUlpWorkerInitilized) {
