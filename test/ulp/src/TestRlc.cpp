@@ -1063,7 +1063,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_No_Rlc_Data) {
 }
 
 // -------------------------------
-TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Pdu_Multi_Li) {
+TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Concatenation_3_Li) {
     LteLoggerSetLogLevel(0);
     gCallRlcDataInd = 0;
     KpiInit();
@@ -1074,10 +1074,10 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Pdu_Multi_Li) {
     unsigned short rnti = 101;
     unsigned short lcId = 1;
     unsigned char rlcPdu[] = {
-        0xa4, 0x12, 0x81, 0x08, 0x10, 0x00, 0xd0, 0x07, 0xd7, 0x1d, 0x81, 0x31, 0x30, 0xb4, 0x9d, 0xb3,
-        0x9c, 0x98, 0x13, 0xec, 0x3f, 0x17, 0x73, 0x08, 0x5f, 0x91, 0xe1, 0xa6, 0x7c, 0xf1, 0x9a, 0x8d,
-        0xee, 0x91, 0x50, 0x47, 0x06, 0xfd, 0x35, 0x09, 0xf8, 0xd3, 0xc0, 0x85, 0x21, 0xa7, 0x6d, 0xe1,
-        0x1f, 0x9a, 0x02, 0x31, 0x0a, 0x01, 0xec, 0x6e, 0xc1, 0x99, 0x78, 0xa1, 0xb5};
+        0xa4, 0x01, 0x81, 0x90, 0x07, 0x01, 0x48, 0x02, 0x22, 0xf0, 0x4f, 0x4a, 0xd5, 0xa2, 0x80, 0xea, 
+        0xc1, 0x09, 0x20, 0xc4, 0x05, 0x28, 0x06, 0xa4, 0x0c, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x02, 0x2c,
+        0x00, 0x8f, 0xd0, 0x01, 0x96, 0x03, 0x8e, 0x73, 0xe0, 0x8d, 0xe8, 0x83
+    };
     MacUeDataInd_t* pMacDataInd = (MacUeDataInd_t*)MemAlloc(sizeof(MacUeDataInd_t));
     ASSERT_TRUE(pMacDataInd != 0);
     pMacDataInd->rnti = rnti;
@@ -1108,13 +1108,48 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Pdu_Multi_Li) {
     ASSERT_TRUE(pRlcUeCtx->rxAMEntityArray[lcId] != 0);
     ASSERT_EQ((int)gLteKpi.activeRlcCtx, 1);
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1+1); // add one for RLC context
-    ASSERT_EQ((int)gLteKpi.mem, 2); // 1 RLC ctx, 1 AM Entity
-    ASSERT_EQ(gRlcUeDataInd.numUe, 0);
+    ASSERT_EQ((int)gLteKpi.mem, 5); // 1 RLC ctx, 1 AM Entity, 3 pdcp buffer
+    ASSERT_EQ(gRlcUeDataInd.numUe, 3);
+
+    unsigned char expectPdcpPdu0[] = {
+        0x01, 0x48, 0x02, 0x22, 0xf0, 0x4f, 0x4a, 0xd5, 0xa2, 0x80, 
+        0xea, 0xc1, 0x09, 0x20, 0xc4, 0x05, 0x28, 0x06, 0xa4, 0x0c, 
+        0xc0, 0x00, 0x00, 0x00, 0x00  
+    };
+    unsigned char expectPdcpPdu1[] = {
+        0x02, 0x2c, 0x00, 0x8f, 0xd0, 0x01, 0x96
+    };
+    unsigned char expectPdcpPdu2[] = {
+        0x03, 0x8e, 0x73, 0xe0, 0x8d, 0xe8, 0x83
+    };
+    RlcPdcpUeDataInd_test* pRlcUeDataInd;
+    // li 0
+    pRlcUeDataInd = (RlcPdcpUeDataInd_test*)&gRlcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRlcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRlcUeDataInd->lcId, lcId);
+    ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu0));
+    ASSERT_TRUE(pRlcUeDataInd->pData != 0);
+    ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu0, sizeof(expectPdcpPdu0)) == 0);
+    // li 1
+    pRlcUeDataInd = (RlcPdcpUeDataInd_test*)&gRlcUeDataInd.ueDataIndArray[1];
+    ASSERT_EQ(pRlcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRlcUeDataInd->lcId, lcId);
+    ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu1));
+    ASSERT_TRUE(pRlcUeDataInd->pData != 0);
+    ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu1, sizeof(expectPdcpPdu1)) == 0);
+    // li 2
+    pRlcUeDataInd = (RlcPdcpUeDataInd_test*)&gRlcUeDataInd.ueDataIndArray[2];
+    ASSERT_EQ(pRlcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRlcUeDataInd->lcId, lcId);
+    ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu2));
+    ASSERT_TRUE(pRlcUeDataInd->pData != 0);
+    ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu2, sizeof(expectPdcpPdu2)) == 0);
+
     
     RlcDeleteUeContext(pRlcUeCtx);
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE+1);
-    ASSERT_EQ((int)gLteKpi.mem, 0);  
+    ASSERT_EQ((int)gLteKpi.mem, 3);  
 }
 
 // -------------------------------

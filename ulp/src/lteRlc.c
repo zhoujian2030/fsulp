@@ -44,6 +44,8 @@ void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAm
 void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
 void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe);
 void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer);
+unsigned int RlcGetConcatenationHeaderInfo(RlcUlDataInfo* pRlcDataInfo, RlcConcatenatePduHeader *pPduHeader);
+unsigned int RlcDecodeAndEnqueueAMSegment(List *pDfeQ, AmdDFE *pAmdDfe, RlcConcatenatePduHeader *pPduHeader, unsigned char fi);
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gRlcUeContextList, ".ulpdata");
@@ -517,8 +519,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         if (pDfe == 0) {            
             LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AmdDFE\n");
             MemFree(pRlcDataInfo->rlcdataBuffer);
-            MemFree(pAmdPduSegment);
-            ListDeInit(&pAmdPduSegment->dfeQ);
+            RlcDeleteAmdPduSegment(pAmdPduSegment);
             return RLC_FAILURE;
         }
         
@@ -533,11 +534,39 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
         ListPushNode(&pAmdPduSegment->dfeQ, &pDfe->node);
     } else {
         // Concatenation
-        LOG_INFO(ULP_LOGGER_NAME, "TODO, handle Concatenation\n");
-        // TODO
-        MemFree(pRlcDataInfo->rlcdataBuffer);
-        RlcDeleteAmdPduSegment(pAmdPduSegment);
-        ret = RLC_FAILURE;
+        LOG_DBG(ULP_LOGGER_NAME, "handle Concatenation\n");
+        
+        RlcConcatenatePduHeader pduHeader;        
+        unsigned int dfeCount = RlcGetConcatenationHeaderInfo(pRlcDataInfo, &pduHeader);
+
+        if (dfeCount == 0) {
+            LOG_ERROR(ULP_LOGGER_NAME, "RlcGetConcatenationHeaderInfo error\n");
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            RlcDeleteAmdPduSegment(pAmdPduSegment);
+            return RLC_FAILURE;
+        }
+
+        pDfe = (AmdDFE*)MemAlloc(sizeof(AmdDFE));
+        if (pDfe == 0) {            
+            LOG_ERROR(ULP_LOGGER_NAME, "2 fail to allocate memory for AmdDFE\n");
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            RlcDeleteAmdPduSegment(pAmdPduSegment);
+            return RLC_FAILURE;
+        }
+
+        pDfe->buffer.size = pRlcDataInfo->length - pduHeader.hdrSize;
+        pDfe->buffer.pData = pRlcDataInfo->rlcdataBuffer;
+        MemRemove(pDfe->buffer.pData, 0, pduHeader.hdrSize);
+
+        if(pAmdHeader->fi & 0x02) {
+            pDfe->status = AM_PDU_MAP_SDU_END;
+        }
+        ret = RlcDecodeAndEnqueueAMSegment(&pAmdPduSegment->dfeQ, pDfe, &pduHeader, pAmdHeader->fi);
+        if (ret == RLC_FAILURE) {
+            LOG_ERROR(ULP_LOGGER_NAME, "RlcDecodeAndEnqueueAMSegment error\n");
+            RlcDeleteAmdPduSegment(pAmdPduSegment);
+            return RLC_FAILURE;
+        }
     }
 
     if (ret == RLC_SUCCESS) {
@@ -545,6 +574,148 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     }
 
     return ret;
+}
+
+#define MULTIPLY_BY_12(x) ( (x << 3) + (x << 2) )
+#define DIVIDE_BY_8(x) (x >> 3)
+#define MOD_BY_8(x) (x & 0x7)
+#define GET_E_BIT( eliStart, eliOffset) ((eliStart[0] >> ( 7 - eliOffset )) & 0x01 )
+#define GET_LI( eliStart, eliOffset ) ( (( eliStart[0] << ( 4 + eliOffset )) | (eliStart[1] >> ( 4 - eliOffset) )) & 0x7FF )
+#define GET_VAR_HEADER_SIZE(coutSDU) (( ((coutSDU -1) << 3) + ((coutSDU -1) << 2) + 7 ) >> 3 )
+// ---------------------------------
+unsigned int RlcGetConcatenationHeaderInfo(RlcUlDataInfo* pRlcDataInfo, RlcConcatenatePduHeader *pPduHeader)
+{
+    if (pRlcDataInfo == 0 || pRlcDataInfo->rlcdataBuffer == 0 || pPduHeader == 0) {
+        return 0;
+    }
+
+    UInt8 ext       = 1;
+    UInt8 byteNum   = 0;
+    UInt32 dfeCount = 1; /* Fixed Header*/
+    UInt32 li       = 0;
+    UInt8 *eliStart = 0;
+    /* Value should be 0 and 4 as corressponding to E bit position*/
+    UInt8 eliOffset = 0;
+
+    UInt8 *baseStartWithVH = &pRlcDataInfo->rlcdataBuffer[2]; // the first bytes are RLC header
+
+    pPduHeader->numDfe = 0;
+
+    do  
+    { /*  
+          elifOffset = 0   elifOffset = 4 where E bit exist.
+
+          0   1  2   3   4   5  6  7
+       *****************************
+       E              L               eliStart = 0
+       *****************************
+       L           E     L         eliStart = 1
+       *****************************
+       L
+       *****************************
+       E              L               eliStart = 3
+       *****************************
+       */
+        /* Get the byte number where E bit exist 
+           12 = E ( 1 bit) + L ( 11 bit ) 
+           byteNum = 
+           8 = 1 bytes
+         */
+        eliStart  = & (baseStartWithVH[ DIVIDE_BY_8( (MULTIPLY_BY_12( byteNum)) )]);
+        /* Get the exact position of E in term of bits. i.e 0 or 4 */
+        eliOffset = MOD_BY_8( (MULTIPLY_BY_12( ( byteNum) )) ) /* Mod 8*/;
+        /* Get the value of extension i.e 0 or 1 */
+        ext = GET_E_BIT( eliStart, eliOffset);
+        /* Get the value of Length of the sdu*/
+        li  = GET_LI( eliStart, eliOffset);
+        /* li = 0 is reserved and if this value is received the PDU should be discard */
+        if (0 == li) {
+            LOG_ERROR(ULP_LOGGER_NAME, "li is 0\n");
+            return 0;
+        }
+
+        LOG_TRACE(ULP_LOGGER_NAME, "dfeCount = %d, li = %d, eliOffset = %d, ext = %d, numDfe = %d\n", dfeCount, li, eliOffset, ext, pPduHeader->numDfe);
+
+        pPduHeader->dfeLength[pPduHeader->numDfe] = li;
+        pPduHeader->numDfe++;
+        dfeCount++;
+        byteNum++;
+
+
+        if (pPduHeader->numDfe >= RLC_MAX_DFE_IN_UL_PDU) {
+            LOG_ERROR(ULP_LOGGER_NAME, "pPduHeader->numDfe = %d\n", pPduHeader->numDfe);
+            break;
+        }
+
+    }while ( 0 != ext );
+
+    pPduHeader->hdrSize = (GET_VAR_HEADER_SIZE( pPduHeader->numDfe + 1) ) + 2;
+    LOG_TRACE(ULP_LOGGER_NAME, "dfeCount = %d, hdrSize = %d\n", dfeCount, pPduHeader->hdrSize);
+
+    return dfeCount;
+}
+
+// ---------------------------------
+unsigned int RlcDecodeAndEnqueueAMSegment(
+    List *pDfeQ, 
+    AmdDFE *pAmdDfe, 
+    RlcConcatenatePduHeader *pPduHeader, 
+    unsigned char fi)
+{
+    UInt32 li          = 0;
+    AmdDFE *pNextDfe   = 0;
+    UInt32 i           = 0;
+
+    do 
+    {
+        li =  pPduHeader->dfeLength[i];
+
+        if ( li > pAmdDfe->buffer.size )
+        {
+       	    LOG_ERROR(ULP_LOGGER_NAME, "[%s], li = %d, pAmdDfe->buffer.size\n", li, pAmdDfe->buffer.size);
+            MemFree(pAmdDfe->buffer.pData);
+            MemFree(pAmdDfe);   
+            return RLC_FAILURE;
+        }
+
+        pNextDfe = (AmdDFE*)MemAlloc(sizeof(AmdDFE));
+        if (pNextDfe == 0) {            
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for AmdDFE\n");
+            MemFree(pAmdDfe->buffer.pData);
+            MemFree(pAmdDfe);    
+            return RLC_FAILURE;
+        }
+
+        pNextDfe->buffer.pData = MemAlloc(pAmdDfe->buffer.size - li);
+        if(pNextDfe->buffer.pData == 0) {
+        	LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc mem for AmdDFE buffer\n");
+            MemFree(pAmdDfe->buffer.pData);
+            MemFree(pNextDfe);
+            MemFree(pAmdDfe);     
+            return RLC_FAILURE;
+        }
+
+        memcpy(pNextDfe->buffer.pData, pAmdDfe->buffer.pData + li, pAmdDfe->buffer.size - li);  
+        pNextDfe->buffer.size = pAmdDfe->buffer.size - li;
+
+        pAmdDfe->buffer.size = li;
+        ListPushNode(pDfeQ, &pAmdDfe->node);
+        LOG_TRACE(ULP_LOGGER_NAME, "li = %d, data: \n", li);
+        LOG_BUFFER(pAmdDfe->buffer.pData, pAmdDfe->buffer.size);
+
+        pAmdDfe = pNextDfe;
+        pAmdDfe->status = AM_PDU_MAP_SDU_FULL;
+        
+        i++;        
+    } while ( i < pPduHeader->numDfe );
+
+    pAmdDfe->status = (RlcSduStatus)(fi & 0x01);
+    LOG_TRACE(ULP_LOGGER_NAME, "last li = %d, status = %d, data: \n", pAmdDfe->buffer.size, pAmdDfe->status);
+    LOG_BUFFER(pAmdDfe->buffer.pData, pAmdDfe->buffer.size);
+    /*enqueue last dfe into DFE queue */
+    ListPushNode(pDfeQ, &pAmdDfe->node);
+
+    return RLC_SUCCESS ;
 }
 
 // ---------------------------------

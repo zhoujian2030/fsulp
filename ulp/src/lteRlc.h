@@ -38,6 +38,16 @@ typedef struct {
     unsigned short soEnd;
 } AmdHeader;
 
+#define RLC_MAX_DFE_IN_UL_PDU   256
+typedef struct
+{
+    unsigned int   hdrSize;
+    unsigned short numDfe;
+    unsigned char  snLen;
+    unsigned char  fi;
+    unsigned short dfeLength[RLC_MAX_DFE_IN_UL_PDU];
+} RlcConcatenatePduHeader;
+
 typedef enum {
     RS_FREE = 0 ,
     RS_IN_USE = 1 ,
