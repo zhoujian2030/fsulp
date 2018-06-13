@@ -299,7 +299,7 @@ void RlcProcessUmOrTmRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         return;
     }
 
-    LOG_TRACE(ULP_LOGGER_NAME, "TODO, This could be PDCP DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
+    LOG_TRACE(ULP_LOGGER_NAME, "TODO, DRB data, lcId = %d, rnti = %d\n", pRlcDataInfo->lcId, rnti);
 
     //TODO
     MemFree(pRlcDataInfo->rlcdataBuffer);
@@ -535,7 +535,7 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     } else {
         // Concatenation
         LOG_DBG(ULP_LOGGER_NAME, "handle Concatenation\n");
-        
+
         RlcConcatenatePduHeader pduHeader;        
         unsigned int dfeCount = RlcGetConcatenationHeaderInfo(pRlcDataInfo, &pduHeader);
 
@@ -560,6 +560,8 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
 
         if(pAmdHeader->fi & 0x02) {
             pDfe->status = AM_PDU_MAP_SDU_END;
+        } else {
+            pDfe->status = AM_PDU_MAP_SDU_FULL;
         }
         ret = RlcDecodeAndEnqueueAMSegment(&pAmdPduSegment->dfeQ, pDfe, &pduHeader, pAmdHeader->fi);
         if (ret == RLC_FAILURE) {

@@ -1071,7 +1071,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Concatenation_3_Li) {
     InitRlcLayer();
 
     // Create test data
-    unsigned short rnti = 101;
+    unsigned short rnti = 200;
     unsigned short lcId = 1;
     unsigned char rlcPdu[] = {
         0xa4, 0x01, 0x81, 0x90, 0x07, 0x01, 0x48, 0x02, 0x22, 0xf0, 0x4f, 0x4a, 0xd5, 0xa2, 0x80, 0xea, 
@@ -1130,6 +1130,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Concatenation_3_Li) {
     ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu0));
     ASSERT_TRUE(pRlcUeDataInd->pData != 0);
     ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu0, sizeof(expectPdcpPdu0)) == 0);
+    delete pRlcUeDataInd->pData;
     // li 1
     pRlcUeDataInd = (RlcPdcpUeDataInd_test*)&gRlcUeDataInd.ueDataIndArray[1];
     ASSERT_EQ(pRlcUeDataInd->rnti, rnti);
@@ -1137,6 +1138,7 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Concatenation_3_Li) {
     ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu1));
     ASSERT_TRUE(pRlcUeDataInd->pData != 0);
     ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu1, sizeof(expectPdcpPdu1)) == 0);
+    delete pRlcUeDataInd->pData;
     // li 2
     pRlcUeDataInd = (RlcPdcpUeDataInd_test*)&gRlcUeDataInd.ueDataIndArray[2];
     ASSERT_EQ(pRlcUeDataInd->rnti, rnti);
@@ -1144,7 +1146,10 @@ TEST_F(TestRlc, Interface_MacUeDataInd_LcId_1_Rlc_Sdu_Concatenation_3_Li) {
     ASSERT_EQ(pRlcUeDataInd->size, sizeof(expectPdcpPdu2));
     ASSERT_TRUE(pRlcUeDataInd->pData != 0);
     ASSERT_TRUE(memcmp(pRlcUeDataInd->pData, expectPdcpPdu2, sizeof(expectPdcpPdu2)) == 0);
-
+    delete pRlcUeDataInd->pData;
+    
+    gRlcUeDataInd.numUe = 0;
+    memset((void*)&gRlcUeDataInd, 0, sizeof(RlcPdcpUeDataInd_Test_Array));
     
     RlcDeleteUeContext(pRlcUeCtx);
     KpiRefresh();
