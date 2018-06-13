@@ -202,7 +202,6 @@ AmdPdu* RlcCreateAmdPdu(RxAMEntity* pRxAmEntity, UInt16 ringSn)
         return 0;
     } 
     LOG_DBG(ULP_LOGGER_NAME, "create AM PDU, rnti = %d, ringSn = %d\n", pRxAmEntity->rnti, ringSn);
-    RLC_SET_RX_AMD_PDU(pRxAmEntity, ringSn, pAmdPdu);
     ListInit(&pAmdPdu->segList, 0);
     return pAmdPdu;
 }
@@ -371,6 +370,16 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
                 MemFree(pRlcDataInfo->rlcdataBuffer);
                 return;
             }
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "TODO, should not happen, rnti = %d, pAmdPdu = %p\n", rnti, pAmdPdu);
+
+            RlcDeleteAmdPdu(pAmdPdu);
+            RLC_SET_RX_AMD_PDU(pRxAmEntity, ringSn, 0);
+            pAmdPdu = RlcCreateAmdPdu(pRxAmEntity, ringSn);
+            if (pAmdPdu == 0) {
+                MemFree(pRlcDataInfo->rlcdataBuffer);
+                return;
+            }
         }
 
         if (amdHeader.rf) {
@@ -386,7 +395,10 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         }
 
         if (ret == RLC_SUCCESS) {
+            RLC_SET_RX_AMD_PDU(pRxAmEntity, ringSn, pAmdPdu);
             RLC_SET_RX_AMD_PDU_STATUS(pRxAmEntity, ringSn, RS_IN_USE);
+        } else {
+            RlcDeleteAmdPdu(pAmdPdu);
         }
     } 
     // new PDU segment
@@ -522,10 +534,15 @@ BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlc
     } else {
         // Concatenation
         LOG_INFO(ULP_LOGGER_NAME, "TODO, handle Concatenation\n");
+        // TODO
         MemFree(pRlcDataInfo->rlcdataBuffer);
+        RlcDeleteAmdPduSegment(pAmdPduSegment);
+        ret = RLC_FAILURE;
     }
 
-    ListPushNode(&pAmdPdu->segList, &pAmdPduSegment->node);
+    if (ret == RLC_SUCCESS) {
+        ListPushNode(&pAmdPdu->segList, &pAmdPduSegment->node);
+    }
 
     return ret;
 }
@@ -538,7 +555,6 @@ BOOL RlcProcessAmdPduSegment(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataIn
     // TODO
 
     MemFree(pRlcDataInfo->rlcdataBuffer);
-    RlcDeleteAmdPdu(pAmdPdu);
 
     return ret;
 }
