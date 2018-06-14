@@ -888,7 +888,7 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                 pPrevBuffer->pData = 0;
                 pPrevBuffer->size = 0;
 
-                RlcDeliverAmSduToPdcp(pRxAmEntity, pPrevBuffer);
+                RlcDeliverAmSduToPdcp(pRxAmEntity, pCurrBuffer);
 
                 break;
             }
