@@ -330,7 +330,7 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
     }
 
     if (!amdHeader.dc) {
-        LOG_DBG(ULP_LOGGER_NAME, "receive RLC status PDU, ignore it, rnti = %d\n", rnti);
+        LOG_DBG(ULP_LOGGER_NAME, "ignore RLC status PDU, rnti = %d\n", rnti);
         MemFree(pRlcDataInfo->rlcdataBuffer);
         return;
     }

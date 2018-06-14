@@ -34,7 +34,8 @@ typedef enum {
 	AYNC_LOG_TYPE_2 = 2,
 	INVALID_LOG_TYPE = 3
 } E_LogType;
-#define MAX_LOG_FILE_PATH_LENGTH 128
+#define MAX_LOG_FILE_PATH_LENGTH	128
+#define MAX_LOG_SERVER_IP_LENGTH	64
 typedef struct {
 	unsigned int  logLevel;	
 	unsigned int  logType;
@@ -45,6 +46,11 @@ typedef struct {
 	unsigned char logToFileFlag;
 	unsigned int  maxLogFileSize;
 	char logFilePath[MAX_LOG_FILE_PATH_LENGTH];
+
+	// logger socket config
+	unsigned char logToSocketFlag;
+	char logServerIp[MAX_LOG_SERVER_IP_LENGTH];
+	unsigned short logServerPort;
 
 	// log format config
 	unsigned char logModuleNameFlag;
@@ -60,6 +66,8 @@ typedef struct {
 typedef struct {
 	FILE* fp;
 	unsigned int logFileSize;
+
+	int logfd;
 } LoggerStatus;
 
 #define MAX_LOG_BLOCK_SIZE	(1024*16)

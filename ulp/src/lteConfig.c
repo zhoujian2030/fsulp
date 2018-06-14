@@ -33,6 +33,10 @@ LteConfig gLteConfig =
         1024*1024*5,    // 5M bytes
         "",
 
+        0,  // log to socket flag
+        "127.0.0.1",
+        5997,
+
         0,  // default not log module name
         0,  // log file name
         1,  // log function name
@@ -234,6 +238,35 @@ void ParseConfig(char* configFileName)
             }
         }
 
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogToSocket");
+        if (jsonItem != 0) {
+            if (cJSON_IsBool(jsonItem)) {                
+                gLteConfig.logConfig.logToSocketFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogToSocket\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogServerIp");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_String) {      
+                if (strlen(jsonItem->valuestring) < MAX_LOG_SERVER_IP_LENGTH) {
+                     strcpy(gLteConfig.logConfig.logServerIp, jsonItem->valuestring);
+                }       
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogServerIp\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogServerPort");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_Number) {                
+                gLteConfig.logConfig.logServerPort = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for LogServerPort\n");
+            }
+        }
+
         jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "LogModuleName");
         if (jsonItem != 0) {
             if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
@@ -330,6 +363,9 @@ void ParseConfig(char* configFileName)
             }
         }
     }
+
+    // printf("%s\n", cJSON_Print(jsonRoot));
+    cJSON_Delete(jsonRoot);
 }
 
 // -------------------------------
@@ -348,6 +384,9 @@ void ShowConfig()
     printf("logToFileFlag:          %d\n", gLteConfig.logConfig.logToFileFlag);
     printf("maxLogFileSize:         %d\n", gLteConfig.logConfig.maxLogFileSize);
     printf("logFilePath:            %s\n", gLteConfig.logConfig.logFilePath);
+    printf("logToSocketFlag:        %d\n", gLteConfig.logConfig.logToSocketFlag);
+    printf("logServerIp:            %s\n", gLteConfig.logConfig.logServerIp);
+    printf("logServerPort:          %d\n", gLteConfig.logConfig.logServerPort);
     printf("logModuleNameFlag:      %d\n", gLteConfig.logConfig.logModuleNameFlag);
     printf("logFileNameFlag:        %d\n", gLteConfig.logConfig.logFileNameFlag);
     printf("logFuncNameFlag:        %d\n", gLteConfig.logConfig.logFuncNameFlag);

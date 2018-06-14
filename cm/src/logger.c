@@ -11,11 +11,16 @@
 #include <sys/time.h>
 #include "logger.h"
 #include <unistd.h>
+#include "socket.h"
 
 static LoggerStatus gLoggerStatus_s = {
     0,
-    0
+    0,
+
+    -1
 };
+struct sockaddr_in gLogServerAddress;
+
 static LoggerConfig gLoggerConfig_s = {
     TRACE,
     0,  // log type
@@ -24,6 +29,10 @@ static LoggerConfig gLoggerConfig_s = {
     0,  // log to file flag
     1024*1024*5,    // 5M bytes
     "",
+
+    0,  // log to socket flag
+    "127.0.0.1",
+    5997,
 
     0,  // default not log module name
     0,  // log file name
@@ -87,38 +96,49 @@ void LoggerSetlevel(int loglevel)
 void LoggerInit(LoggerConfig* pConfig)
 {
     if (pConfig != 0) {
-        memcpy((void*)&gLoggerConfig_s, (void*)pConfig, sizeof(LoggerConfig));
-        if (gLoggerConfig_s.logToFileFlag) {
+        if (pConfig->logToFileFlag) {
             if (gLoggerStatus_s.fp != 0) {
                 fclose(gLoggerStatus_s.fp);
             }
             gLoggerStatus_s.logFileSize = 0;
-            gLoggerStatus_s.fp = fopen(gLoggerConfig_s.logFilePath, "w+");
+            gLoggerStatus_s.fp = fopen(pConfig->logFilePath, "w+");
             if (gLoggerStatus_s.fp == 0) {
-                gLoggerConfig_s.logToFileFlag = 0;
-                printf("Fail to create log file : %s\n", gLoggerConfig_s.logFilePath);
+                pConfig->logToFileFlag = 0;
+                printf("Fail to create log file : %s\n", pConfig->logFilePath);
                 return;
             }
         }
-    }
 
-    if (gLoggerConfig_s.logType == SYNC_LOG) {
-        if (pthread_mutex_init(&gLoggerMutex, 0) != 0) {
-            printf("Fail to init pthread_mutex_t\n"); 
+        if (pConfig->logToSocketFlag) {
+            if (gLoggerStatus_s.logfd != -1) {
+                SocketClose(gLoggerStatus_s.logfd);
+            }
+
+            gLoggerStatus_s.logfd = SocketUdpInit();
+            SocketMakeNonBlocking(gLoggerStatus_s.logfd);
+            SocketGetSockaddrByIpAndPort(&gLogServerAddress, pConfig->logServerIp, pConfig->logServerPort);
         }
-    } else {
-        InitAsyncLogger();
-    }
+
+        if (pConfig->logType == SYNC_LOG) {
+            if (pthread_mutex_init(&gLoggerMutex, 0) != 0) {
+                printf("Fail to init pthread_mutex_t\n"); 
+            }
+        } else {
+            InitAsyncLogger(pConfig);
+        }
+
+        memcpy((void*)&gLoggerConfig_s, (void*)pConfig, sizeof(LoggerConfig));
+    }   
 }
 
 // -------------------------------------
-static void InitAsyncLogger()
+static void InitAsyncLogger(LoggerConfig* pLoggerConfig)
 {
-    if (gLoggerConfig_s.logType != SYNC_LOG) {
+    if (pLoggerConfig->logType != SYNC_LOG) {
         unsigned int i;
         int ret;
 
-        if (gLoggerConfig_s.logType == AYNC_LOG_TYPE_1) {
+        if (pLoggerConfig->logType == AYNC_LOG_TYPE_1) {
             LogBufferCache* ptr = &gLogBufferQueue[0];
             for (i=0; i<MAX_NUM_LOG_BUFFER_BLOCK; i++) {
                 gLogBufferQueue[i].fullFlag = 0;
@@ -148,12 +168,12 @@ static void InitAsyncLogger()
             ret = pthread_cond_init(&gLoggerCondition, 0);
             if (ret != 0) {
                 pthread_mutex_destroy(&gLoggerMutex);
-                gLoggerConfig_s.logType = SYNC_LOG;
+                pLoggerConfig->logType = SYNC_LOG;
                 printf("Fail to init pthread_cond_t\n"); 
                 return;
             }
         } else {
-            gLoggerConfig_s.logType = SYNC_LOG;
+            pLoggerConfig->logType = SYNC_LOG;
             printf("Fail to init pthread_mutex_t\n"); 
             return;
         }
@@ -181,8 +201,8 @@ static void InitAsyncLogger()
             return;
         }
 
-        if (gLoggerConfig_s.logBufferingSize > MAX_LOG_BLOCK_SIZE) {
-            gLoggerConfig_s.logBufferingSize = MAX_LOG_BLOCK_SIZE;
+        if (pLoggerConfig->logBufferingSize > MAX_LOG_BLOCK_SIZE) {
+            pLoggerConfig->logBufferingSize = MAX_LOG_BLOCK_SIZE;
         }
     }
 }
@@ -851,6 +871,10 @@ static void LoggerOutputLog(char* logBuff, unsigned length)
             }
             fflush(gLoggerStatus_s.fp);
         }
+    }
+
+    if (gLoggerConfig_s.logToSocketFlag) {
+        SocketUdpSend(gLoggerStatus_s.logfd, logBuff, length, &gLogServerAddress);  
     }
 }
 
