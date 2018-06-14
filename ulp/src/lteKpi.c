@@ -31,6 +31,7 @@ int gKpiNotifyCount = 1;
 
 Event gKpiEvent;
 int gKpiFileFd = -1;
+int gDetailKpiFileFd = -1;
 
 
 static void ReportKpiToFile();
@@ -53,7 +54,9 @@ void* LteKpiEntryFunc(void* p)
     LOG_TRACE(ULP_LOGGER_NAME, "Entry\n");
 
     while (1) {
-        if (gLteConfig.kpiConfig.reportType == KPI_REPORT_FILE) {
+        if (gLteConfig.kpiConfig.reportType == KPI_REPORT_FILE ||
+            gLteConfig.kpiConfig.reportType == KPI_REPORT_DETAIL_FILE) 
+        {
             EventWait(&gKpiEvent);
             KpiRefresh();
             ReportKpiToFile();
@@ -122,12 +125,52 @@ static void ReportKpiToFile()
     varLength = sprintf(kpiData + sumLength, "Mem Used        %10d  %8d\n", gLteKpi.mem, gLteKpi.mem - prevLteKpi.mem);
     sumLength += varLength;
 
-    int writeBytes = 0;
-    FileSeek(gKpiFileFd, F_SEEK_BEGIN);
-    FileTruncate(gKpiFileFd, 0);
-    FileWrite(gKpiFileFd, kpiData, sumLength, &writeBytes);
-
     memcpy((void*)&prevLteKpi, (void*)&gLteKpi, sizeof(LteKpi));
+
+    int writeBytes = 0;
+    if (gKpiFileFd != -1) {        
+        FileSeek(gKpiFileFd, F_SEEK_BEGIN);
+        FileTruncate(gKpiFileFd, 0);
+        FileWrite(gKpiFileFd, kpiData, sumLength, &writeBytes);
+    }    
+
+    // write detail data
+    if (gDetailKpiFileFd != -1) {
+        sumLength = 0;
+    
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.imsi);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.mTmsi);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.idResp);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.rrcSetupCompl);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.attachReq);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.tauReq);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.servReq);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.extServReq);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.detachReq);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.lcIdArray[0]);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.lcIdArray[1]);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.lcIdArray[2]);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.lcIdArray[3]);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "%8d; ", gLteKpi.lcIdArray[4]);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "\n");
+        sumLength += varLength;
+    
+        FileWrite(gDetailKpiFileFd, kpiData, sumLength, &writeBytes);
+    }  
 }
 
 #endif
@@ -139,15 +182,43 @@ void KpiInit()
 
 #ifdef OS_LINUX 
     if (gLteConfig.kpiConfig.reportType != KPI_NO_REPORT) {
-        if (gLteConfig.kpiConfig.reportType == KPI_REPORT_FILE) {
+        if (gLteConfig.kpiConfig.reportType == KPI_REPORT_FILE || 
+            gLteConfig.kpiConfig.reportType == KPI_REPORT_DETAIL_FILE) 
+        {
             gKpiNotifyCount = gLteConfig.kpiConfig.reportFilePeriod / gLteConfig.pollingInterval;
             if (gKpiNotifyCount < 1) {
                 gKpiNotifyCount = 1;
             }
             EventInit(&gKpiEvent);
-            gKpiFileFd = FileOpen(gLteConfig.kpiConfig.fileName, FILE_CREATE, FILE_WRITE_ONLY);
+            gKpiFileFd = FileOpen(gLteConfig.kpiConfig.kpiFileName, FILE_CREATE, FILE_WRITE_ONLY);
             if (gKpiFileFd == -1) {
-                LOG_ERROR(ULP_LOGGER_NAME, "Fail to create file\n");
+                LOG_ERROR(ULP_LOGGER_NAME, "Fail to create kpi file\n");
+            }
+
+            if (gLteConfig.kpiConfig.reportType == KPI_REPORT_DETAIL_FILE) {
+                time_t timep;   
+                struct tm *p;   
+                char detailFileName[256] = {0};
+                int offset = 0;
+                time(&timep);   
+                p = localtime(&timep);
+                memcpy(detailFileName, gLteConfig.kpiConfig.detailFilePath, strlen(gLteConfig.kpiConfig.detailFilePath));
+                offset = strlen(gLteConfig.kpiConfig.detailFilePath);
+                if (detailFileName[offset - 1] != '/') {
+                    detailFileName[offset] = '/';
+                    offset++;
+                }
+                sprintf(detailFileName + offset, "eq5_kpi_%04d-%02d-%02d_%02d-%02d-%02d.txt",
+                    (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+                LOG_DBG(ULP_LOGGER_NAME, "Create kpi detail file: %s\n", detailFileName);
+                gDetailKpiFileFd = FileOpen(detailFileName, FILE_CREATE, FILE_WRITE_ONLY);
+                if (gDetailKpiFileFd == -1) {
+                    LOG_ERROR(ULP_LOGGER_NAME, "Fail to create kpi detail file: %s\n", detailFileName);
+                } else {
+                    char kpiName[] = "IMSI; M-TMSI; IdResp; RrcSetupCompl; AttachReq; TAUReq; ServReq; ExtServReq; DetachReq; LcId0; LcId1; LcId2; LcId3; LcId4;\n";
+                    int writeBytes;
+                    FileWrite(gDetailKpiFileFd, kpiName, sizeof(kpiName), &writeBytes);
+                }
             }
         } else {
             LOG_ERROR(ULP_LOGGER_NAME, "TODO\n");

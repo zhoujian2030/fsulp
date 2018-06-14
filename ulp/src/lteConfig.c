@@ -51,6 +51,7 @@ LteConfig gLteConfig =
         0,
         10000,  // 10ms
         "",
+        "",
         0
     }
 };
@@ -109,7 +110,7 @@ void ParseConfig(char* configFileName)
 
     jsonRoot = cJSON_Parse(jsonBuffer);
     if (jsonRoot == 0) {
-        printf("cJSON_Parse\n");
+        printf("cJSON_Parse error\n");
         return;
     }
 
@@ -347,10 +348,21 @@ void ParseConfig(char* configFileName)
         if (jsonItem != 0) {
             if (jsonItem->type == cJSON_String) {               
                 if (strlen(jsonItem->valuestring) < MAX_KPI_FILE_NAME_LENGTH) {
-                    strcpy(gLteConfig.kpiConfig.fileName, jsonItem->valuestring);
+                    strcpy(gLteConfig.kpiConfig.kpiFileName, jsonItem->valuestring);
                 }  
             } else {
-                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi fileName\n");
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for KpiFileName\n");
+            }
+        }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "KpiDetailFilePath");
+        if (jsonItem != 0) {
+            if (jsonItem->type == cJSON_String) {               
+                if (strlen(jsonItem->valuestring) < MAX_KPI_FILE_NAME_LENGTH) {
+                    strcpy(gLteConfig.kpiConfig.detailFilePath, jsonItem->valuestring);
+                }  
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for KpiDetailFilePath\n");
             }
         }
 
@@ -395,7 +407,8 @@ void ShowConfig()
     printf("logBufferingSize:       %d\n", gLteConfig.logConfig.logBufferingSize);
     printf("reportType:             %d\n", gLteConfig.kpiConfig.reportType);
     printf("reportFilePeriod:       %d\n", gLteConfig.kpiConfig.reportFilePeriod);
-    printf("fileName:               %s\n", gLteConfig.kpiConfig.fileName);
+    printf("kpiFileName:            %s\n", gLteConfig.kpiConfig.kpiFileName);
+    printf("detailFilePath:         %s\n", gLteConfig.kpiConfig.detailFilePath);
     printf("udpPort:                %d\n", gLteConfig.kpiConfig.udpPort);
     printf("+----------------------------------------+\n");
 }

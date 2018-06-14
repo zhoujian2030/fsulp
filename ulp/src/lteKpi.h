@@ -34,9 +34,10 @@ typedef struct
 
 #ifdef OS_LINUX
 typedef enum {
-    KPI_NO_REPORT   = 0,
-    KPI_REPORT_FILE = 1,
-    KPI_REPORT_UDP  = 2
+    KPI_NO_REPORT           = 0,
+    KPI_REPORT_FILE         = 1,
+    KPI_REPORT_DETAIL_FILE  = 2, 
+    KPI_REPORT_UDP          = 3
 } KpiReportType;
 
 #define MAX_KPI_FILE_NAME_LENGTH    128
@@ -45,7 +46,8 @@ typedef struct {
     unsigned int reportType;
 
     unsigned int reportFilePeriod;              // for report type 1
-    char fileName[MAX_KPI_FILE_NAME_LENGTH];    
+    char kpiFileName[MAX_KPI_FILE_NAME_LENGTH];    
+    char detailFilePath[MAX_KPI_FILE_NAME_LENGTH];
 
     unsigned short udpPort;                     // for report type 2
 } LteKpiConfig;
