@@ -21,8 +21,10 @@
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gUlRRcMsgName, ".ulpdata");
 #pragma DATA_SECTION(gRrcUeContextList, ".ulpdata");
+#pragma DATA_SECTION(gReadyRrcUeContextList, ".ulpdata");
 #endif
 List gRrcUeContextList;
+List gReadyRrcUeContextList;
 UInt8 gUlRRcMsgName[17][50] = {
     "Csfb Params Req CDMA2000",
     "Measurement Report",
@@ -45,11 +47,14 @@ UInt8 gUlRRcMsgName[17][50] = {
 void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff);
+RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi);
+RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi);
 
 // --------------------------------
 void InitRrcLayer()
 {
     ListInit(&gRrcUeContextList, 1);
+    ListInit(&gReadyRrcUeContextList, 1);    
 }
 
 // --------------------------------
@@ -81,6 +86,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
     pUeCtx->rnti = rnti; 
     // SemInit(&pUeCtx->lockOfCount, 1);
     pUeCtx->idleCount = 0;
+    pUeCtx->deleteFlag = 0;
     ListPushNode(&gRrcUeContextList, &pUeCtx->node);
     // KpiCountRrcUeCtx(TRUE);
 
@@ -203,7 +209,6 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
 {
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Id Resp (%d)\n", rnti);
     RrcUeContext* pUeCtx;
-    UInt32 i;
     LIBLTE_MME_ID_RESPONSE_MSG_STRUCT* pIdResp = (LIBLTE_MME_ID_RESPONSE_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ID_RESPONSE_MSG_STRUCT));
     if (pIdResp == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_ID_RESPONSE_MSG_STRUCT, rnti = %d\n", rnti);
@@ -223,24 +228,18 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
                     return;
                 }
             }
-            gLteKpi.imsi++;
-            if (pUeCtx->ueIdentity.imsiPresent) {
-                LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
-            } else {
-                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            pUeCtx = RrcUpdateImsi(pUeCtx, pIdResp->mobile_id.imsi);
+            if (pUeCtx == 0) {
+                MemFree(pIdResp);
+                return;
             }
-            
-            for (i = 0; i < 15; i++) {
-                pUeCtx->ueIdentity.imsi[i] = pIdResp->mobile_id.imsi[i] + 0x30;
-            }
-            pUeCtx->ueIdentity.imsi[15] = '\0';
 
             // for print test
 #ifdef OS_LINUX
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pUeCtx->ueIdentity.imsi);
 #else
             UInt8* imsiOctect = pIdResp->mobile_id.imsi;
-            i = 0;
+            UInt32 i = 0;
             UInt32 imsi0, imsi1;
             imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
 			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
@@ -252,8 +251,6 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
                 LOG_DBG(ULP_LOGGER_NAME, "Miss M-TMSI, rnti = %d\n", rnti);
             }
             
-            // TODO
-            // send to OAM ??
             RrcUeDataInd(pUeCtx);
         } else {
             LOG_INFO(ULP_LOGGER_NAME, "pIdResp->mobile_id.type_of_id = %d, rnti = %d\n", pIdResp->mobile_id.type_of_id, rnti);
@@ -270,7 +267,6 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 {
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Attach Req (%d)\n", rnti);
     RrcUeContext* pUeCtx;
-    UInt32 i;
     LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT* pAttachReq = (LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT));
     if (pAttachReq == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT, rnti = %d\n", rnti);
@@ -291,13 +287,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pAttachReq->eps_mobile_id.type_of_id) {
-            gLteKpi.mTmsi++;
-            if (pUeCtx->ueIdentity.mTmsiPresent) {
-                LOG_WARN(ULP_LOGGER_NAME, "update M-TMSI, rnti = %d\n", rnti);
-            } else {
-                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
-            }
-            pUeCtx->ueIdentity.mTmsi = pAttachReq->eps_mobile_id.guti.m_tmsi;
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pAttachReq->eps_mobile_id.guti.m_tmsi);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pAttachReq->eps_mobile_id.guti.m_tmsi,
@@ -305,23 +295,17 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pAttachReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pAttachReq->eps_mobile_id.type_of_id) {
-            gLteKpi.imsi++;
-            if (pUeCtx->ueIdentity.imsiPresent) {
-                LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
-            } else {
-                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            pUeCtx = RrcUpdateImsi(pUeCtx, pAttachReq->eps_mobile_id.imsi);
+            if (pUeCtx == 0) {
+                MemFree(pAttachReq);
+                return;
             }
-
-            for (i = 0; i < 15; i++) {
-                pUeCtx->ueIdentity.imsi[i] = pAttachReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pUeCtx->ueIdentity.imsi);
 #else
             UInt8* imsiOctect = pAttachReq->eps_mobile_id.imsi;
-            i = 0;
+            UInt32 i = 0;
             UInt32 imsi0, imsi1;
             imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
 			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
@@ -329,6 +313,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 #endif
         } else {
             UInt8 imei[16];
+            UInt32 i;
             for (i = 0; i < 15; i++) {
                 imei[i] = pAttachReq->eps_mobile_id.imei[i] + 0x30;
             }
@@ -336,7 +321,6 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             LOG_INFO(ULP_LOGGER_NAME, "TODO, rnti = %d, imei = %s\n", rnti, imei);
         }
 
-        // TODO
         RrcUeDataInd(pUeCtx);
     } else {                        
         LOG_ERROR(ULP_LOGGER_NAME, "liblte_mme_unpack_attach_request_msg error, rnti = %d\n", rnti);
@@ -351,7 +335,6 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Detach Req (%d)\n", rnti);
     RrcUeContext* pUeCtx;
     LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT* pDetachReq = (LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT));
-    UInt32 i;
     if (pDetachReq == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_DETACH_REQUEST_MSG_STRUCT, rnti = %d\n", rnti);
         return;
@@ -373,15 +356,7 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
         pUeCtx->ueIdentity.detachFlag = TRUE;
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pDetachReq->eps_mobile_id.type_of_id) {
-            gLteKpi.mTmsi++;
-            if (pUeCtx->ueIdentity.mTmsiPresent) {
-                if (pUeCtx->ueIdentity.mTmsi != pDetachReq->eps_mobile_id.guti.m_tmsi) {
-                    LOG_WARN(ULP_LOGGER_NAME, "update M-TMSI, rnti = %d\n", rnti);
-                }
-            } else {
-                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
-            }
-            pUeCtx->ueIdentity.mTmsi = pDetachReq->eps_mobile_id.guti.m_tmsi;
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pDetachReq->eps_mobile_id.guti.m_tmsi);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pDetachReq->eps_mobile_id.guti.m_tmsi,
@@ -389,25 +364,17 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pDetachReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pDetachReq->eps_mobile_id.type_of_id) {
-            gLteKpi.imsi++;
-            if (pUeCtx->ueIdentity.imsiPresent) {
-                if (memcmp(pUeCtx->ueIdentity.imsi, pDetachReq->eps_mobile_id.imsi, 15) != 0) {
-                    LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
-                }
-            } else {
-                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            pUeCtx = RrcUpdateImsi(pUeCtx, pDetachReq->eps_mobile_id.imsi);
+            if (pUeCtx == 0) {
+                MemFree(pDetachReq);
+                return;
             }
-
-            for (i = 0; i < 15; i++) {
-                pUeCtx->ueIdentity.imsi[i] = pDetachReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pDetachReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pDetachReq->eps_mobile_id.imsi;
-            i = 0;
+            UInt32 i = 0;
             UInt32 imsi0, imsi1;
             imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
 			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
@@ -415,6 +382,7 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 #endif
         } else {
             UInt8 imei[16];
+            UInt32 i;
             for (i = 0; i < 15; i++) {
                 imei[i] = pDetachReq->eps_mobile_id.imei[i] + 0x30;
             }
@@ -438,7 +406,6 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 
     RrcUeContext* pUeCtx;
     LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT* pExtServReq = (LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT));
-    UInt32 i;
     if (pExtServReq == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_EXTENDED_SERVICE_REQUEST_STRUCT, rnti = %d\n", rnti);
         return;
@@ -458,38 +425,22 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_TMSI == pExtServReq->eps_mobile_id.type_of_id) {
-            gLteKpi.mTmsi++;
-            if (pUeCtx->ueIdentity.mTmsiPresent) {
-                if (pUeCtx->ueIdentity.mTmsi != pExtServReq->eps_mobile_id.m_tmsi) {
-                    LOG_WARN(ULP_LOGGER_NAME, "update M-TMSI, rnti = %d\n", rnti);
-                }
-            } else {
-                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
-            }
-            pUeCtx->ueIdentity.mTmsi = pExtServReq->eps_mobile_id.m_tmsi;
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pExtServReq->eps_mobile_id.m_tmsi);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x\n", rnti, pExtServReq->eps_mobile_id.m_tmsi);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pExtServReq->eps_mobile_id.type_of_id) {
-            gLteKpi.imsi++;
-            if (pUeCtx->ueIdentity.imsiPresent) {
-                if (memcmp(pUeCtx->ueIdentity.imsi, pExtServReq->eps_mobile_id.imsi, 15) != 0) {
-                    LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
-                }
-            } else {
-                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            pUeCtx = RrcUpdateImsi(pUeCtx, pExtServReq->eps_mobile_id.imsi);
+            if (pUeCtx == 0) {
+                MemFree(pExtServReq);
+                return;
             }
-
-            for (i = 0; i < 15; i++) {
-                pUeCtx->ueIdentity.imsi[i] = pExtServReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pExtServReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pExtServReq->eps_mobile_id.imsi;
-            i = 0;
+            UInt32 i = 0;
             UInt32 imsi0, imsi1;
             imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
 			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
@@ -497,6 +448,7 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
 #endif
         } else {
             UInt8 imei[16];
+            UInt32 i;
             for (i = 0; i < 15; i++) {
                 imei[i] = pExtServReq->eps_mobile_id.imei[i] + 0x30;
             }
@@ -518,7 +470,6 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: TAU Req (%d)\n", rnti);
 
     RrcUeContext* pUeCtx;
-    UInt32 i;
     LIBLTE_MME_TAU_REQ_STRUCT* pTauReq = (LIBLTE_MME_TAU_REQ_STRUCT*)MemAlloc(sizeof(LIBLTE_MME_TAU_REQ_STRUCT));
     if (pTauReq == 0) {
         LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_MME_TAU_REQ_STRUCT, rnti = %d\n", rnti);
@@ -539,13 +490,7 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pTauReq->eps_mobile_id.type_of_id) {
-            gLteKpi.mTmsi++;
-            if (pUeCtx->ueIdentity.mTmsiPresent) {
-                LOG_WARN(ULP_LOGGER_NAME, "update M-TMSI, rnti = %d\n", rnti);
-            } else {
-                pUeCtx->ueIdentity.mTmsiPresent = TRUE;
-            }
-            pUeCtx->ueIdentity.mTmsi = pTauReq->eps_mobile_id.guti.m_tmsi;
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pTauReq->eps_mobile_id.guti.m_tmsi);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pTauReq->eps_mobile_id.guti.m_tmsi,
@@ -553,23 +498,17 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pTauReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pTauReq->eps_mobile_id.type_of_id) {
-            gLteKpi.imsi++;
-            if (pUeCtx->ueIdentity.imsiPresent) {
-                LOG_WARN(ULP_LOGGER_NAME, "update imsi, rnti = %d\n", rnti);
-            } else {
-                pUeCtx->ueIdentity.imsiPresent = TRUE;
+            pUeCtx = RrcUpdateImsi(pUeCtx, pTauReq->eps_mobile_id.imsi);
+            if (pUeCtx == 0) {
+                MemFree(pTauReq);
+                return;
             }
-
-            for (i = 0; i < 15; i++) {
-                pUeCtx->ueIdentity.imsi[i] = pTauReq->eps_mobile_id.imsi[i] + 0x30;
-            }
-            pUeCtx->ueIdentity.imsi[15] = '\0';
 
 #ifdef OS_LINUX
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, imsi = %s\n", rnti, pTauReq->eps_mobile_id.imsi);
 #else
             UInt8* imsiOctect = pTauReq->eps_mobile_id.imsi;
-            i = 0;
+            UInt32 i = 0;
             UInt32 imsi0, imsi1;
             imsi0 = (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
 			imsi1 = (imsiOctect[i++] << 28) | (imsiOctect[i++] << 24) | (imsiOctect[i++] << 20) | (imsiOctect[i++] << 16) | (imsiOctect[i++] << 12) | (imsiOctect[i++] << 8) | (imsiOctect[i++] << 4) | imsiOctect[i++];
@@ -577,6 +516,7 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
 #endif
         } else {
             UInt8 imei[16];
+            UInt32 i;
             for (i = 0; i < 15; i++) {
                 imei[i] = pTauReq->eps_mobile_id.imei[i] + 0x30;
             }
@@ -682,5 +622,82 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
 
     // if send data to OAM, delete the UE context
     // RrcDeleteUeContext(pRrcUeCtx);
+}
+
+// --------------------------------
+RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi)
+{
+    UInt32 i;
+    UInt8 tmpImsi[16];
+    for (i=0; i<15; i++) {
+        tmpImsi[i] = imsi[i] + 0x30;
+    }
+    tmpImsi[15] = '\0';
+
+    if (pUeCtx->deleteFlag) {
+        LOG_WARN(ULP_LOGGER_NAME, "pUeCtx = %p is pending deletion, rnti = %d\n", pUeCtx, pUeCtx->rnti);
+        pUeCtx = RrcCreateUeContext(pUeCtx->rnti);
+        if (pUeCtx == 0) {             
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for new rrc ue context, rnti = %d, drop new imsi: %s\n", pUeCtx->rnti, tmpImsi);
+            return 0;
+        }
+    }
+
+    if (pUeCtx->ueIdentity.imsiPresent) {
+        if (memcmp(pUeCtx->ueIdentity.imsi, tmpImsi, 15) == 0) {
+            LOG_WARN(ULP_LOGGER_NAME, "imsi [%s] is not change, could be retransmit, rnti = %d\n", pUeCtx->ueIdentity.imsi, pUeCtx->rnti);
+            return pUeCtx;
+        }
+
+        LOG_WARN(ULP_LOGGER_NAME, "old imsi = %s, rnti = %d\n", pUeCtx->ueIdentity.imsi, pUeCtx->rnti);
+        RrcUeContext* pOldUeCtx = (RrcUeContext*)MemAlloc(sizeof(RrcUeContext));
+        if (pOldUeCtx != 0) {
+            memcpy((void*)pOldUeCtx, (void*)pUeCtx, sizeof(RrcUeContext));
+            ListPushNode(&gReadyRrcUeContextList, &pOldUeCtx->node);
+        } else {                
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context, rnti = %d, drop this imsi: %s\n", pUeCtx->rnti, pUeCtx->ueIdentity.imsi);
+        }  
+    }
+
+    gLteKpi.imsi++;
+    pUeCtx->ueIdentity.imsiPresent = TRUE;
+    memcpy(pUeCtx->ueIdentity.imsi, tmpImsi, 16);  
+
+    return pUeCtx;
+}
+
+// --------------------------------
+RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi)
+{ 
+    if (pUeCtx->deleteFlag) {
+        LOG_WARN(ULP_LOGGER_NAME, "pUeCtx = %p is pending deletion, rnti = %d\n", pUeCtx, pUeCtx->rnti);
+        pUeCtx = RrcCreateUeContext(pUeCtx->rnti);
+        if (pUeCtx == 0) {             
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for new rrc ue context, rnti = %d, drop new m-tmsi: 0x%x\n", pUeCtx->rnti, mTmsi);
+            return 0;
+        }
+    }  
+
+    if (pUeCtx->ueIdentity.mTmsiPresent) {
+        if (pUeCtx->ueIdentity.mTmsi == mTmsi) {
+            LOG_WARN(ULP_LOGGER_NAME, "mTmsi [0x%x] is not change, could be retransmit, rnti = %d\n", mTmsi, pUeCtx->rnti);
+            return pUeCtx;
+        }
+
+        LOG_WARN(ULP_LOGGER_NAME, "old mTmsi = 0x%x, rnti = %d\n", pUeCtx->ueIdentity.mTmsi, pUeCtx->rnti);
+        RrcUeContext* pOldUeCtx = (RrcUeContext*)MemAlloc(sizeof(RrcUeContext));
+        if (pOldUeCtx != 0) {
+            memcpy((void*)pOldUeCtx, (void*)pUeCtx, sizeof(RrcUeContext));
+            ListPushNode(&gReadyRrcUeContextList, &pOldUeCtx->node);
+        } else {                
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context, rnti = %d, drop this mTmsi: %s\n", pUeCtx->rnti, pUeCtx->ueIdentity.mTmsi);
+        }  
+    }
+
+    gLteKpi.mTmsi++;
+    pUeCtx->ueIdentity.mTmsiPresent = TRUE;
+    pUeCtx->ueIdentity.mTmsi = mTmsi;
+
+    return pUeCtx;
 }
 

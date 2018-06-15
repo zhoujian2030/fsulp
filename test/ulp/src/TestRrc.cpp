@@ -24,6 +24,7 @@
 using namespace std;
 
 extern List gRrcUeContextList;
+extern List gReadyRrcUeContextList;
 // -------------------------------
 TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
     LteLoggerSetLogLevel(0);
@@ -614,3 +615,271 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }
 
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rrcMsg1[] = {
+        0x48, 0x01, 0x60, 0xEA, 0xC1, 0x09, 0x20, 0xC8, 0x02, 
+        0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 0x00
+    };
+    unsigned char rrcMsg2[] = {
+        0x48, 0x02, 0x22, 0xe6, 0x8e, 0xcb, 0xc9, 0x62, 0x80, 
+        0xea, 0xc1, 0x09, 0x20, 0xc4, 0x04, 0x0e, 0xca, 0x6c, 
+        0x25, 0x00, 0x00, 0x00, 0x00, 0x00 
+    };
+    
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+    RrcUeContext* pRrcUeCtx;
+    unsigned char expectImsiStr1[] = "460041143702947";
+    unsigned char expectImsiStr2[] = "460020267351682";
+
+    // id resp 1
+    unsigned short dataSize = sizeof(rrcMsg1);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg1, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);  
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr1, 15) == 0);
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
+
+    // id resp 2
+    dataSize = sizeof(rrcMsg2);
+    pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg2, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 2);  // 1 rrc ctx in gRrcUeContextList, 1 in gReadyRrcUeContextList
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr2, 15) == 0);
+    RrcDeleteUeContext(pRrcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 1);
+    pRrcUeCtx = (RrcUeContext*)ListPopNode(&gReadyRrcUeContextList);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    cout << "old imsi = " << pRrcUeCtx->ueIdentity.imsi << endl;
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr1, 15) == 0); 
+    MemFree(pRrcUeCtx);   
+    
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+}
+
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Same_Imsi) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rrcMsg1[] = {
+        0x48, 0x01, 0x60, 0xEA, 0xC1, 0x09, 0x20, 0xC8, 0x02, 
+        0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 0x00
+    };
+    unsigned char rrcMsg2[] = {
+        0x48, 0x01, 0x60, 0xEA, 0xC1, 0x09, 0x20, 0xC8, 0x02, 
+        0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 0x00
+    };
+    
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+    RrcUeContext* pRrcUeCtx;
+    unsigned char expectImsiStr1[] = "460041143702947";
+    unsigned char expectImsiStr2[] = "460041143702947";
+
+    // id resp 1
+    unsigned short dataSize = sizeof(rrcMsg1);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg1, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);  
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr1, 15) == 0);
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
+
+    // id resp 2
+    dataSize = sizeof(rrcMsg2);
+    pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg2, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);  // 1 rrc ctx in gRrcUeContextList
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr2, 15) == 0);
+    RrcDeleteUeContext(pRrcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
+}
+
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi_Prev_Deleting) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rrcMsg1[] = {
+        0x48, 0x01, 0x60, 0xEA, 0xC1, 0x09, 0x20, 0xC8, 0x02, 
+        0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 0x00
+    };
+    unsigned char rrcMsg2[] = {
+        0x48, 0x02, 0x22, 0xe6, 0x8e, 0xcb, 0xc9, 0x62, 0x80, 
+        0xea, 0xc1, 0x09, 0x20, 0xc4, 0x04, 0x0e, 0xca, 0x6c, 
+        0x25, 0x00, 0x00, 0x00, 0x00, 0x00 
+    };
+    
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+    RrcUeContext* pRrcUeCtx;
+    unsigned char expectImsiStr1[] = "460041143702947";
+    unsigned char expectImsiStr2[] = "460020267351682";
+
+    // id resp 1
+    unsigned short dataSize = sizeof(rrcMsg1);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg1, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);  
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr1, 15) == 0);
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
+    pRrcUeCtx->deleteFlag = 1;
+
+    // id resp 2
+    dataSize = sizeof(rrcMsg2);
+    pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg2, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 2);  // 1 rrc ctx in gRrcUeContextList, 1 in gReadyRrcUeContextList
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_IDENTITY_RESPONSE);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 2);
+    RrcDeleteUeContext(pRrcUeCtx);  // delete prev ue ctx
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr2, 15) == 0);
+    RrcDeleteUeContext(pRrcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+
+    ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
+}

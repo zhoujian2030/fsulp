@@ -24,6 +24,7 @@
 #endif
 
 extern List gRrcUeContextList;
+extern List gReadyRrcUeContextList;
 
 // standlone configurations
 #ifndef OS_LINUX
@@ -241,43 +242,66 @@ void UlpRecvAndHandleOamData()
 #endif
 
     // handle UE identity
-    UInt32 rrcCtxCount = ListCount(&gRrcUeContextList);    
-    if (rrcCtxCount == 0) {
-        return;
-    }   
-    pUlpDataInd->msgType = MSG_ULP_UE_IDENTITY_IND;
-    pUlpDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH;
     int ueIndex = 0;
     RrcUeContext *pRrcUeCtx, *pNextRrcUeCtx;
+    pUlpDataInd->msgType = MSG_ULP_UE_IDENTITY_IND;
+    pUlpDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH;
 
-    pRrcUeCtx = (RrcUeContext*)ListGetFirstNode(&gRrcUeContextList);
-    while (pRrcUeCtx != 0) {
-        pNextRrcUeCtx = (RrcUeContext*)ListGetNextNode(&pRrcUeCtx->node);
-            
-        if ((pRrcUeCtx->ueIdentity.imsiPresent && pRrcUeCtx->ueIdentity.mTmsiPresent) 
-            || (pRrcUeCtx->idleCount >= gMaxRrcCtxIdleCount)) 
-        {
+    UInt32 rrcCtxCount = ListCount(&gReadyRrcUeContextList);
+    while (rrcCtxCount > 0) {
+        pRrcUeCtx = (RrcUeContext*)ListPopNode(&gReadyRrcUeContextList);
+        if (pRrcUeCtx == 0) {
+            break;
+        }
+        if (pRrcUeCtx->ueIdentity.imsiPresent || pRrcUeCtx->ueIdentity.mTmsiPresent) {            
+            LOG_INFO(ULP_LOGGER_NAME, "add ue data from gReadyRrcUeContextList, rnti = %d\n", pRrcUeCtx->rnti);
             memcpy((void*)&pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
             pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
             pUlpDataInd->length += sizeof(UeIdentity);
-            RrcDeleteUeContext(pRrcUeCtx);
+            MemFree(pRrcUeCtx);
             ueIndex++;
             if (ueIndex == MAX_NUM_UE_INFO_REPORT) {
-                LOG_INFO(ULP_LOGGER_NAME, "reach max report UE count: %d\n", ueIndex);
+                LOG_INFO(ULP_LOGGER_NAME, "1 reach max report UE count: %d\n", ueIndex);
                 break;
             }
-        } else {
-            RrcUpdateUeContextTime(pRrcUeCtx, 1);
         }
-
-        pRrcUeCtx = pNextRrcUeCtx;
+        rrcCtxCount--;
     }
 
-    pUlpDataInd->u.ueIdentityInd.count = ueIndex;
+    rrcCtxCount = ListCount(&gRrcUeContextList);    
+    if (rrcCtxCount > 0) {
+        pRrcUeCtx = (RrcUeContext*)ListGetFirstNode(&gRrcUeContextList);
+        while (pRrcUeCtx != 0) {
+            pNextRrcUeCtx = (RrcUeContext*)ListGetNextNode(&pRrcUeCtx->node);
+                
+            if (ueIndex < MAX_NUM_UE_INFO_REPORT) {
+                if ((pRrcUeCtx->ueIdentity.imsiPresent && pRrcUeCtx->ueIdentity.mTmsiPresent) 
+                    || (pRrcUeCtx->idleCount >= gMaxRrcCtxIdleCount)) 
+                {
+                    pRrcUeCtx->deleteFlag = 1;
+                    memcpy((void*)&pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
+                    pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
+                    pUlpDataInd->length += sizeof(UeIdentity);
+                    RrcDeleteUeContext(pRrcUeCtx);
+                    ueIndex++;
+                }
+            } else {
+                LOG_INFO(ULP_LOGGER_NAME, "2 reach max report UE count: %d\n", ueIndex);
+            }
+
+            RrcUpdateUeContextTime(pRrcUeCtx, 1);
+
+            pRrcUeCtx = pNextRrcUeCtx;
+        }
+    }
+
     if (ueIndex > 0) {
+        pUlpDataInd->u.ueIdentityInd.count = ueIndex;
+        if (ueIndex > 0) {
 #ifdef OS_LINUX
-        SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &gOamAddress);  
+            SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &gOamAddress);  
 #endif
+        }
     }
 }
 

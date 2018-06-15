@@ -19,6 +19,7 @@ typedef struct {
     ListNode node;
     UInt16 idleCount;
     UInt16 rnti;
+    UInt8  deleteFlag;
     UeIdentity ueIdentity;
 } RrcUeContext;
 
