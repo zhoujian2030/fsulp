@@ -108,7 +108,8 @@ void ExecuteCleanup()
             pNextRlcUeCtx = (RlcUeContext*)ListGetNextNode(&pRlcUeCtx->node);
              
             if (pRlcUeCtx->idleCount >= gMaxIdleCount) {
-                LOG_DBG(ULP_LOGGER_NAME, "clean RLC UE context, rnti = %d\n", pRlcUeCtx->rnti);
+                LOG_DBG(ULP_LOGGER_NAME, "clean RLC UE context, rnti = %d\n", pRlcUeCtx->rnti);                
+                pRlcUeCtx->deleteFlag = 1;
                 RlcDeleteUeContext(pRlcUeCtx);
             } else {
                 RlcUpdateUeContextTime(pRlcUeCtx, 1);

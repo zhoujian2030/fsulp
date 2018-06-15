@@ -87,6 +87,7 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
     pUeCtx->rnti = rnti; 
     SemInit(&pUeCtx->lockOfCount, 1);
     pUeCtx->idleCount = 0;
+    pUeCtx->deleteFlag = 0;
     ListPushNode(&gRlcUeContextList, &pUeCtx->node);
     KpiCountRlcUeCtx(TRUE);
 
@@ -99,13 +100,13 @@ void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx)
     if (pRlcUeCtx != 0) {
         LOG_INFO(ULP_LOGGER_NAME, "pRlcUeCtx = %p, rnti = %d\n", pRlcUeCtx, pRlcUeCtx->rnti);
         KpiCountRlcUeCtx(FALSE);
+        ListDeleteNode(&gRlcUeContextList, &pRlcUeCtx->node);
         unsigned int i;
         for (i=0; i<MAX_LC_ID; i++) {
             RlcDeleteRxAmEntity(pRlcUeCtx->rxAMEntityArray[i]);
             pRlcUeCtx->rxAMEntityArray[i] = 0;
         }
         SemDestroy(&pRlcUeCtx->lockOfCount);
-        ListDeleteNode(&gRlcUeContextList, &pRlcUeCtx->node);
         MemFree(pRlcUeCtx);
     }
 }
@@ -133,7 +134,6 @@ void RlcUpdateUeContextTime(RlcUeContext* pRlcUeCtx, unsigned int value)
 // -----------------------------------
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
     if (pUeCtx != 0 && lcId <MAX_LC_ID) {
-        RlcUpdateUeContextTime(pUeCtx, 0);
         return pUeCtx->rxAMEntityArray[lcId];
     }
 
@@ -162,8 +162,6 @@ RxAMEntity* RlcCreateRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId) {
             RLC_SET_RX_AMD_PDU_STATUS(pRxAmEntity, i, RS_FREE);
             RLC_SET_RX_AMD_PDU(pRxAmEntity, i, 0);
         }
-
-        RlcUpdateUeContextTime(pUeCtx, 0);
     }
 
     return pRxAmEntity;
@@ -341,9 +339,18 @@ void RlcProcessAMRxPacket(RlcUlDataInfo* pRlcDataInfo, UInt16 rnti)
         pUeCtx = RlcCreateUeContext(rnti);
         if (pUeCtx == 0) {      
             MemFree(pRlcDataInfo->rlcdataBuffer);
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate mem for rlc ue context, rnti = %d\n", rnti);
             return;
         } else {
             LOG_DBG(ULP_LOGGER_NAME, "create rlc ue context, rnti = %d, pUeCtx = %p\n", rnti, pUeCtx);
+        }
+    } else {
+        if (pUeCtx->deleteFlag) {
+            MemFree(pRlcDataInfo->rlcdataBuffer);
+            LOG_ERROR(ULP_LOGGER_NAME, "rlc ue context is pending deletion, rnti = %d\n", rnti);
+            return;
+        } else {            
+            RlcUpdateUeContextTime(pUeCtx, 0);
         }
     }
 
@@ -488,7 +495,7 @@ BOOL RlcDecodeAmdHeader(RlcUlDataInfo* pRlcDataInfo, AmdHeader* pAmdHeader)
 // ---------------------------------
 BOOL RlcDecodeAmdPdu(AmdPdu* pAmdPdu, AmdHeader* pAmdHeader, RlcUlDataInfo* pRlcDataInfo)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "sn = %d, fi = %d, e = %d, length = %d\n", 
+    LOG_DBG(ULP_LOGGER_NAME, "sn = %d, fi = %d, e = %d, length = %d\n", 
         pAmdHeader->sn, pAmdHeader->fi, pAmdHeader->e, pRlcDataInfo->length);
 
     BOOL ret = RLC_SUCCESS;
@@ -806,7 +813,7 @@ void RlcReassembleRlcSdu(UInt16 sn, RxAMEntity* pRxAmEntity)
 // --------------------------------
 void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAmdPduSeg)
 {
-    LOG_INFO(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdPduSeg = %p\n", sn, pRxAmEntity->rnti, pAmdPduSeg);
+    LOG_DBG(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdPduSeg = %p\n", sn, pRxAmEntity->rnti, pAmdPduSeg);
 
     RlcAmRawSdu* pRawSdu = &pRxAmEntity->rxRawSdu;
 
@@ -916,7 +923,7 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
             RlcReassembleFirstSduSegment(sn, pRxAmEntity, pRawSdu, pAmdDfe);
         } else {
             // this might be previous HARQ retransmit data or RLC ARQ retransmit data, so drop it
-            LOG_WARN(ULP_LOGGER_NAME, "segment seq num not valid, drop this segment, sn = %d, pRawSdu->sn = %d, rnti = %d, status = %d\n",
+            LOG_WARN(ULP_LOGGER_NAME, "seq num not valid, drop this segment, sn = %d, pRawSdu->sn = %d, rnti = %d, status = %d\n",
                 sn, pRawSdu->sn, pRxAmEntity->rnti, pAmdDfe->status);
             MemFree(pAmdDfe->buffer.pData);
         }
@@ -948,7 +955,7 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 
         default:
         {
-            LOG_WARN(ULP_LOGGER_NAME, "should not come here, could be HARQ retransmit or RLC ARQ retransmit PDU, status = %d, rnti = %d\n", pAmdDfe->status, pRxAmEntity->rnti);
+            LOG_WARN(ULP_LOGGER_NAME, "miss previous segments, status = %d, rnti = %d\n", pAmdDfe->status, pRxAmEntity->rnti);
             MemFree(pAmdDfe->buffer.pData);
             break;
         }

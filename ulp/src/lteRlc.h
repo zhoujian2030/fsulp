@@ -118,6 +118,7 @@ typedef struct {
 typedef struct {
     ListNode node;
     unsigned int idleCount;
+    unsigned char deleteFlag;
     SEM_LOCK lockOfCount;
     unsigned short rnti;
     RxAMEntity* rxAMEntityArray[MAX_LC_ID]; 
