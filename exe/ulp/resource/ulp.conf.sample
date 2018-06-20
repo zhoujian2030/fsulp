@@ -1,0 +1,46 @@
+{
+    "PollingInterval"       : 50,
+
+    "ResCleanupTimer"       : 5000,
+
+    "UeIdentityWaitTime"    : 500,
+
+    "OamServerIp"           : "127.0.0.1",
+
+    "OamServerUdpPort"      : 55012,
+
+    "ExplicitInitQmss"      : true,
+
+    "LoggerConfig" : 
+    {
+        "LogLevel"          : "TRACE",
+        "LogType"           : 1,
+
+        "LogToConsole"      : true,
+
+        "LogToFile"         : true,
+        "MaxLogFileSize"    : 5242880,
+        "LogFilePath"       : "/tmp/lte_ulp.log",
+
+        "LogToSocket"       : true,
+        "LogServerIp"       : "192.168.0.125",
+        "LogServerPort"     : 5997,
+
+        "LogModuleName"     : false,
+        "LogFileName"       : false,
+        "LogFuncName"       : true,
+        "LogThreadId"       : true,
+
+        "LogAsyncWaitTime"  : 1000,
+        "LogBufferingSize"  : 8192
+    },
+
+    "KpiConfig" :
+    {
+        "ReportType"        : 2,
+        "ReportFilePeriod"  : 10000,
+        "KpiFileName"       : "/tmp/kpi.txt",
+        "KpiDetailFilePath" : "/tmp",
+        "UdpPort"           : 5747
+    }
+}

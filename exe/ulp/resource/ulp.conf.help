@@ -12,7 +12,7 @@ LogLevel设置建议：
 2. DEBUG: 在外场测试验证阶段，业务压力正常的情况下（每5ms不超过8个上行用户数据），业务量峰值较小时（低于4 user/5ms）可优先设置LogType为0或1确保不丢log；峰值不大于
    6 user/5ms时优先设置LogType 1，既保证效率也尽可能不丢log； 峰值大于6 user/5ms优先设置LogType 2，确保业务线程的效率，容忍丢log， 如果设置为type 2因为CPU占用率
    过高导致丢log太多影响问题调试， 可根据实际情况调整为type 1
-3. INFO: 正常使用时配置，一般建议配置LogType为1
+3. INFO: 正常使用时配置，一般建议配置LogType为2
 
 参考配置
 -----------
@@ -47,18 +47,28 @@ logger配置参数说明
     "PollingInterval"       : 5,    # The business worker threads are invoked every 5ms by default
 
     "ResCleanupTimer"       : 5000, # RLC context is cleanup if it is idle more than 5s
+    
+    "UeIdentityWaitTime"    : 500,  # Wait 500ms to associate IMSI and M-TMSI with the same RNTI, when timeout, report to OAM even only one of them is collected
+    
+    "OamServerIp"           : "127.0.0.1",  # OAM server IP for UE data report
+    
+    "OamServerUdpPort"      : 55012,        # OAM server UDP port 
 
     "LoggerConfig" : 
     {
         "LogLevel"          : "INFO",   
-        "LogType"           : 1,        # 0: sync logging
+        "LogType"           : 2,        # 0: sync logging
                                         # 1: logger users parse and prepare log parameters and save formated data in buffer for logger thread to write; 
                                         # 2: logger users save log parameters in queue, logger thread parse each log in queue, then prepare formated log data and write 
         "LogToConsole"      : false,    # default not print to console  
 
-        "LogToFile"         : true,     # default log to file
-        "MaxLogFileSize"    : 5242880,  # default log file rotate size if 5M bytes
+        "LogToFile"         : true,                         # default log to file
+        "MaxLogFileSize"    : 10485760,                     # default log file rotate size if 5M bytes
         "LogFilePath"       : "/mnt/memlog/lte_ulp.log",    # log file path
+
+        "LogToSocket"       : false,            # default not log to socket
+        "LogServerIp"       : "192.168.1.166",  # log server IP to receive log data
+        "LogServerPort"     : 5997,             # log server UDP port 
 
         "LogModuleName"     : false,    # default not log module name
         "LogFileName"       : false,    # default not log src file name
@@ -66,14 +76,18 @@ logger配置参数说明
         "LogThreadId"       : true,     # default log thread id
 
         "LogAsyncWaitTime"  : 5,        # the logger thread wait notification to write log, or write log after timeout if the value is not set to 0, default is 10ms
-        "LogBufferingSize"  : 4096      # logger user will notify logger thread to write buffering log data if it reaches target size, default is 4k bytes, range [0, 16k]
+        "LogBufferingSize"  : 8192      # logger user will notify logger thread to write buffering log data if it reaches target size, default is 4k bytes, range [0, 16k]
     },
 
     "KpiConfig" :
     {
-        "ReportType"        : 1,
-        "ReportFilePeriod"  : 10000,
-        "KpiFileName"       : "/tmp/kpi.txt",
-        "UdpPort"           : 0
+        "ReportType"        : 1,                # 0: not report KPI 
+                                                # 1: report KPI summary to file specified by "KpiFileName"
+                                                # 2: report KPI summary and detail to file specified by "KpiFileName" and "KpiDetailFilePath"
+                                                # 3: report KPI to socket. NOT SUPPORT yet!
+        "ReportFilePeriod"  : 10000,            # valid for report type 1 and 2
+        "KpiFileName"       : "/tmp/kpi.txt",   
+        "KpiDetailFilePath" : "/mnt/memlog",    # path to hold KPI detail data file
+        "UdpPort"           : 5747              
     }
 }
