@@ -129,6 +129,11 @@ unsigned char* MemAlloc(unsigned int length)
     MemNode* pNode = 0;
     while (poolId < MAX_NUM_POOL_SIZE) {
         pNode = (MemNode*)ListPopNode(&gMemPool.pool[poolId]);
+#ifdef ISSUE_DEBUG
+        if (poolId == 7) {
+            LOG_INFO(ULP_LOGGER_NAME, "Alloc pNode = %p in pool[%d]\n", pNode, poolId);
+        }
+#endif
         if (pNode != 0) {
             break;
         }
@@ -173,9 +178,15 @@ void MemFree(void* pBuffer)
 {
     MemNode* pNode = CheckNode(pBuffer);
     if (pNode) {
+        // TODO need to add lock here to protect isInUsed ?
         if (pNode->isInUsed) {
             // LOG_TRACE(ULP_LOGGER_NAME, "free memory, length = %d, poolId = %d\n", 
             //     pNode->length, pNode->poolId);
+#ifdef ISSUE_DEBUG
+            if (pNode->poolId == 7) {
+                LOG_INFO(ULP_LOGGER_NAME, "Free pNode = %p in pool[%d]\n", pNode, pNode->poolId);
+            }
+#endif
             pNode->length = 0;
             pNode->isInUsed = 0;
             ListPushNode(&gMemPool.pool[pNode->poolId], &pNode->node);

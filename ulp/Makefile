@@ -19,11 +19,11 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 
 include ../cm/global.mk
 
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DISSUE_DEBUG
+
 ifeq ($(PLATFORM), arm)
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DARM_LINUX
+CFLAGS += -DARM_LINUX
 LIBS += $(PROJBASE)/cm/extlib/libnetcp.a
-else
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW
 endif
 
 ifeq ($(GTEST_SUPPORT), TRUE)

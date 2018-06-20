@@ -20,10 +20,10 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 
 include global.mk
 
-ifeq ($(PLATFORM), arm)
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DARM_LINUX -DRT_LOGGER
-else
 CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DRT_LOGGER
+
+ifeq ($(PLATFORM), arm)
+CFLAGS += -DARM_LINUX
 endif
 
 ifeq ($(GTEST_SUPPORT), TRUE)

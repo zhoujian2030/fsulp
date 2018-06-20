@@ -7,11 +7,16 @@
 
 #include "list.h"
 #include "lteLogger.h"
+#include <stdlib.h>
+#ifdef OS_LINUX
+#include <execinfo.h>
+#endif
 
 void PushTail(List* pList, ListNode* pNode);
 void PushHead(List *pList, ListNode *pNode);
 ListNode* PopHead(List* pList);
 unsigned int DeleteNode(List* pList, ListNode* pNode);
+void PrintBackTrace(void);
 
 // ----------------------------------
 void ListInit(List* pList, unsigned char mtFlag) 
@@ -213,6 +218,9 @@ ListNode* PopHead(List* pList)
 unsigned int DeleteNode(List* pList, ListNode* pNode)
 {
     unsigned int ret = 0;
+#ifdef ISSUE_DEBUG
+    static int failureCount = 0;
+#endif
 
     if (pList->count == 0) {
         pList->node.next = 0;
@@ -276,9 +284,44 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
         {
             LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->next = %p, pNode->prev = %p, pList->count = %d\n", 
                 pNode, pNode->next, pNode->prev, pList->count);
+
+#ifdef ISSUE_DEBUG
+            failureCount++;
+            if (failureCount > 3) {
+                exit(1); 
+            }
+#endif
+
             ret = 1;
         }
     }
 
+    if (ret == 1) {
+        PrintBackTrace();
+    }
+
     return ret;
+}
+
+// -----------------------------------
+#define MAX_FRAMES_IN_BT_ADD 10
+void PrintBackTrace(void)
+{
+#ifdef OS_LINUX
+    int i, nptrs;
+    void *buffer[MAX_FRAMES_IN_BT_ADD];
+    char **strings;
+
+    nptrs = backtrace(buffer, MAX_FRAMES_IN_BT_ADD);
+    /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+    * would produce similar output to the following: */
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings == 0) {
+        perror("backtrace_symbols");
+    }
+    for (i = 0; i < nptrs; i++)
+        LOG_ERROR(ULP_LOGGER_NAME, "%s\n", strings[i]);
+
+    free(strings);
+#endif
 }
