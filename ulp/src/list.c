@@ -285,19 +285,18 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
             LOG_ERROR(ULP_LOGGER_NAME, "invalid pNode = %p, pNode->next = %p, pNode->prev = %p, pList->count = %d\n", 
                 pNode, pNode->next, pNode->prev, pList->count);
 
-#ifdef ISSUE_DEBUG
-            failureCount++;
-            if (failureCount > 3) {
-                exit(1); 
-            }
-#endif
-
             ret = 1;
         }
     }
 
     if (ret == 1) {
         PrintBackTrace();
+#ifdef ISSUE_DEBUG
+        failureCount++;
+        if (failureCount > 3) {
+            exit(1); 
+        }
+#endif
     }
 
     return ret;
