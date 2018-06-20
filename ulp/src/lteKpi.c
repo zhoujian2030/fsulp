@@ -9,6 +9,8 @@
 #include "lteKpi.h"
 #include "lteLogger.h"
 #include "mempool.h"
+#include "lteRlc.h"
+#include "lteRrc.h"
 #ifdef OS_LINUX
 #include "thread.h"
 #include "event.h"
@@ -33,6 +35,8 @@ Event gKpiEvent;
 int gKpiFileFd = -1;
 int gDetailKpiFileFd = -1;
 
+extern MemPool gMemPool;
+extern MemPoolConfig gMemPoolConfig[MAX_NUM_POOL_SIZE];
 
 static void ReportKpiToFile();
 
@@ -74,7 +78,7 @@ void* LteKpiEntryFunc(void* p)
 // ---------------------------------
 static void ReportKpiToFile()
 {
-    char kpiData[7168];
+    char kpiData[8192];
     int sumLength = 0;
     int varLength = 0;
 
@@ -122,10 +126,22 @@ static void ReportKpiToFile()
     sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "Active Rlc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRlcCtx);
     sumLength += varLength;
+    varLength = sprintf(kpiData + sumLength, "Active Rrc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRrcCtx);
+    sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "Mem Used        %10d  %8d\n", gLteKpi.mem, gLteKpi.mem - prevLteKpi.mem);
     sumLength += varLength;
 
     memcpy((void*)&prevLteKpi, (void*)&gLteKpi, sizeof(LteKpi));
+
+    UInt32 i;
+    varLength = sprintf(kpiData + sumLength, "\nDetail Mempool Usage\n-----------------------\n");
+    sumLength += varLength;
+    varLength = sprintf(kpiData + sumLength, "Mem Size  Total  Used\n");
+    sumLength += varLength;
+    for (i=0; i<MAX_NUM_POOL_SIZE; i++) {   
+        varLength = sprintf(kpiData + sumLength, "%8d  %5d  %4d\n", gMemPoolConfig[i].size, gMemPoolConfig[i].num, (gMemPoolConfig[i].num - ListCount(&gMemPool.pool[i])));
+        sumLength += varLength;
+    }
 
     int writeBytes = 0;
     if (gKpiFileFd != -1) {        
@@ -257,6 +273,8 @@ void KpiRefresh()
     if (gLteKpi.mem < 0) {
         MemDumpStatus();
     }
+    gLteKpi.activeRlcCtx = RlcGetUeContextCount();
+    gLteKpi.activeRrcCtx = RrcGetUeContextCount();
 }
 
 // ----------------------------
@@ -274,14 +292,3 @@ void KpiCountSem(unsigned char createFlag)
 #endif
 }
 
-// ----------------------------
-void KpiCountRlcUeCtx(unsigned char createFlag)
-{
-    if (createFlag) {
-        gLteKpi.activeRlcCtx++;
-    } else {
-        if (gLteKpi.activeRlcCtx) {
-            gLteKpi.activeRlcCtx--;
-        }
-    }    
-}

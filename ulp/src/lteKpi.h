@@ -25,6 +25,7 @@ typedef struct
     unsigned int detachReq; 
     unsigned int lcIdArray[11];
     unsigned int activeRlcCtx;
+    unsigned int activeRrcCtx;
     unsigned int semLock;
     unsigned int mem;
     unsigned int macInd;
@@ -45,11 +46,11 @@ typedef enum {
 typedef struct {
     unsigned int reportType;
 
-    unsigned int reportFilePeriod;              // for report type 1
-    char kpiFileName[MAX_KPI_FILE_NAME_LENGTH];    
-    char detailFilePath[MAX_KPI_FILE_NAME_LENGTH];
+    unsigned int reportFilePeriod;                  // for report type 1 & 2
+    char kpiFileName[MAX_KPI_FILE_NAME_LENGTH];     // for report type 1 & 2
+    char detailFilePath[MAX_KPI_FILE_NAME_LENGTH];  // for report type 2
 
-    unsigned short udpPort;                     // for report type 2
+    unsigned short udpPort;                         // for report type 3
 } LteKpiConfig;
 
 extern void NotifyKpi();
@@ -63,7 +64,6 @@ extern void KpiShow();
 extern void KpiRefresh();
 
 extern void KpiCountSem(unsigned char createFlag);
-extern void KpiCountRlcUeCtx(unsigned char createFlag);
 
 #ifdef __cplusplus
 }

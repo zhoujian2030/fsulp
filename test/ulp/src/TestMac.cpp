@@ -263,3 +263,58 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
     gMacUeDataInd.numUe = 0;
     memset((void*)&gMacUeDataInd, 0, sizeof(MacUeDataInd_Test_Array));
 }
+
+TEST_F(TestMac, Interface_PhyUlDataInd_LcId_0) {
+    LteLoggerSetLogLevel(0);
+    gCallMacDataInd = 0;
+    KpiInit();
+    InitMemPool();
+    InitMacLayer();
+
+    // Identity Response, imsi = 460041143702947
+    unsigned char macPdu[] = {
+        0x3d, 0x20, 0x06, 0x1f, 0x00, 0x5b, 0xab, 0xfd, 0xad, 0x70, 0xb6, 0xee, 0xc4, 0x85, 0xf3, 0x7b, 
+        0xfc, 0xbf 
+    };
+
+    unsigned short length = 0;
+
+    S_PhyHlMsgHead* pPhyMsgHead = (S_PhyHlMsgHead*)gMsgBuffer;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    S_UlIndHead* pUlIndHead = (S_UlIndHead*)(gMsgBuffer + length);
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 501;
+    pUlIndHead->sf = 2;
+    pUlIndHead->numOfPDUs = 1;
+
+    S_RxUlschIndHeadPdu* pUlSchPduHead = (S_RxUlschIndHeadPdu*)(gMsgBuffer + length);
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = 124;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPdu) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPdu) << 3;
+    memcpy(gMsgBuffer + length, macPdu, sizeof(macPdu));    
+    length += (pUlSchPduHead->wordLen << 2);
+
+    // Pre-check status
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.mem, 0);
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
+
+    PhyUlDataInd(gMsgBuffer, length);
+
+    // check after
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.mem, 1); // 1 for MacUeDataInd_t
+    ASSERT_EQ((int)gLteKpi.lcIdArray[0], 1); 
+    ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
+    ASSERT_EQ(gMacUeDataInd.numUe, 1);
+    MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pMacUeDataInd->rnti, 124);
+    ASSERT_TRUE(pMacUeDataInd->rlcData == 0);
+    memset((void*)&gMacUeDataInd, 0, sizeof(MacUeDataInd_Test_Array));
+}

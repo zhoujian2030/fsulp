@@ -89,7 +89,6 @@ RlcUeContext* RlcCreateUeContext(unsigned short rnti)
     pUeCtx->idleCount = 0;
     pUeCtx->deleteFlag = 0;
     ListPushNode(&gRlcUeContextList, &pUeCtx->node);
-    KpiCountRlcUeCtx(TRUE);
 
     return pUeCtx;
 }
@@ -99,7 +98,6 @@ void RlcDeleteUeContext(RlcUeContext* pRlcUeCtx)
 {
     if (pRlcUeCtx != 0) {
         LOG_INFO(ULP_LOGGER_NAME, "pRlcUeCtx = %p, rnti = %d\n", pRlcUeCtx, pRlcUeCtx->rnti);
-        KpiCountRlcUeCtx(FALSE);
         ListDeleteNode(&gRlcUeContextList, &pRlcUeCtx->node);
         unsigned int i;
         for (i=0; i<MAX_LC_ID; i++) {
