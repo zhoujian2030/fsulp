@@ -619,7 +619,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
             {
                 LOG_DBG(ULP_LOGGER_NAME, "TODO, MAC_UL_CCCH_LCH\n");
                 gLteKpi.lcIdArray[lchId]++;
-                return;
+                break;
             }
 
             case MAC_LCID_1:
@@ -721,7 +721,7 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
 
     if (*lcIdx >= MAX_NUM_UL_PKTS) {
         //TODO
-        LOG_WARN(ULP_LOGGER_NAME, "invalid *lcIdx = %d\n", *lcIdx);
+        LOG_ERROR(ULP_LOGGER_NAME, "invalid *lcIdx = %d\n", *lcIdx);
     } else {
         *ulDataReceivedFlag = TRUE;
 

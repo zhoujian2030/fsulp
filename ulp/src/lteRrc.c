@@ -610,11 +610,9 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         return;
     }
 
-    LOG_INFO(ULP_LOGGER_NAME, "imsiPresent = %d, mTmsiPresent = %d, detachFlag = %d, rnti = %d\n", 
+    LOG_DBG(ULP_LOGGER_NAME, "imsiPresent = %d, mTmsiPresent = %d, detachFlag = %d, rnti = %d\n", 
         pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, 
         pRrcUeCtx->ueIdentity.detachFlag, pRrcUeCtx->rnti);
-    
-    // LOG_INFO(ULP_LOGGER_NAME, "KPI: idResp = %d, attachReq = %d\n", gLteKpi.idResp, gLteKpi.attachReq);
     
     if (!IP_RRC_DATA_IND(pRrcUeCtx)) {
         return;
