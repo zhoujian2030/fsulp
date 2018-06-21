@@ -37,10 +37,11 @@
 
     "KpiConfig" :
     {
-        "ReportType"        : 2,
-        "ReportFilePeriod"  : 10000,
+        "ReportType"        : 1,
+        "ReportFilePeriod"  : 1000,
         "KpiFileName"       : "/tmp/kpi.txt",
         "KpiDetailFilePath" : "/tmp",
+        "ReportDebugInfo"   : true, 
         "UdpPort"           : 5747
     }
 }

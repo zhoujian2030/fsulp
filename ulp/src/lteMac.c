@@ -144,6 +144,8 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 			// only handle crc correct data
 			if (pUlSchPduHead->CRCFlag == 1) {
                 LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d, numPdu = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs, numPdu);
+                gLteKpi.crcCorrect++;
+
 				ulSchPdu.rnti = pUlSchPduHead->RNTI;
 				ulSchPdu.length = (pUlSchPduHead->bitLen + 7) >> 3;
 				ulSchPdu.buffer = pBuffer + tempLen;
@@ -151,6 +153,7 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 				MacProcessUlSchPdu(&ulSchPdu);
 			} else {
 		    	//LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
+                gLteKpi.crcError++;
 			}
 
 			tempLen += (pUlSchPduHead->wordLen << 2);

@@ -28,6 +28,8 @@ typedef struct
     unsigned int activeRrcCtx;
     unsigned int semLock;
     unsigned int mem;
+    unsigned int crcCorrect;
+    unsigned int crcError;
     unsigned int macInd;
     unsigned int rlcInd;
     unsigned int pdcpInd;
@@ -51,6 +53,8 @@ typedef struct {
     char detailFilePath[MAX_KPI_FILE_NAME_LENGTH];  // for report type 2
 
     unsigned short udpPort;                         // for report type 3
+
+    unsigned char reportDebugInfoFlag;              // 
 } LteKpiConfig;
 
 extern void NotifyKpi();

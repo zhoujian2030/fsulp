@@ -88,6 +88,7 @@ logger配置参数说明
         "ReportFilePeriod"  : 10000,            # valid for report type 1 and 2
         "KpiFileName"       : "/tmp/kpi.txt",   
         "KpiDetailFilePath" : "/mnt/memlog",    # path to hold KPI detail data file
-        "UdpPort"           : 5747              
+        "ReportDebugInfo"   : true              # report additional kpi for debug          
+        "UdpPort"           : 5747,
     }
 }

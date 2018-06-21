@@ -52,6 +52,7 @@ LteConfig gLteConfig =
         10000,  // 10ms
         "",
         "",
+        0,
         0
     }
 };
@@ -374,6 +375,15 @@ void ParseConfig(char* configFileName)
                 LOG_WARN(ULP_LOGGER_NAME, "Invalid config for kpi udpPort\n");
             }
         }
+
+        jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot2, "ReportDebugInfo");
+        if (jsonItem != 0) {
+            if (cJSON_IsBool(jsonItem)) {                
+                gLteConfig.kpiConfig.reportDebugInfoFlag = jsonItem->valueint;
+            } else {
+                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for ReportDebugInfo\n");
+            }
+        }
     }
 
     // printf("%s\n", cJSON_Print(jsonRoot));
@@ -410,6 +420,7 @@ void ShowConfig()
     printf("kpiFileName:            %s\n", gLteConfig.kpiConfig.kpiFileName);
     printf("detailFilePath:         %s\n", gLteConfig.kpiConfig.detailFilePath);
     printf("udpPort:                %d\n", gLteConfig.kpiConfig.udpPort);
+    printf("reportDebugInfoFlag:    %d\n", gLteConfig.kpiConfig.reportDebugInfoFlag);
     printf("+----------------------------------------+\n");
 }
 

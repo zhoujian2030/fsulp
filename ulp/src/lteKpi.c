@@ -124,23 +124,32 @@ static void ReportKpiToFile()
     sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "LcId4           %10d  %8d\n", gLteKpi.lcIdArray[4], gLteKpi.lcIdArray[4] - prevLteKpi.lcIdArray[4]);
     sumLength += varLength;
-    varLength = sprintf(kpiData + sumLength, "Active Rlc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRlcCtx);
-    sumLength += varLength;
-    varLength = sprintf(kpiData + sumLength, "Active Rrc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRrcCtx);
-    sumLength += varLength;
-    varLength = sprintf(kpiData + sumLength, "Mem Used        %10d  %8d\n", gLteKpi.mem, gLteKpi.mem - prevLteKpi.mem);
-    sumLength += varLength;
+
+    if (gLteConfig.kpiConfig.reportDebugInfoFlag) {
+        varLength = sprintf(kpiData + sumLength, "Active Rlc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRlcCtx);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "Active Rrc Ctx  %10d  %8d\n", gLteKpi.activeRlcCtx, gLteKpi.activeRlcCtx - prevLteKpi.activeRrcCtx);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "Mem Used        %10d  %8d\n", gLteKpi.mem, gLteKpi.mem - prevLteKpi.mem);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "Crc Correct     %10d  %8d\n", gLteKpi.crcCorrect, gLteKpi.crcCorrect - prevLteKpi.crcCorrect);
+        sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "Crc Error       %10d  %8d\n", gLteKpi.crcError, gLteKpi.crcError - prevLteKpi.crcError);
+        sumLength += varLength;
+    }
 
     memcpy((void*)&prevLteKpi, (void*)&gLteKpi, sizeof(LteKpi));
 
-    UInt32 i;
-    varLength = sprintf(kpiData + sumLength, "\nDetail Mempool Usage\n-----------------------\n");
-    sumLength += varLength;
-    varLength = sprintf(kpiData + sumLength, "Mem Size  Total  Used\n");
-    sumLength += varLength;
-    for (i=0; i<MAX_NUM_POOL_SIZE; i++) {   
-        varLength = sprintf(kpiData + sumLength, "%8d  %5d  %4d\n", gMemPoolConfig[i].size, gMemPoolConfig[i].num, (gMemPoolConfig[i].num - ListCount(&gMemPool.pool[i])));
+    if (gLteConfig.kpiConfig.reportDebugInfoFlag) {
+        UInt32 i;
+        varLength = sprintf(kpiData + sumLength, "\nDetail Mempool Usage\n-----------------------\n");
         sumLength += varLength;
+        varLength = sprintf(kpiData + sumLength, "Mem Size  Total  Used\n");
+        sumLength += varLength;
+        for (i=0; i<MAX_NUM_POOL_SIZE; i++) {   
+            varLength = sprintf(kpiData + sumLength, "%8d  %5d  %4d\n", gMemPoolConfig[i].size, gMemPoolConfig[i].num, (gMemPoolConfig[i].num - ListCount(&gMemPool.pool[i])));
+            sumLength += varLength;
+        }
     }
 
     int writeBytes = 0;
