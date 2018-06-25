@@ -174,11 +174,11 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
             LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT, rnti = %d\n", rnti);
         }
     } else if (RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE == rrcMsgType) {
-        gLteKpi.rrcSetupCompl++;
         LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT* pRrcSetupComplMsg = 
             (LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT));
         if (pRrcSetupComplMsg != 0) {
             if (ASN1_SUCCES == Asn1ParseRrcSetupComplMsg(pData, size, pRrcSetupComplMsg)) {
+                gLteKpi.rrcSetupCompl++;
                 nasMsgType = RrcParseNasMsg(rnti, &pRrcSetupComplMsg->dedicated_info_nas);
             } else {
                 LOG_ERROR(ULP_LOGGER_NAME, "Asn1ParseRrcSetupComplMsg error, rnti = %d\n", rnti);

@@ -196,3 +196,12 @@ TEST_F(TestMempool, Mem_Remove) {
     EXPECT_EQ(MemGetLength(pBuffer), sizeof(expectData));
     EXPECT_EQ(memcmp(expectData, pBuffer, sizeof(expectData)), 0);
 }
+
+#ifdef ISSUE_DEBUG
+extern "C" void DumpPoolMemory();
+#endif
+// ------------------------
+TEST_F(TestMempool, Mem_Dump) {
+    InitMemPool();
+    DumpPoolMemory();
+}

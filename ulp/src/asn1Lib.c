@@ -67,33 +67,38 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg( LIBLTE_BIT_MSG_
 {
     LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
     uint8             *msg_ptr = msg->msg;
+    int32             nBits = msg->N_bits;
 
     if(msg              != NULL &&
        ul_info_transfer != NULL)
     {
         // Extension choice
         uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
+        nBits -= 2;
 
         // C1 choice
         liblte_bits_2_value(&msg_ptr, 2);
+        nBits -= 2;
 
         // Optional indicator
         liblte_rrc_warning_not_handled(liblte_bits_2_value(&msg_ptr, 1), __func__);;
+        nBits -= 2;
 
         // Dedicated info type choice
         ul_info_transfer->dedicated_info_type = (LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_ENUM)liblte_bits_2_value(&msg_ptr, 2);
+        nBits -= 2;
 
-        if(LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS == ul_info_transfer->dedicated_info_type)
-        {
-        	liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr,
-                                                    &ul_info_transfer->dedicated_info);
-        }else{
+        if(LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS == ul_info_transfer->dedicated_info_type) {
+        	liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr, &ul_info_transfer->dedicated_info, &nBits);
+        } else {
             //printf("Invalid dedicated_info_type = %d\n", ul_info_transfer->dedicated_info_type);
         }
 
         liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);
 
-        err = LIBLTE_SUCCESS;
+        if (nBits >= 0) {
+            err = LIBLTE_SUCCESS;
+        }
     }
 
     return(err);
@@ -144,29 +149,39 @@ uint32 liblte_bits_2_value(uint8  **bits,
 }
 
 LIBLTE_ERROR_ENUM liblte_rrc_unpack_dedicated_info_nas_ie(uint8                         **ie_ptr,
-                                                          LIBLTE_SIMPLE_BYTE_MSG_STRUCT  *ded_info_nas)
+                                                          LIBLTE_SIMPLE_BYTE_MSG_STRUCT  *ded_info_nas,
+                                                          int32 *nBits_ptr)
 {
     LIBLTE_ERROR_ENUM err = LIBLTE_ERROR_INVALID_INPUTS;
     uint32            i;
 
     if(ie_ptr       != NULL &&
-       ded_info_nas != NULL)
+       ded_info_nas != NULL &&
+       nBits_ptr    != NULL)
     {
-        if(0 == liblte_bits_2_value(ie_ptr, 1))
-        {
+        if(0 == liblte_bits_2_value(ie_ptr, 1)) {
             ded_info_nas->N_bytes = liblte_bits_2_value(ie_ptr, 7);
-        }else{
-            if(0 == liblte_bits_2_value(ie_ptr, 1))
-            {
+            *nBits_ptr = *nBits_ptr - 2;
+        } else {
+            if(0 == liblte_bits_2_value(ie_ptr, 1)) {
                 ded_info_nas->N_bytes = liblte_bits_2_value(ie_ptr, 14);
-            }else{
+                *nBits_ptr = *nBits_ptr - 2;
+            } else {
                 // FIXME: Unlikely to have more than 16K of octets
                 ded_info_nas->N_bytes = 0;
             }
+            *nBits_ptr = *nBits_ptr - 2;
+        }
+        *nBits_ptr = *nBits_ptr - 2;
+
+        if ((*nBits_ptr < 0) || (ded_info_nas->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) || ((ded_info_nas->N_bytes << 3) > *nBits_ptr)) {
+            // printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
+            ded_info_nas->N_bytes = 0;
+            *nBits_ptr = -1;
+            return err;
         }
 
-        for(i=0; i<ded_info_nas->N_bytes; i++)
-        {
+        for(i=0; i<ded_info_nas->N_bytes; i++) {
             ded_info_nas->msg[i] = liblte_bits_2_value(ie_ptr, 8);
         }
 
@@ -288,7 +303,8 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_transaction_identifier_ie(uint8 **ie_ptr
 }
 
 LIBLTE_ERROR_ENUM liblte_rrc_unpack_plmn_identity_ie(uint8                           **ie_ptr,
-                                                     LIBLTE_RRC_PLMN_IDENTITY_STRUCT  *plmn_id)
+                                                     LIBLTE_RRC_PLMN_IDENTITY_STRUCT  *plmn_id,
+                                                     int32* nBits_ptr)
 {
     LIBLTE_ERROR_ENUM err = LIBLTE_ERROR_INVALID_INPUTS;
     uint8             mcc_opt;
@@ -298,6 +314,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_plmn_identity_ie(uint8                      
        plmn_id != NULL)
     {
         mcc_opt = liblte_bits_2_value(ie_ptr, 1);
+        *nBits_ptr = *nBits_ptr - 2;
 
         if(TRUE == mcc_opt)
         {
@@ -305,22 +322,26 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_plmn_identity_ie(uint8                      
             plmn_id->mcc |= (liblte_bits_2_value(ie_ptr, 4) << 8);
             plmn_id->mcc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mcc |= liblte_bits_2_value(ie_ptr, 4);
+            *nBits_ptr = *nBits_ptr - 6;
 
         }else{
             plmn_id->mcc = LIBLTE_RRC_MCC_NOT_PRESENT;
         }
 
         mnc_size     = (liblte_bits_2_value(ie_ptr, 1) + 2);
+        *nBits_ptr = *nBits_ptr - 2;
         if(2 == mnc_size)
         {
             plmn_id->mnc  = 0xFF00;
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mnc |= liblte_bits_2_value(ie_ptr, 4);
+            *nBits_ptr = *nBits_ptr - 4;
         }else{
             plmn_id->mnc  = 0xF000;
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 8);
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mnc |= liblte_bits_2_value(ie_ptr, 4);
+            *nBits_ptr = *nBits_ptr - 6;
         }
 
         err = LIBLTE_SUCCESS;
@@ -352,56 +373,66 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_setup_complete_msg(
 {
    LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
    uint8             *msg_ptr = msg->msg;
+   int32             nBits = msg->N_bits;
 
    if(msg                != NULL &&
       con_setup_complete != NULL)
    {
        // RRC Transaction ID
-       liblte_rrc_unpack_rrc_transaction_identifier_ie(&msg_ptr,
-                                                       &con_setup_complete->rrc_transaction_id);
+        liblte_rrc_unpack_rrc_transaction_identifier_ie(&msg_ptr, &con_setup_complete->rrc_transaction_id);
+        nBits -= 2;
 
-       // Extension choice
-       uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
+        // Extension choice
+        uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
+        nBits -= 2;
 
-       // C1 choice
-       liblte_bits_2_value(&msg_ptr, 2);
+        // C1 choice
+        liblte_bits_2_value(&msg_ptr, 2);
+        nBits -= 2;
 
-       // Optional indicators
-       con_setup_complete->registered_mme_present = liblte_bits_2_value(&msg_ptr, 1);
-       liblte_rrc_warning_not_handled(liblte_bits_2_value(&msg_ptr, 1), __func__);;
+        // Optional indicators
+        con_setup_complete->registered_mme_present = liblte_bits_2_value(&msg_ptr, 1);
+        nBits -= 2;
+        liblte_rrc_warning_not_handled(liblte_bits_2_value(&msg_ptr, 1), __func__);
+        nBits -= 2;
 
-       // Selected PLMN identity
-       con_setup_complete->selected_plmn_id = liblte_bits_2_value(&msg_ptr, 3) + 1;
+        // Selected PLMN identity
+        con_setup_complete->selected_plmn_id = liblte_bits_2_value(&msg_ptr, 3) + 1;
+        nBits -= 2;
 
-       // Registered MME
-       if(con_setup_complete->registered_mme_present)
-       {
-           // Optional indicator
-           con_setup_complete->registered_mme.plmn_id_present = liblte_bits_2_value(&msg_ptr, 1);
+        // Registered MME
+        if(con_setup_complete->registered_mme_present)
+        {
+            // Optional indicator
+            con_setup_complete->registered_mme.plmn_id_present = liblte_bits_2_value(&msg_ptr, 1);
+            nBits -= 2;
 
-           // PLMN identity
-           if(con_setup_complete->registered_mme.plmn_id_present)
-           {
-               liblte_rrc_unpack_plmn_identity_ie(&msg_ptr, &con_setup_complete->registered_mme.plmn_id);
-           }
+            // PLMN identity
+            if(con_setup_complete->registered_mme.plmn_id_present)
+            {
+                liblte_rrc_unpack_plmn_identity_ie(&msg_ptr, &con_setup_complete->registered_mme.plmn_id, &nBits);
+            }
 
-           // MMEGI
-           con_setup_complete->registered_mme.mmegi = liblte_bits_2_value(&msg_ptr, 16);
+            // MMEGI
+            con_setup_complete->registered_mme.mmegi = liblte_bits_2_value(&msg_ptr, 16);
+            nBits -= 2;
 
-           // MMEC
-           liblte_rrc_unpack_mmec_ie(&msg_ptr, &con_setup_complete->registered_mme.mmec);
-       }
+            // MMEC
+            liblte_rrc_unpack_mmec_ie(&msg_ptr, &con_setup_complete->registered_mme.mmec);
+            nBits -= 2;
+        }
 
-       // Dedicated info NAS
-       liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr,
-                                               &con_setup_complete->dedicated_info_nas);
+        // Dedicated info NAS
+        liblte_rrc_unpack_dedicated_info_nas_ie(&msg_ptr, &con_setup_complete->dedicated_info_nas, &nBits);
 
-       liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);
+        liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);
 
-       err = LIBLTE_SUCCESS;
-   }
+        if (nBits >= 0) {
+            err = LIBLTE_SUCCESS;
+        }
+    }
 
-   return(err);
+    return(err);
 }
 
 LIBLTE_ERROR_ENUM liblte_mme_unpack_eps_attach_type_ie(uint8 **ie_ptr,
@@ -539,6 +570,13 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_esm_message_container_ie(uint8              
     {
         esm_msg->N_bytes  = (*ie_ptr)[0] << 8;
         esm_msg->N_bytes |= (*ie_ptr)[1];
+
+        if (esm_msg->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) {
+            // TODO
+            esm_msg->N_bytes = 0;
+            return err;
+        }
+
         for(i=0; i<esm_msg->N_bytes; i++)
         {
             esm_msg->msg[i]  = (*ie_ptr)[2+i];
@@ -967,7 +1005,9 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_attach_request_msg(
         liblte_mme_unpack_ue_network_capability_ie(&msg_ptr, &attach_req->ue_network_cap);
 
         // ESM Message Container
-        liblte_mme_unpack_esm_message_container_ie(&msg_ptr, &attach_req->esm_msg);
+        if (LIBLTE_SUCCESS != liblte_mme_unpack_esm_message_container_ie(&msg_ptr, &attach_req->esm_msg)) {
+            return err;
+        }
 
         // Old P-TMSI Signature
         if(LIBLTE_MME_P_TMSI_SIGNATURE_IEI == *msg_ptr)

@@ -883,3 +883,55 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi_Prev_Deleting
 
     ASSERT_EQ((int)ListCount(&gReadyRrcUeContextList), 0);
 }
+
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Invalid_Rrc_Msg) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rrcMsg1[] = {
+        0x26, 0xfe, 0x33, 0xb0, 0xbc, 0xbf, 0xee, 0x03
+    };
+    unsigned char rrcMsg2[] = {
+        0xca, 0x52, 0xb7, 0xe9, 0x01, 0xd2, 0x0a, 0x3d, 0x7a, 0x8f, 0x43, 0xc7, 0x41, 0xaa, 0x5b
+    };
+
+    // rrc msg 1
+    unsigned short dataSize = sizeof(rrcMsg1);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg1, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 0);  
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+
+    // rrc msg 2
+    dataSize = sizeof(rrcMsg2);
+    pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg2, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1); // 1 pPdcpDataInd
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 0); 
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+}

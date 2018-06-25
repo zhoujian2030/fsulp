@@ -56,6 +56,17 @@ unsigned int NUM_MEM_BLOCK = 0;
 inline MemNode* CheckNode(void* pBuffer);
 inline int findMatchPool(unsigned int size);
 
+#ifdef ISSUE_DEBUG
+void DumpPoolMemory()
+{
+    unsigned int i;
+    for (i=0; i<NUM_SIZE_7; i++) {
+        LOG_TRACE(ULP_LOGGER_NAME, "MemNode = %p\n", &gMemBufSize7[i][0]);
+        LOG_BUFFER(&gMemBufSize7[i][0], 24);
+    }
+}
+#endif
+
 // ----------------------------------
 void InitMemPool()
 {

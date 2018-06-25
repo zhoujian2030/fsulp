@@ -214,6 +214,10 @@ ListNode* PopHead(List* pList)
 	return pNode;
 }
 
+#ifdef ISSUE_DEBUG
+extern void DumpPoolMemory();
+#endif 
+
 // -----------------------------------
 unsigned int DeleteNode(List* pList, ListNode* pNode)
 {
@@ -290,8 +294,9 @@ unsigned int DeleteNode(List* pList, ListNode* pNode)
     }
 
     if (ret == 1) {
-        PrintBackTrace();
+        // PrintBackTrace();
 #ifdef ISSUE_DEBUG
+        DumpPoolMemory();
         failureCount++;
         if (failureCount > 3) {
             exit(1); 

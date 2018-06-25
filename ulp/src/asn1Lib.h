@@ -491,7 +491,7 @@ extern void convert_int_to_bits_vector(uint8 **bits, uint32 value, uint32 num_bi
 extern void convert_bytes_to_bits_vector(uint8 *bit_vector, uint8 *byte_buf, uint32 num_bits);
 
 extern uint32 liblte_bits_2_value(uint8  **bits, uint32   N_bits);
-extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_dedicated_info_nas_ie(uint8 **ie_ptr, LIBLTE_SIMPLE_BYTE_MSG_STRUCT  *ded_info_nas);
+extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_dedicated_info_nas_ie(uint8 **ie_ptr, LIBLTE_SIMPLE_BYTE_MSG_STRUCT *ded_info_nas, int32 *nBits_ptr);
 
 extern void liblte_rrc_warning_not_handled(uint8 opt, const char *func_name);
 extern void liblte_rrc_consume_noncrit_extension(uint8 ext, const char *func_name, uint8 **ie_ptr);

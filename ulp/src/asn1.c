@@ -69,6 +69,9 @@ int Asn1ParseUlInfoTransMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_R
 
 	gMsgBitBuffer.msg = gMsgBitBuffer.buff;
 	unsigned int bitLen = length << 3;
+    if (bitLen > LIBLTE_MAX_MSG_SIZE_BITS) {
+        return err;
+    }
 
 	convert_bytes_to_bits_vector(gMsgBitBuffer.msg, msgBuf, bitLen);
 	// remove 5 bits RRC msg type
@@ -88,6 +91,9 @@ int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE
 
 	gMsgBitBuffer.msg = gMsgBitBuffer.buff;
 	unsigned int bitLen = length << 3;
+    if (bitLen > LIBLTE_MAX_MSG_SIZE_BITS) {
+        return err;
+    }
 
     convert_bytes_to_bits_vector(gMsgBitBuffer.msg, msgBuf, bitLen);
 	// remove 5 bits RRC msg type
