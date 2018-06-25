@@ -74,7 +74,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg( LIBLTE_BIT_MSG_
     {
         // Extension choice
         uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
-        nBits -= 2;
+        nBits -= 1;
 
         // C1 choice
         liblte_bits_2_value(&msg_ptr, 2);
@@ -82,7 +82,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg( LIBLTE_BIT_MSG_
 
         // Optional indicator
         liblte_rrc_warning_not_handled(liblte_bits_2_value(&msg_ptr, 1), __func__);;
-        nBits -= 2;
+        nBits -= 1;
 
         // Dedicated info type choice
         ul_info_transfer->dedicated_info_type = (LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_ENUM)liblte_bits_2_value(&msg_ptr, 2);
@@ -161,20 +161,21 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_dedicated_info_nas_ie(uint8                 
     {
         if(0 == liblte_bits_2_value(ie_ptr, 1)) {
             ded_info_nas->N_bytes = liblte_bits_2_value(ie_ptr, 7);
-            *nBits_ptr = *nBits_ptr - 2;
+            *nBits_ptr = *nBits_ptr - 7;
         } else {
             if(0 == liblte_bits_2_value(ie_ptr, 1)) {
                 ded_info_nas->N_bytes = liblte_bits_2_value(ie_ptr, 14);
-                *nBits_ptr = *nBits_ptr - 2;
+                *nBits_ptr = *nBits_ptr - 14;
             } else {
                 // FIXME: Unlikely to have more than 16K of octets
                 ded_info_nas->N_bytes = 0;
             }
-            *nBits_ptr = *nBits_ptr - 2;
+            *nBits_ptr = *nBits_ptr - 1;
         }
-        *nBits_ptr = *nBits_ptr - 2;
+        *nBits_ptr = *nBits_ptr - 1;
 
-        if ((*nBits_ptr < 0) || (ded_info_nas->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) || ((ded_info_nas->N_bytes << 3) > *nBits_ptr)) {
+        // printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
+        if ((*nBits_ptr < 0) || (ded_info_nas->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) || ((ded_info_nas->N_bytes << 3) > (*nBits_ptr + 7))) {
             // printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
             ded_info_nas->N_bytes = 0;
             *nBits_ptr = -1;
@@ -314,7 +315,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_plmn_identity_ie(uint8                      
        plmn_id != NULL)
     {
         mcc_opt = liblte_bits_2_value(ie_ptr, 1);
-        *nBits_ptr = *nBits_ptr - 2;
+        *nBits_ptr = *nBits_ptr - 1;
 
         if(TRUE == mcc_opt)
         {
@@ -322,26 +323,26 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_plmn_identity_ie(uint8                      
             plmn_id->mcc |= (liblte_bits_2_value(ie_ptr, 4) << 8);
             plmn_id->mcc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mcc |= liblte_bits_2_value(ie_ptr, 4);
-            *nBits_ptr = *nBits_ptr - 6;
+            *nBits_ptr = *nBits_ptr - 12;
 
         }else{
             plmn_id->mcc = LIBLTE_RRC_MCC_NOT_PRESENT;
         }
 
         mnc_size     = (liblte_bits_2_value(ie_ptr, 1) + 2);
-        *nBits_ptr = *nBits_ptr - 2;
+        *nBits_ptr = *nBits_ptr - 1;
         if(2 == mnc_size)
         {
             plmn_id->mnc  = 0xFF00;
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mnc |= liblte_bits_2_value(ie_ptr, 4);
-            *nBits_ptr = *nBits_ptr - 4;
+            *nBits_ptr = *nBits_ptr - 8;
         }else{
             plmn_id->mnc  = 0xF000;
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 8);
             plmn_id->mnc |= (liblte_bits_2_value(ie_ptr, 4) << 4);
             plmn_id->mnc |= liblte_bits_2_value(ie_ptr, 4);
-            *nBits_ptr = *nBits_ptr - 6;
+            *nBits_ptr = *nBits_ptr - 12;
         }
 
         err = LIBLTE_SUCCESS;
@@ -384,7 +385,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_setup_complete_msg(
 
         // Extension choice
         uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
-        nBits -= 2;
+        nBits -= 1;
 
         // C1 choice
         liblte_bits_2_value(&msg_ptr, 2);
@@ -392,20 +393,19 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_setup_complete_msg(
 
         // Optional indicators
         con_setup_complete->registered_mme_present = liblte_bits_2_value(&msg_ptr, 1);
-        nBits -= 2;
         liblte_rrc_warning_not_handled(liblte_bits_2_value(&msg_ptr, 1), __func__);
         nBits -= 2;
 
         // Selected PLMN identity
         con_setup_complete->selected_plmn_id = liblte_bits_2_value(&msg_ptr, 3) + 1;
-        nBits -= 2;
+        nBits -= 3;
 
         // Registered MME
         if(con_setup_complete->registered_mme_present)
         {
             // Optional indicator
             con_setup_complete->registered_mme.plmn_id_present = liblte_bits_2_value(&msg_ptr, 1);
-            nBits -= 2;
+            nBits -= 1;
 
             // PLMN identity
             if(con_setup_complete->registered_mme.plmn_id_present)
@@ -415,11 +415,11 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_setup_complete_msg(
 
             // MMEGI
             con_setup_complete->registered_mme.mmegi = liblte_bits_2_value(&msg_ptr, 16);
-            nBits -= 2;
+            nBits -= 16;
 
             // MMEC
             liblte_rrc_unpack_mmec_ie(&msg_ptr, &con_setup_complete->registered_mme.mmec);
-            nBits -= 2;
+            nBits -= 8;
         }
 
         // Dedicated info NAS
