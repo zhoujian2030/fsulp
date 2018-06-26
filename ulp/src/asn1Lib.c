@@ -174,8 +174,9 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_dedicated_info_nas_ie(uint8                 
         }
         *nBits_ptr = *nBits_ptr - 1;
 
-        // printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
-        if ((*nBits_ptr < 0) || (ded_info_nas->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) || ((ded_info_nas->N_bytes << 3) > (*nBits_ptr + 7))) {
+        //printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
+        if ((*nBits_ptr < 0) || (ded_info_nas->N_bytes == 0) || (ded_info_nas->N_bytes > LIBLTE_MAX_MSG_SIZE_BYTES) ||
+            ((ded_info_nas->N_bytes << 3) > (*nBits_ptr + 7))) {
             // printf("N_bytes = %d, *nBits_ptr = %d\n", ded_info_nas->N_bytes, *nBits_ptr);
             ded_info_nas->N_bytes = 0;
             *nBits_ptr = -1;

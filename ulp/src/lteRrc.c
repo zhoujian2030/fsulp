@@ -152,10 +152,6 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
     UInt8 nasMsgType = 0xff;
     LOG_DBG(ULP_LOGGER_NAME, "rnti = %d, rrcMsgType = %d\n", rnti, rrcMsgType);
 
-    if ((rrcMsgType <= RRC_UL_DCCH_MSG_TYPE_N_ITEMS) && (rrcMsgType != RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER)) {
-        LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: %s (%d)\n", gUlRRcMsgName[rrcMsgType], rnti);
-    }
-
     if (RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER == rrcMsgType) {
         LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT* pUlInfoTransMsg = 
             (LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT));
@@ -178,6 +174,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
             (LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT));
         if (pRrcSetupComplMsg != 0) {
             if (ASN1_SUCCES == Asn1ParseRrcSetupComplMsg(pData, size, pRrcSetupComplMsg)) {
+                LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: RRC Conn Setup Compl (%d)\n", rnti);
                 gLteKpi.rrcSetupCompl++;
                 nasMsgType = RrcParseNasMsg(rnti, &pRrcSetupComplMsg->dedicated_info_nas);
             } else {
@@ -187,6 +184,10 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
         } else {
             LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT, rnti = %d\n", rnti);
         }  
+    } else {
+        if (rrcMsgType <= RRC_UL_DCCH_MSG_TYPE_N_ITEMS) {
+            LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: %s (%d)\n", gUlRRcMsgName[rrcMsgType], rnti);
+        }
     }
     
     IP_RRC_DECODE_RESULT(rnti, rrcMsgType, nasMsgType, 0);
