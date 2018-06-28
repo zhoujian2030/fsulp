@@ -1,10 +1,14 @@
 ifeq ($(GTEST_SUPPORT), TRUE)
 SUBDIRS = cm \
 	ulp \
+	db \
+	dpe \
 	test
 else
 SUBDIRS = cm \
 	ulp \
+	db \
+	dpe \
 	exe
 endif
 
