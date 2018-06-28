@@ -937,3 +937,44 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Invalid_Rrc_Msg) {
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
     ASSERT_EQ(RrcGetUeContextCount(), 0);
 }
+
+// -------------------------------
+TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_SMS) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 101;
+    unsigned short lcId = 1;
+    unsigned char rrcMsg[] = {
+        0x48, 0x05, 0x84, 0xe1, 0x2f, 0xb9, 0x16, 0x40, 0x60, 0xec, 
+        0x64, 0x61, 0x20, 0x24, 0x00, 0x00, 0x20, 0x01, 0x12, 0x2d, 
+        0x06, 0x21, 0x04, 0x00, 0x00, 0xbe, 0x02, 0x66, 0x3c, 0xe1, 
+        0xb2, 0x2d, 0x06, 0x25, 0x33, 0x0e, 0xa0, 0xfe, 0xa0, 0x01, 
+        0x1e, 0xa0, 0x8b, 0x37, 0x2e, 0xd0, 0x80
+    };
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+
+    unsigned short dataSize = sizeof(rrcMsg);
+    unsigned char* pPdcpDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pPdcpDataInd, rrcMsg, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 0);  
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ(pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_UPLINK_NAS_TRANSPORT);
+    gRrcUeDataInd.numUe = 0;
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+}

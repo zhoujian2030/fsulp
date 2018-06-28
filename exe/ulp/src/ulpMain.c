@@ -5,6 +5,7 @@
 #include "lteTrigger.h"
 #include <stdio.h>
 
+#define EQ5_ULP_VERSION "1.0.0.180628"
 
 // -----------------------------------
 void ShowUsage()
@@ -33,6 +34,9 @@ int main(int argc, char* argv[]) {
                     ShowUsage();
                     return 0;
                 }
+            } if (IsStringEqual(option, "-v")) {
+                printf("Version: %s\n",EQ5_ULP_VERSION);
+                return 0;
             } else {
                 ShowUsage();
                 return 0;
