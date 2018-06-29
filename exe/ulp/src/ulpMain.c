@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
                     ShowUsage();
                     return 0;
                 }
-            } if (IsStringEqual(option, "-v")) {
+            } else if (IsStringEqual(option, "-v")) {
                 printf("Version: %s\n",EQ5_ULP_VERSION);
                 return 0;
             } else {
