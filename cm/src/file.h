@@ -62,7 +62,7 @@ typedef enum
     ALL_EXECUTE                 = S_IXUSR | S_IXGRP | S_IXOTH
 } FileMode;
 
-int FileOpen(char* fileName, OpenMode openMode, AccessType accessType);
+int FileOpen(const char* fileName, OpenMode openMode, AccessType accessType);
 void FileClose(int fd);
 int FileWrite(int fd, const char* theBuffer, int numOfBytesToWrite, int* numberOfBytesWritten);
 int FileRead(int fd, char* theBuffer, int buffSize, int* numOfBytesRead);

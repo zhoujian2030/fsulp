@@ -11,6 +11,12 @@
 
     "ExplicitInitQmss"      : true,
 
+    "ReportToDpe"           : true,
+
+    "DpeIp"                 : "127.0.0.1",
+
+    "DpeUdpPort"            : 3737,
+
     "LoggerConfig" : 
     {
         "LogLevel"          : "TRACE",
@@ -22,7 +28,7 @@
         "MaxLogFileSize"    : 5242880,
         "LogFilePath"       : "/tmp/lte_ulp.log",
 
-        "LogToSocket"       : true,
+        "LogToSocket"       : false,
         "LogServerIp"       : "192.168.0.125",
         "LogServerPort"     : 5997,
 

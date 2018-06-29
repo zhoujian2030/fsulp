@@ -23,6 +23,11 @@ LteConfig gLteConfig =
     "127.0.0.1",
     55012,
     1, 
+#ifdef DPE
+    0,
+    "127.0.0.1",
+    3737,
+#endif
 
     // log config, default log to console only
     {
@@ -164,13 +169,44 @@ void ParseConfig(char* configFileName)
     }
 
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ExplicitInitQmss");
-        if (jsonItem != 0) {
-            if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
-                gLteConfig.explicitInitQmssFlag = jsonItem->valueint;
-            } else {
-                LOG_WARN(ULP_LOGGER_NAME, "Invalid config for ExplicitInitQmss\n");
-            }
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_True) || (jsonItem->type == cJSON_False)) {                
+            gLteConfig.explicitInitQmssFlag = jsonItem->valueint;
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for ExplicitInitQmss\n");
         }
+    }
+
+#ifdef DPE
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ReportToDpe");
+    if (jsonItem != 0) {
+        if (cJSON_IsBool(jsonItem)) {                
+            gLteConfig.reportToDpeFlag = jsonItem->valueint;
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for ReportToDpe\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "DpeIp");
+    if (jsonItem != 0) {
+        if (jsonItem->type == cJSON_String) {      
+            if (strlen(jsonItem->valuestring) < MAX_IP_ADDR_LENGTH) {
+                strcpy(gLteConfig.dpeIp, jsonItem->valuestring);
+            }       
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for DpeIp\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "DpeUdpPort");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            gLteConfig.dpeUdpPort = jsonItem->valueint;
+        } else {
+            LOG_WARN(ULP_LOGGER_NAME, "Invalid config for DpeUdpPort\n");
+        }
+    }
+#endif
 
     jsonRoot2 = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
     if (jsonRoot2 != 0) {
@@ -253,6 +289,11 @@ void ShowConfig()
     printf("oamIp:                  %s\n", gLteConfig.oamIp);
     printf("oamUdpPort:             %d\n", gLteConfig.oamUdpPort);
     printf("explicitInitQmssFlag:   %d\n", gLteConfig.explicitInitQmssFlag);
+#ifdef DPE
+    printf("reportToDpeFlag     :   %d\n", gLteConfig.reportToDpeFlag);
+    printf("dpeIp:                  %s\n", gLteConfig.dpeIp);
+    printf("dpeUdpPort:             %d\n", gLteConfig.dpeUdpPort);
+#endif
     printf("logLevel:               %d\n", gLteConfig.logConfig.logLevel);
     printf("logType:                %d\n", gLteConfig.logConfig.logType);
     printf("logToConsoleFlag:       %d\n", gLteConfig.logConfig.logToConsoleFlag);

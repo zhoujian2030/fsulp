@@ -13,7 +13,7 @@
 #include <string.h>
 
 // -----------------------------------
-int FileOpen(char* fileName, OpenMode openMode, AccessType accessType)
+int FileOpen(const char* fileName, OpenMode openMode, AccessType accessType)
 {
     int fd = -1;
     int oflag;

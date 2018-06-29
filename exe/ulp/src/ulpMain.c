@@ -18,7 +18,6 @@ void ShowUsage()
 }
 
 // -----------------------------------
-#define DELAY_INTERVAL_MS   1000*5000
 int main(int argc, char* argv[]) {
     // parse optional argv
     char* configFileName = 0;

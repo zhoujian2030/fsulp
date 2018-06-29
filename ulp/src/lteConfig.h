@@ -25,6 +25,11 @@ typedef struct {
     char oamIp[MAX_IP_ADDR_LENGTH];             
     unsigned short oamUdpPort;  //
     unsigned char explicitInitQmssFlag; 
+#ifdef DPE
+    unsigned char reportToDpeFlag;
+    char dpeIp[MAX_IP_ADDR_LENGTH];
+    unsigned short dpeUdpPort;
+#endif
     LoggerConfig logConfig;     // TRACE, DEBUG, INFO, WARNING, ERROR
     LteKpiConfig kpiConfig;
 } LteConfig;

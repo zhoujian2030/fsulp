@@ -19,7 +19,7 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 
 include ../cm/global.mk
 
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DISSUE_DEBUG
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DISSUE_DEBUG -DDPE
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX

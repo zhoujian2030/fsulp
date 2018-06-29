@@ -48,6 +48,9 @@ MessageQueue gUlpRecvMessageQ;
 #ifdef OS_LINUX
 int gOamUdpFd = -1;
 struct sockaddr_in gOamAddress;
+#ifdef DPE
+struct sockaddr_in gDpeAddress;
+#endif
 #endif
 
 #ifndef OS_LINUX
@@ -112,6 +115,9 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
     gOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
     SocketMakeNonBlocking(gOamUdpFd);
     SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
+#ifdef DPE 
+    SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
+#endif
 #endif
 }
 
@@ -300,6 +306,9 @@ void UlpRecvAndHandleOamData()
         if (ueIndex > 0) {
 #ifdef OS_LINUX
             SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &gOamAddress);  
+#ifdef DPE 
+            SocketUdpSend(gOamUdpFd, buffer, pUlpDataInd->length, &gDpeAddress);  
+#endif
 #endif
         }
     }
