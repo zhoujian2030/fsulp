@@ -1,0 +1,33 @@
+{
+    "MobileIdDBName"        : "/home/zj/nb-ulp/exe/dpe/resource/eq5_mobile_id.db",
+
+    "UserInfoDBName"        : "/tmp/user_info.db",
+
+    "LocalIp"               : "192.168.64.155",
+
+    "LocalUdpServerPort"    : 3737,
+
+    "LoggerConfig" : 
+    {
+        "LogLevel"          : "TRACE",
+        "LogType"           : 2,
+
+        "LogToConsole"      : true,
+
+        "LogToFile"         : true,
+        "MaxLogFileSize"    : 5242880,
+        "LogFilePath"       : "/tmp/dpe.log",
+
+        "LogToSocket"       : false,
+        "LogServerIp"       : "192.168.0.125",
+        "LogServerPort"     : 5997,
+
+        "LogModuleName"     : false,
+        "LogFileName"       : false,
+        "LogFuncName"       : true,
+        "LogThreadId"       : true,
+
+        "LogAsyncWaitTime"  : 1000,
+        "LogBufferingSize"  : 8192
+    }
+}

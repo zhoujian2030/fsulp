@@ -1,5 +1,6 @@
 SUBDIRS = ulp \
-	ulpdeamon
+	ulpdeamon \
+	dpe
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

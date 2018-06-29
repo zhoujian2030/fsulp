@@ -18,13 +18,14 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
 include $(PROJBASE)/cm/global.mk
+CFLAGS += -Wno-write-strings
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/cm/lib/libcm_arm.a $(PROJBASE)/db/lib/libdb_arm.a 
+LIBS += $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
 else
 CFLAGS += -DOS_LINUX -UUNIT_TEST
-LIBS += $(PROJBASE)/cm/lib/libcm.a $(PROJBASE)/db/lib/libdb.a 
+LIBS += $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a 
 endif
 
 all: $(LIBA)

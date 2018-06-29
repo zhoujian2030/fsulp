@@ -8,7 +8,7 @@ INCDIR = inc
 LIBDIR = lib
 
 # Libraries
-INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/db/inc
+INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/db/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/ulp/inc
 LIBS = 
 
 # Files and folders
@@ -21,17 +21,17 @@ include $(PROJBASE)/cm/global.mk
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/cm/lib/libcm_arm.a $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/dpe/lib/libdpe_arm.a 
+LIBS += $(PROJBASE)/dpe/lib/libdpe_arm.a $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/cm/lib/libcm_arm.a 
 else
 CFLAGS += -DOS_LINUX -UUNIT_TEST
-LIBS += $(PROJBASE)/cm/lib/libcm.a $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/dpe/lib/libdpe.a 
+LIBS += $(PROJBASE)/dpe/lib/libdpe.a $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a
 endif
 
 all: $(TARGET)
 
 # Targets
 $(TARGET): buildrepo $(OBJS)
-	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBS)
+	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBS) -ldl
 	@mv $(TARGET) $(OBJDIR)
 
 clean:

@@ -9,6 +9,7 @@
 #define DP_ENGINE_CONFIG_H
 
 #include <string>
+#include "loggerConfig.h"
 
 namespace dpe {
 
@@ -17,8 +18,12 @@ namespace dpe {
         DpEngineConfig();
         ~DpEngineConfig();
 
+        void parseJsonConfig(std::string configFileName);
+
         std::string m_mobileIdDbName;
-        std::string m_userInfoDbname;        
+        std::string m_userInfoDbname;  
+        std::string m_localIp;
+        unsigned short m_localUdpServerPort;    
     };
 
 }
