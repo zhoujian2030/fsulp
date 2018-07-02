@@ -33,6 +33,9 @@ typedef struct
     unsigned int macInd;
     unsigned int rlcInd;
     unsigned int pdcpInd;
+#ifdef HEARTBEAT_DEBUG
+    unsigned int heartbeatResp;
+#endif
 } LteKpi;
 
 #ifdef OS_LINUX

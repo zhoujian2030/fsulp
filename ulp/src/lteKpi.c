@@ -138,6 +138,11 @@ static void ReportKpiToFile()
         sumLength += varLength;
     }
 
+#ifdef HEARTBEAT_DEBUG
+    varLength = sprintf(kpiData + sumLength, "Heartbeat       %10d  %8d\n", gLteKpi.heartbeatResp, gLteKpi.heartbeatResp - prevLteKpi.heartbeatResp);
+    sumLength += varLength;
+#endif
+
     memcpy((void*)&prevLteKpi, (void*)&gLteKpi, sizeof(LteKpi));
 
     if (gLteConfig.kpiConfig.reportDebugInfoFlag) {

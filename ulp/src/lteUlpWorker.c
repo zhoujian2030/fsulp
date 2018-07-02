@@ -17,6 +17,7 @@
 #include "mempool.h"
 #include "event.h"
 #include "lteConfig.h"
+#include "lteKpi.h"
 #ifndef OS_LINUX
 #include <ti/csl/csl_tsc.h>
 #else
@@ -50,6 +51,10 @@ int gOamUdpFd = -1;
 struct sockaddr_in gOamAddress;
 #ifdef DPE
 struct sockaddr_in gDpeAddress;
+#endif
+#ifdef HEARTBEAT_DEBUG
+int gHeartbeatUdpFd = -1;
+struct sockaddr_in gTestOamAddress;
 #endif
 #endif
 
@@ -117,6 +122,12 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
     SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
 #ifdef DPE 
     SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
+#endif
+
+#ifdef HEARTBEAT_DEBUG
+    gHeartbeatUdpFd = SocketUdpInitAndBind(6000, "0.0.0.0");
+    SocketGetSockaddrByIpAndPort(&gTestOamAddress, "127.0.0.1", 6002);
+    SocketMakeNonBlocking(gHeartbeatUdpFd);
 #endif
 #endif
 }
@@ -231,7 +242,25 @@ void UlpRecvAndHandleOamData()
     // handle heartbeat
 #ifdef OS_LINUX
     struct sockaddr_in remoteAddr;
-    int byteRecvd = SocketUdpRecv(gOamUdpFd, buffer, MAX_UDP_OAM_DATA_BUFFER, &remoteAddr);
+    int byteRecvd = 0;
+
+#ifdef HEARTBEAT_DEBUG
+    byteRecvd = SocketUdpRecv(gHeartbeatUdpFd, buffer, MAX_UDP_OAM_DATA_BUFFER, &remoteAddr);
+    if (byteRecvd >= LTE_OAM_DATA_REQ_HEAD_LEHGTH) {
+        if (pOamDataReq->msgType == MSG_ULP_HEARTBEAT_REQ) {
+            gLteKpi.heartbeatResp++;
+            pUlpDataInd->msgType = MSG_ULP_HEARTBEAT_RESP;
+            pUlpDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH;
+            SocketUdpSend(gHeartbeatUdpFd, buffer, sizeof(LteUlpDataInd), &remoteAddr);  
+            LOG_INFO(ULP_LOGGER_NAME, "Send Heartbeat response to Test OAM, heartbeatResp = %d\n", gLteKpi.heartbeatResp);
+        } else {
+            LOG_ERROR(ULP_LOGGER_NAME, "invalid msgType = %d from Test OAM\n", pOamDataReq->msgType);
+            LOG_BUFFER(buffer, byteRecvd);
+        }
+    } 
+#endif
+
+    byteRecvd = SocketUdpRecv(gOamUdpFd, buffer, MAX_UDP_OAM_DATA_BUFFER, &remoteAddr);
     if (byteRecvd >= LTE_OAM_DATA_REQ_HEAD_LEHGTH) {
         if (pOamDataReq->msgType == MSG_ULP_HEARTBEAT_REQ) {
             pUlpDataInd->msgType = MSG_ULP_HEARTBEAT_RESP;
