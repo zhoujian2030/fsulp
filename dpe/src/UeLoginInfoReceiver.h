@@ -23,7 +23,7 @@ namespace dpe {
 
     class UeLoginInfoReceiver : public Thread {
     public:
-        UeLoginInfoReceiver(DpEngineConfig* pDbeConfig);
+        UeLoginInfoReceiver(DpEngineConfig* pDpeConfig);
         virtual ~UeLoginInfoReceiver();
 
     protected:

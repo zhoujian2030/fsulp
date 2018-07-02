@@ -14,8 +14,8 @@ using namespace std;
 using namespace dpe;
 
 // -------------------------------
-UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDbeConfig) 
-: Thread("DP Engine"), m_pConfig(pDbeConfig), m_udpSocketFd(-1)
+UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDpeConfig) 
+: Thread("UE Info Receiver"), m_pConfig(pDpeConfig), m_udpSocketFd(-1)
 {
     m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_localUdpServerPort, (char*)m_pConfig->m_localIp.c_str());
     DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());

@@ -13,7 +13,7 @@
 using namespace std;
 using namespace dpe;
 
-#define DPE_VERSION "1.0.0.080625"
+#define DPE_VERSION "1.0.0.080629" 
 
 // -----------------------------------
 void ShowUsage()
