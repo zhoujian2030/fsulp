@@ -122,5 +122,7 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         printf("logBufferingSize:       %d\n", loggerConfig.logBufferingSize);
         LoggerInit(&loggerConfig);
     }
+
+    FileClose(fd);
 }
 

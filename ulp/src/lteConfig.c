@@ -277,6 +277,7 @@ void ParseConfig(char* configFileName)
 
     // printf("%s\n", cJSON_Print(jsonRoot));
     cJSON_Delete(jsonRoot);
+    FileClose(fd);
 }
 
 // -------------------------------

@@ -1,5 +1,5 @@
 # Target  name
-TARGET = ulp
+TARGET = dpe
 
 # Directories
 OBJDIR = obj
@@ -10,12 +10,12 @@ BINDIR = bin
 # Libraries
 # gtest include
 INCGTEST = -I$(PROJBASE)/test/lib/gtest/include
-INC += $(INCGTEST) -I$(PROJBASE)/cm/include -I$(PROJBASE)/cm/inc -I$(PROJBASE)/ulp/inc
+INC += $(INCGTEST) -I$(PROJBASE)/cm/include -I$(PROJBASE)/cm/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/db/inc
 # MUST place libnet.a ahead of libcm.a because libnet depends on libcm.a
 ifeq ($(PLATFORM), x86)
-LIBS = $(PROJBASE)/ulp/lib/libulp.a $(PROJBASE)/cm/lib/libcm.a
+LIBS = $(PROJBASE)/dpe/lib/libdpe.a $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a
 else
-LIBS = $(PROJBASE)/ulp/lib/libulp_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
+LIBS = $(PROJBASE)/dpe/lib/libdpe_arm.a $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
 endif
 
 LIBAGTEST = $(PROJBASE)/test/lib/gtest/lib/libgtest.a $(PROJBASE)/test/lib/gtest/lib/libgtest_main.a
@@ -26,13 +26,13 @@ SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -DUNIT_TEST -UISSUE_DEBUG
+CFLAGS += -Wno-write-strings -DOS_LINUX -UMAC_PHY_INTF_NEW -DUNIT_TEST -UISSUE_DEBUG
 
 all: $(TARGET)
 
 # Targets
 $(TARGET): buildrepo $(OBJS)
-	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBAGTEST) $(LIBS)
+	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBAGTEST) $(LIBS) -ldl
 	@mv $(TARGET) $(OBJDIR)
 
 clean:

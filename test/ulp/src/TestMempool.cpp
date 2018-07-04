@@ -199,9 +199,9 @@ TEST_F(TestMempool, Mem_Remove) {
 
 #ifdef ISSUE_DEBUG
 extern "C" void DumpPoolMemory();
-#endif
 // ------------------------
 TEST_F(TestMempool, Mem_Dump) {
     InitMemPool();
     DumpPoolMemory();
 }
+#endif

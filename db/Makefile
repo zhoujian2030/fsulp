@@ -19,7 +19,9 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.c=.o))
 
 include ../cm/global.mk
 
-CFLAGS = -Wall -g -DOS_LINUX
+#SQLITE_THREADSAFE: 0, 1, 2
+#Multi-Threaded mode
+CFLAGS = -Wall -g -DOS_LINUX -DSQLITE_THREADSAFE=2
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX

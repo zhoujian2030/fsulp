@@ -9,6 +9,7 @@
 #define DB_INTERFACE_H
 
 #include "sqlite3.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,20 @@ typedef struct {
     sqlite3 *sqlite;
 } DbConnection;
 
+#define MAX_DB_TIMESTAMP_LENGTH    (sizeof("2018-01-01 00:00:00") + 1)
+typedef struct {
+    char imsi[16];
+    char timestamp[MAX_DB_TIMESTAMP_LENGTH];
+} UeLoginInfo;
+
+typedef void (*QueryLoginInfoCallback)(
+    void* param,
+    unsigned int id,
+    const char* imsi,
+    unsigned int mTmsi,
+    const char* timestamp
+);
+
 void DbInit(DbConfig* pDbConfig);
 
 int  DbGetConnection(DbConnection* pDbConn, const char* dbName);
@@ -36,6 +51,17 @@ void DbCloseConnection(DbConnection* pDbConn);
 int  DbInsertLoginImsi(DbConnection* pDbConn, const char* imsi);
 int  DbInsertMTmsi(DbConnection* pDbConn, unsigned int mTmsi);
 int  DbInsertImsiAndMTmsi(DbConnection* pDbConn, const char* imsi, unsigned int mTmsi);
+
+int DbSelectLoginCountByImsi(DbConnection* pDbConn, const char* imsi);
+int DbQueryLoginInfoByImsiAndDate(
+    DbConnection* pDbConn, 
+    void* param,
+    const char* imsi, 
+    const char* startDate, 
+    const char* endDate, 
+    QueryLoginInfoCallback callbackFunc,
+    int* pResultSetCount);
+
 
 #ifdef __cplusplus
 }

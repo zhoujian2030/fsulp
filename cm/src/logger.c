@@ -37,7 +37,7 @@ static LoggerConfig gLoggerConfig_s = {
     0,  // default not log module name
     0,  // log file name
     1,  // log function name
-    1,  // log thread id
+    0,  // log thread id
 
     5,      // async wait time
     1024*4, // default 4k bytes buffering

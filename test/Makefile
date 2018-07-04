@@ -1,7 +1,8 @@
 SUBDIRS = cm \
 	ulp \
 	sqlite \
-	db
+	db \
+	dpe
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

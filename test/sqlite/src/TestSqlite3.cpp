@@ -311,3 +311,66 @@ TEST_F(TestSqlite3, API_Query_sqlite3_prepare_v2)
     sqlite3_finalize(pSqlStmt);
     sqlite3_close(dbConn);
 }
+
+// -------------------------------
+TEST_F(TestSqlite3, Select_Count)
+{
+    sqlite3 *dbConn;
+    char *errMsg = 0;
+    int ret;
+
+    system("rm -rf /tmp/test.db");
+
+    ret = sqlite3_open("/tmp/test.db", &dbConn);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(dbConn != 0);
+
+    char createTbSql[] = "CREATE TABLE UserInfo(" \
+                            "ID     INTEGER PRIMARY KEY," \
+                            "IMSI   VARCHAR (20)," \
+                            "M_TMSI INTEGER," \
+                            "RNTI   INTEGER   NOT NULL," \
+                            "TIME   TimeStamp NOT NULL DEFAULT (datetime('now','localtime')));";
+    
+    // create table
+    ret = sqlite3_exec(dbConn, createTbSql, 0, 0, &errMsg);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(errMsg == 0);
+
+    char insertRecord1Sql[] = "INSERT INTO UserInfo (IMSI, RNTI) VALUES ('460078139656276', 5678);";
+    char insertRecord2Sql[] = "INSERT INTO UserInfo (IMSI, RNTI) VALUES ('460078139656276', 1234);";
+    char insertRecord3Sql[] = "INSERT INTO UserInfo (IMSI, RNTI) VALUES ('460078139656276', 2345);";
+
+    ret = sqlite3_exec(dbConn, insertRecord1Sql, 0, 0, &errMsg);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(errMsg == 0);
+    ret = sqlite3_exec(dbConn, insertRecord2Sql, 0, 0, &errMsg);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(errMsg == 0);
+    ret = sqlite3_exec(dbConn, insertRecord3Sql, 0, 0, &errMsg);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(errMsg == 0);
+
+    char querySql[] = "SELECT count(*) FROM UserInfo WHERE IMSI = ?";
+    sqlite3_stmt *pSqlStmt = 0;
+
+    // precompile query sql statement
+    ret = sqlite3_prepare_v2(dbConn, querySql, strlen(querySql), &pSqlStmt, 0);
+    ASSERT_TRUE(ret == SQLITE_OK);
+    ASSERT_TRUE(pSqlStmt != 0);
+
+    // query by IMSI
+    ret = sqlite3_bind_text(pSqlStmt, 1, "460078139656276", -1, SQLITE_STATIC);
+    ASSERT_EQ(SQLITE_OK, ret);
+
+    // Get query result
+    ret = sqlite3_step(pSqlStmt);
+    ASSERT_EQ(SQLITE_ROW, ret);    
+
+    // check query result
+    ASSERT_EQ(1, sqlite3_column_count(pSqlStmt));
+    ASSERT_EQ(3, sqlite3_column_int(pSqlStmt, 0));
+
+    sqlite3_finalize(pSqlStmt);
+    sqlite3_close(dbConn);
+}
