@@ -1,7 +1,7 @@
 {
     "MobileIdDBName"        : "/home/zj/nb-ulp/exe/dpe/resource/eq5_mobile_id.db",
 
-    "UserInfoDBName"        : "/tmp/user_info.db",
+    "UserDBName"            : "/tmp/eq5_user.db",
 
     "LocalIp"               : "192.168.64.155",
 

@@ -16,7 +16,7 @@ using namespace dpe;
 // -------------------------------
 DpEngineConfig::DpEngineConfig() 
 : m_mobileIdDbName("/tmp/eq5_mobile_id.db"),
-  m_userInfoDbname("/tmp/eq5_user_info.db"),
+  m_userDbname("/tmp/eq5_user_info.db"),
   m_localIp("127.0.0.1"),
   m_localUdpServerPort(3737)
 {
@@ -69,12 +69,12 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "UserInfoDBName");
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "UserDBName");
     if (jsonItem != 0) {
         if (jsonItem->type == cJSON_String) {      
-            m_userInfoDbname = string(jsonItem->valuestring);     
+            m_userDbname = string(jsonItem->valuestring);     
         } else {
-            printf("Invalid config for UserInfoDBName\n");
+            printf("Invalid config for UserDBName\n");
         }
     }
 
@@ -97,7 +97,7 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
     }
 
     printf("m_mobileIdDbName:   %s\n", m_mobileIdDbName.c_str());
-    printf("m_userInfoDbname:   %s\n", m_userInfoDbname.c_str());
+    printf("m_userDbname:       %s\n", m_userDbname.c_str());
     printf("LocalIp:            %s\n", m_localIp.c_str());
     printf("LocalUdpServerPort: %d\n", m_localUdpServerPort);
 

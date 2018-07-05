@@ -17,13 +17,15 @@ using namespace dpe;
 DpEngine::DpEngine(DpEngineConfig* pDpeConfig) 
 : Thread("DP Engine"), m_pConfig(pDpeConfig)
 {
-    DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());
+    DbGetConnection(&m_loginDbConn, m_pConfig->m_mobileIdDbName.c_str());
+    DbGetConnection(&m_userDbConn, m_pConfig->m_userDbname.c_str());    
 }
 
 // -------------------------------
 DpEngine::~DpEngine() 
 {
-
+    DbCloseConnection(&m_loginDbConn);
+    DbCloseConnection(&m_userDbConn);
 }
 
 // -------------------------------
@@ -61,14 +63,15 @@ void DpEngine::handleUserRequest(DpRequest* pRequest)
                 m_imsiLoginTimeMap.erase(it);
             }
 
-            DbQueryLoginInfoByImsiAndDate(&m_dbConn, this, pGetLoginInfoReq->imsi, 
-                pGetLoginInfoReq->startDate, pGetLoginInfoReq->endDate,
+            DbQueryLoginInfoByImsiAndDate(&m_loginDbConn, this, pGetLoginInfoReq->imsi, 
+                pGetLoginInfoReq->beginDate, pGetLoginInfoReq->endDate,
                 DpEngine::queryLoginInfoByImsiCallback, &numRecord);
             if (numRecord > 0) {
                 it = m_imsiLoginTimeMap.find(imsi);
                 if (it != m_imsiLoginTimeMap.end() && (it->second).size() == numRecord) {
                     // process query result
                     analysisLoginBehavior(imsi, it->second);
+                    // TODO clear vector?
                 } else {
                     LOG_MSG(LOGGER_MODULE_DPE, ERROR, "unexpected error, numRecord = %d\n", numRecord);
                     if (it != m_imsiLoginTimeMap.end()) {
@@ -79,6 +82,34 @@ void DpEngine::handleUserRequest(DpRequest* pRequest)
                 }
             }
 
+            break;
+        }
+
+        case DP_REQ_GET_UE_LOGIN_INFO_BY_DATE:
+        {
+            int numRecord = 0;
+            DpGetUeLoginInfoReq* pGetLoginInfoReq = (DpGetUeLoginInfoReq*)&pRequest->u.getLoginInfoReq;
+
+            // clear map
+            map<string, vector<string> >::iterator it = m_imsiLoginTimeMap.begin();
+            while (it != m_imsiLoginTimeMap.end()) {
+                LOG_MSG(LOGGER_MODULE_DPE, WARNING, "imsi = %s exists in m_imsiLoginTimeMap\n", (it->first).c_str());
+                (it->second).clear();
+                m_imsiLoginTimeMap.erase(it++);
+            }
+
+            DbQueryLoginInfoByDate(&m_loginDbConn, this, pGetLoginInfoReq->beginDate, 
+                pGetLoginInfoReq->endDate, DpEngine::queryLoginInfoByImsiCallback, &numRecord);
+
+            LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Num IMSI: %d\n", m_imsiLoginTimeMap.size());
+
+            if (numRecord > 0) {
+                // process query result
+                for (it = m_imsiLoginTimeMap.begin(); it != m_imsiLoginTimeMap.end(); it++) {
+                    analysisLoginBehavior(it->first, it->second);
+                    // TODO clear vector?
+                }
+            }
             break;
         }
 
@@ -95,7 +126,9 @@ void DpEngine::analysisLoginBehavior(string imsi, vector<string> loginTime)
 {
     vector<string>::iterator firstIt = loginTime.begin();
     vector<string>::iterator lastIt = loginTime.end() - 1;
-    LOG_MSG(LOGGER_MODULE_DPE, INFO, "[%s]: %s ~ %s\n", imsi.c_str(), (*firstIt).c_str(), (*lastIt).c_str());
+    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "[%s]: %s ~ %s\n", imsi.c_str(), (*firstIt).c_str(), (*lastIt).c_str());
+
+    DbInsertUserLoginBehaviour(&m_userDbConn, imsi.c_str(), (*firstIt).c_str(), (*lastIt).c_str(), loginTime.size());
 }
 
 // -------------------------------

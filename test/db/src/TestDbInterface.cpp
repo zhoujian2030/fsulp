@@ -132,6 +132,37 @@ TEST_F(TestDbInterface, DbQueryLoginInfoByImsiAndDate)
     
     ASSERT_EQ(49, numQueryResult);
 
+    DbCloseConnection(&dbConn);
+}
+
+void TestQueryLoginInfoByDateCallback(void* param, unsigned int id, const char* imsi, unsigned int mTmsi, const char* timestamp)
+{
+    // printf("id = %05d, imsi = %s, mTmsi = %d, timestamp = %s\n", id, imsi, mTmsi, timestamp);
+    ASSERT_TRUE(param != 0);
+    ASSERT_TRUE(imsi != 0);
+    ASSERT_EQ(0, (int)mTmsi);
+    ASSERT_TRUE(timestamp != 0);
+    ASSERT_TRUE(memcmp((char*)param, "Test DbQueryLoginInfoByDate", strlen("Test DbQueryLoginInfoByDate")) == 0);
+}
+
+// -------------------------------
+TEST_F(TestDbInterface, DbQueryLoginInfoByteDate)
+{
+    string dbName("/tmp/dbtest.db");
+    
+    system(("rm -rf " + dbName).c_str());
+    system("cp /home/zj/nb-ulp/test/db/resource/dbtest.db /tmp");
+
+    DbConnection dbConn;
+    ASSERT_EQ(DB_SUCCESS, DbGetConnection(&dbConn, dbName.c_str()));
+    ASSERT_TRUE(dbConn.sqlite != 0);
+
+    int numQueryResult = 0;
+    ASSERT_EQ(DB_SUCCESS, 
+        DbQueryLoginInfoByDate(&dbConn, (void*)("Test DbQueryLoginInfoByDate"), "2018-06-30 00:00:00", 
+            "2018-06-30 23:59:59", TestQueryLoginInfoByDateCallback, &numQueryResult));
+    
+    ASSERT_EQ(2507, numQueryResult);
 
     DbCloseConnection(&dbConn);
 }

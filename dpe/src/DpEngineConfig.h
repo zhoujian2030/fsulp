@@ -21,7 +21,7 @@ namespace dpe {
         void parseJsonConfig(std::string configFileName);
 
         std::string m_mobileIdDbName;
-        std::string m_userInfoDbname;  
+        std::string m_userDbname;  
         std::string m_localIp;
         unsigned short m_localUdpServerPort;    
     };

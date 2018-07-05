@@ -48,20 +48,36 @@ void DbInit(DbConfig* pDbConfig);
 
 int  DbGetConnection(DbConnection* pDbConn, const char* dbName);
 void DbCloseConnection(DbConnection* pDbConn);
-int  DbInsertLoginImsi(DbConnection* pDbConn, const char* imsi);
-int  DbInsertMTmsi(DbConnection* pDbConn, unsigned int mTmsi);
-int  DbInsertImsiAndMTmsi(DbConnection* pDbConn, const char* imsi, unsigned int mTmsi);
+
+// API for handling login_info table
+int DbInsertLoginImsi(DbConnection* pDbConn, const char* imsi);
+int DbInsertMTmsi(DbConnection* pDbConn, unsigned int mTmsi);
+int DbInsertImsiAndMTmsi(DbConnection* pDbConn, const char* imsi, unsigned int mTmsi);
 
 int DbSelectLoginCountByImsi(DbConnection* pDbConn, const char* imsi);
 int DbQueryLoginInfoByImsiAndDate(
     DbConnection* pDbConn, 
     void* param,
     const char* imsi, 
-    const char* startDate, 
+    const char* beginDate, 
+    const char* endDate, 
+    QueryLoginInfoCallback callbackFunc,
+    int* pResultSetCount);
+int DbQueryLoginInfoByDate(
+    DbConnection* pDbConn, 
+    void* param,
+    const char* beginDate, 
     const char* endDate, 
     QueryLoginInfoCallback callbackFunc,
     int* pResultSetCount);
 
+//
+int DbInsertUserLoginBehaviour(
+    DbConnection* pDbConn, 
+    const char* imsi, 
+    const char* firstTime,
+    const char* lastTime,
+    unsigned int loginCount);
 
 #ifdef __cplusplus
 }
