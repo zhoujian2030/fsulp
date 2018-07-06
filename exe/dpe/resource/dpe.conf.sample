@@ -1,11 +1,15 @@
 {
     "MobileIdDBName"        : "/home/zj/nb-ulp/exe/dpe/resource/eq5_mobile_id.db",
 
-    "UserDBName"            : "/tmp/eq5_user.db",
+    "UserDBName"            : "/home/zj/nb-ulp/exe/dpe/resource/eq5_user.db",
 
-    "LocalIp"               : "192.168.64.155",
+    "ImsiServerIp"          : "192.168.64.155",
 
-    "LocalUdpServerPort"    : 3737,
+    "ImsiServerPort"        : 3737,
+
+    "EngineServerIp"        : "192.168.64.155",
+
+    "EngineServerPort"      : 6070,
 
     "LoggerConfig" : 
     {

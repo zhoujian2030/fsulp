@@ -16,9 +16,11 @@ using namespace dpe;
 // -------------------------------
 DpEngineConfig::DpEngineConfig() 
 : m_mobileIdDbName("/tmp/eq5_mobile_id.db"),
-  m_userDbname("/tmp/eq5_user_info.db"),
-  m_localIp("127.0.0.1"),
-  m_localUdpServerPort(3737)
+  m_userDbname("/tmp/eq5_user.db"),
+  m_imsiServerIp("127.0.0.1"),
+  m_imsiServerPort(3737),
+  m_engineServerIp("127.0.0.1"),
+  m_engineServerPort(6070)
 {
     
 }
@@ -78,28 +80,48 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LocalIp");
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ImsiServerIp");
     if (jsonItem != 0) {
         if (jsonItem->type == cJSON_String) {      
-            m_localIp = string(jsonItem->valuestring);     
+            m_imsiServerIp = string(jsonItem->valuestring);     
         } else {
-            printf("Invalid config for LocalIp\n");
+            printf("Invalid config for ImsiServerIp\n");
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LocalUdpServerPort");
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ImsiServerPort");
     if (jsonItem != 0) {
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
-            m_localUdpServerPort = jsonItem->valueint;
+            m_imsiServerPort = jsonItem->valueint;
         } else {
-            printf("Invalid config for LocalUdpServerPort\n");
+            printf("Invalid config for ImsiServerPort\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "EngineServerIp");
+    if (jsonItem != 0) {
+        if (jsonItem->type == cJSON_String) {      
+            m_engineServerIp = string(jsonItem->valuestring);     
+        } else {
+            printf("Invalid config for EngineServerIp\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "EngineServerPort");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            m_engineServerPort = jsonItem->valueint;
+        } else {
+            printf("Invalid config for EngineServerPort\n");
         }
     }
 
     printf("m_mobileIdDbName:   %s\n", m_mobileIdDbName.c_str());
     printf("m_userDbname:       %s\n", m_userDbname.c_str());
-    printf("LocalIp:            %s\n", m_localIp.c_str());
-    printf("LocalUdpServerPort: %d\n", m_localUdpServerPort);
+    printf("ImsiServerIp:       %s\n", m_imsiServerIp.c_str());
+    printf("ImsiServerPort:     %d\n", m_imsiServerPort);
+    printf("EngineServerIp:     %s\n", m_engineServerIp.c_str());
+    printf("EngineServerPort:   %d\n", m_engineServerPort);
 
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
     if (jsonItem != 0) {

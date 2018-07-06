@@ -132,7 +132,7 @@ void SocketMakeBlocking(int fd)
 int SocketUdpRecv(int fd, char* pBuffer, int bufferSize, struct sockaddr_in* pRemoteAddr)
 {
     if (pBuffer == 0 || pRemoteAddr == 0 || bufferSize == 0 || fd <= 0) {
-        LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid parameters\n");
+        LOG_MSG(LOGGER_MODULE_CM, ERROR, "invalid parameters, fd = %d\n", fd);
         return -1;
     }
 

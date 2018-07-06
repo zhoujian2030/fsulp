@@ -19,6 +19,8 @@ DpEngine::DpEngine(DpEngineConfig* pDpeConfig)
 {
     DbGetConnection(&m_loginDbConn, m_pConfig->m_mobileIdDbName.c_str());
     DbGetConnection(&m_userDbConn, m_pConfig->m_userDbname.c_str());    
+
+    m_socket = SocketUdpInitAndBind(m_pConfig->m_engineServerPort, (char*)m_pConfig->m_engineServerIp.c_str());
 }
 
 // -------------------------------
@@ -65,7 +67,7 @@ void DpEngine::handleUserRequest(DpRequest* pRequest)
 
             DbQueryLoginInfoByImsiAndDate(&m_loginDbConn, this, pGetLoginInfoReq->imsi, 
                 pGetLoginInfoReq->beginDate, pGetLoginInfoReq->endDate,
-                DpEngine::queryLoginInfoByImsiCallback, &numRecord);
+                DpEngine::queryLoginInfoCallback, &numRecord);
             if (numRecord > 0) {
                 it = m_imsiLoginTimeMap.find(imsi);
                 if (it != m_imsiLoginTimeMap.end() && (it->second).size() == numRecord) {
@@ -99,7 +101,7 @@ void DpEngine::handleUserRequest(DpRequest* pRequest)
             }
 
             DbQueryLoginInfoByDate(&m_loginDbConn, this, pGetLoginInfoReq->beginDate, 
-                pGetLoginInfoReq->endDate, DpEngine::queryLoginInfoByImsiCallback, &numRecord);
+                pGetLoginInfoReq->endDate, DpEngine::queryLoginInfoCallback, &numRecord);
 
             LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Num IMSI: %d\n", m_imsiLoginTimeMap.size());
 
@@ -132,7 +134,7 @@ void DpEngine::analysisLoginBehavior(string imsi, vector<string> loginTime)
 }
 
 // -------------------------------
-void DpEngine::preHandleQueryLoginInfoByImsi(unsigned int id, const char* imsi, unsigned int mTmsi, const char* timestamp)
+void DpEngine::preHandleQueryLoginInfo(unsigned int id, const char* imsi, unsigned int mTmsi, const char* timestamp)
 {
     if (imsi == 0 || timestamp == 0) {
         LOG_MSG(LOGGER_MODULE_DPE, ERROR, "imsi = %p, timestamp = %p\n", imsi, timestamp);
@@ -153,7 +155,7 @@ void DpEngine::preHandleQueryLoginInfoByImsi(unsigned int id, const char* imsi, 
 }
 
 // -------------------------------
-void DpEngine::queryLoginInfoByImsiCallback(
+void DpEngine::queryLoginInfoCallback(
     void* param, 
     unsigned int id, 
     const char* imsi, 
@@ -161,7 +163,6 @@ void DpEngine::queryLoginInfoByImsiCallback(
     const char* timestamp) 
 {
     if (param != 0) {
-        // DpEngine* pDpEngine = (DpEngine*)param;
-        ((DpEngine*)param)->preHandleQueryLoginInfoByImsi(id, imsi, mTmsi, timestamp);
+        ((DpEngine*)param)->preHandleQueryLoginInfo(id, imsi, mTmsi, timestamp);
     }
 }

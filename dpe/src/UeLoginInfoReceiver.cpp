@@ -17,7 +17,7 @@ using namespace dpe;
 UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDpeConfig) 
 : Thread("UE Info Receiver"), m_pConfig(pDpeConfig), m_udpSocketFd(-1)
 {
-    m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_localUdpServerPort, (char*)m_pConfig->m_localIp.c_str());
+    m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_imsiServerPort, (char*)m_pConfig->m_imsiServerIp.c_str());
     DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());
 }
 
@@ -40,7 +40,7 @@ unsigned long UeLoginInfoReceiver::run()
 
     while (true) {
         byteRecvd = SocketUdpRecv(m_udpSocketFd, recvBuffer, MAX_UDP_RECV_BUFFER_LENGTH, &remoteAddr);
-        if (byteRecvd >= MIN_UE_LOGIN_INFO_MSG_LENGTH) {
+        if (byteRecvd >= (int)MIN_UE_LOGIN_INFO_MSG_LENGTH) {
             if (pUeLoginInfo->msgType == MSG_ULP_UE_IDENTITY_IND) {
                 // LOG_MSG(LOGGER_MODULE_DPE, INFO, "Recv UE login info, byteRecvd = %d\n", byteRecvd);
                 saveUeIdentity(&pUeLoginInfo->u.ueIdentityInd);
@@ -50,7 +50,9 @@ unsigned long UeLoginInfoReceiver::run()
             }
         } else {
             LOG_MSG(LOGGER_MODULE_DPE, ERROR, "invalid data, byteRecvd = %d\n", byteRecvd);
-            LOG_MEM(ERROR, recvBuffer, byteRecvd);
+            if (byteRecvd > 0) {
+                LOG_MEM(ERROR, recvBuffer, byteRecvd);
+            }
         }
     }
 

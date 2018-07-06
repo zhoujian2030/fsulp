@@ -10,6 +10,7 @@
 
 #include "Thread.h"
 #include "dbInterface.h"
+#include "socket.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -59,9 +60,9 @@ namespace dpe {
     private:
         void analysisLoginBehavior(std::string imsi, std::vector<std::string> loginTime);
 
-        void preHandleQueryLoginInfoByImsi(unsigned int id, const char* imsi, unsigned int mTmsi, const char* timestamp);
+        void preHandleQueryLoginInfo(unsigned int id, const char* imsi, unsigned int mTmsi, const char* timestamp);
 
-        static void queryLoginInfoByImsiCallback(
+        static void queryLoginInfoCallback(
             void* param, 
             unsigned int id, 
             const char* imsi, 
@@ -71,6 +72,8 @@ namespace dpe {
         DpEngineConfig* m_pConfig;
         DbConnection m_loginDbConn;
         DbConnection m_userDbConn;
+
+        int m_socket;
 
         std::map<std::string, std::vector<std::string> > m_imsiLoginTimeMap;
     };
