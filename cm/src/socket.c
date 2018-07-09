@@ -25,7 +25,7 @@ int SocketClose(int fd)
 }
 
 // ------------------------------------------------
-void SocketGetSockaddrByIpAndPort(struct sockaddr_in* sockaddr, char* ip, unsigned short port) {
+void SocketGetSockaddrByIpAndPort(struct sockaddr_in* sockaddr, const char* ip, unsigned short port) {
     if (sockaddr == 0 || ip == 0) {
         return;
     }

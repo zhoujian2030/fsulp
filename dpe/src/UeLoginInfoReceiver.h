@@ -12,6 +12,8 @@
 #include "socket.h"
 #include "dbInterface.h"
 #include "Thread.h"
+#include <map>
+#include <vector>
 
 namespace dpe {
 
@@ -19,7 +21,7 @@ namespace dpe {
 
     typedef LteUlpDataInd UeLoginInfo;
     #define MAX_UDP_RECV_BUFFER_LENGTH      MAX_UDP_OAM_DATA_BUFFER 
-    #define MIN_UE_LOGIN_INFO_MSG_LENGTH    (LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH + sizeof(UeIdentity))
+    #define MIN_UE_ULP_IND_MSG_LENGTH       (LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH)
 
     class UeLoginInfoReceiver : public Thread {
     public:
@@ -34,7 +36,12 @@ namespace dpe {
         int m_udpSocketFd;
         DbConnection m_dbConn;
 
+        unsigned int m_currentTargetId;
+        std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
+        std::vector<UeEstablishInfo> m_targetVect;
+
         void saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg);
+        void processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg);
     };
 
 }

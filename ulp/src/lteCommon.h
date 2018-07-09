@@ -27,8 +27,8 @@ typedef signed int      SInt32;
 typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;
-typedef unsigned long long   UInt64;
-typedef unsigned long    ULong32;
+typedef unsigned long   UInt64;
+typedef unsigned long   ULong32;
 typedef unsigned char   UChar8;
 typedef signed char   	SInt8;
 typedef signed char   	Int8;
@@ -67,12 +67,14 @@ extern void GetSfnAndSf(UInt16* pSfn, UInt8* pSf);
 
 typedef struct  {
     unsigned char rbNum;
+    short ta;
     int prbPower;
 } UlReportInfo;
 
+#define MAX_RLC_SEGMENTS_NUM    10
 typedef struct {
     unsigned char count;
-    UlReportInfo  ulRptInfo[10];
+    UlReportInfo  ulRptInfo[MAX_RLC_SEGMENTS_NUM];
 } UlReportInfoList;
 
 #ifdef __cplusplus

@@ -14,9 +14,8 @@
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
-// #include "socket.h"
-// #include "lteConfig.h"
 #include "sync.h"
+#include "target.h"
 
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gUlRRcMsgName, ".ulpdata");
@@ -169,6 +168,9 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                         }
                     }
 #endif
+                    // if (0xff != nasMsgType) {
+                    //    TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+                    // }
                 } else {
                     LOG_WARN(ULP_LOGGER_NAME, "dedicated_info_type = %d, rnti = %d\n", pUlInfoTransMsg->dedicated_info_type, rnti);
                 }
@@ -195,6 +197,10 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                     }
                 }
 #endif
+                if (0xff != nasMsgType) {
+                    TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+                }
+
             } else {
                 LOG_ERROR(ULP_LOGGER_NAME, "Asn1ParseRrcSetupComplMsg error, rnti = %d\n", rnti);
             }  

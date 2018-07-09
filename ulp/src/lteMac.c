@@ -199,6 +199,7 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
                 if (pUeCtx != 0) {
                     pUeCtx->rbNum = pUlSchPduHead->rbNum;
                     pUeCtx->prbPower = pUlSchPduHead->prbPower;
+                    pUeCtx->ta = pUlSchPduHead->TA;
                 }
 
 				ulSchPdu.rnti = pUlSchPduHead->RNTI;

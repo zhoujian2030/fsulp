@@ -73,6 +73,7 @@ typedef struct {
     unsigned short rnti;
     unsigned char rbNum;
     int prbPower;
+    short ta;
 } MacUeContext;
 
 void InitMacLayer();

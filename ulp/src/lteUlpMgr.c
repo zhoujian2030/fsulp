@@ -16,7 +16,7 @@
 #include "lteRrc.h"
 #include "asn1.h"
 #include "lteUlpWorker.h"
-
+#include "target.h"
 
 // -------------------------
 void InitUlpLayer(unsigned char startUlpWorkerFlag, unsigned char startResCleanerFlag)
@@ -28,6 +28,7 @@ void InitUlpLayer(unsigned char startUlpWorkerFlag, unsigned char startResCleane
     InitMacLayer();
     InitRlcLayer();
     InitRrcLayer();
+    TgtInit();
     InitUlpWorker(startUlpWorkerFlag);
     InitResCleaner(startResCleanerFlag);
 }

@@ -23,6 +23,7 @@
 #else
 #include <sys/time.h>
 #endif
+#include "target.h"
 
 extern List gRrcUeContextList;
 extern List gReadyRrcUeContextList;
@@ -275,6 +276,9 @@ void UlpRecvAndHandleOamData()
 #else
     // TODO in DSP
 #endif
+
+    // handle UE estabilsh
+    TgtSendUeEstablishInd(gOamUdpFd, &gDpeAddress);
 
     // handle UE identity
     int ueIndex = 0;

@@ -31,10 +31,10 @@ typedef struct {
 } DbConnection;
 
 #define MAX_DB_TIMESTAMP_LENGTH    (sizeof("2018-01-01 00:00:00") + 1)
-typedef struct {
-    char imsi[16];
-    char timestamp[MAX_DB_TIMESTAMP_LENGTH];
-} UeLoginInfo;
+// typedef struct {
+//     char imsi[16];
+//     char timestamp[MAX_DB_TIMESTAMP_LENGTH];
+// } UeLoginInfo;
 
 typedef void (*QueryLoginInfoCallback)(
     void* param,

@@ -859,8 +859,10 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                 pPrevBuffer->pData = pTmpBuffer;
 
                 if (pMacUeCtx) {
-                    if (pRxAmEntity->ulRptInfoList.count < 10) {
+                    if (pRxAmEntity->ulRptInfoList.count < MAX_RLC_SEGMENTS_NUM) {
                         pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].prbPower = pMacUeCtx->prbPower;
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].ta = pMacUeCtx->ta;
                     }
                 }
 
@@ -889,8 +891,10 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                     pRawSdu->sn = sn;
 
                     if (pMacUeCtx) {
-                        if (pRxAmEntity->ulRptInfoList.count < 10) {
+                        if (pRxAmEntity->ulRptInfoList.count < MAX_RLC_SEGMENTS_NUM) {
                             pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].prbPower = pMacUeCtx->prbPower;
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].ta = pMacUeCtx->ta;
                         }
                     }
                 } else {
@@ -911,6 +915,8 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
                 if (pMacUeCtx) {
                     pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                    pRxAmEntity->ulRptInfoList.ulRptInfo[0].prbPower = pMacUeCtx->prbPower;
+                    pRxAmEntity->ulRptInfoList.ulRptInfo[0].ta = pMacUeCtx->ta;
                     pRxAmEntity->ulRptInfoList.count = 1;
                 }
 
@@ -962,6 +968,8 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
         {
             if (pMacUeCtx) {
                 pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].prbPower = pMacUeCtx->prbPower;
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].ta = pMacUeCtx->ta;
                 pRxAmEntity->ulRptInfoList.count = 1;
             }
             RlcDeliverAmSduToPdcp(pRxAmEntity, &pAmdDfe->buffer);
@@ -980,6 +988,8 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 
             if (pMacUeCtx) {
                 pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].prbPower = pMacUeCtx->prbPower;
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].ta = pMacUeCtx->ta;
                 pRxAmEntity->ulRptInfoList.count = 1;
             }
             break;

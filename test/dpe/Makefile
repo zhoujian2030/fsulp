@@ -10,7 +10,7 @@ BINDIR = bin
 # Libraries
 # gtest include
 INCGTEST = -I$(PROJBASE)/test/lib/gtest/include
-INC += $(INCGTEST) -I$(PROJBASE)/cm/include -I$(PROJBASE)/cm/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/db/inc
+INC += $(INCGTEST) -I$(PROJBASE)/cm/include -I$(PROJBASE)/cm/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/db/inc -I$(PROJBASE)/ulp/inc
 # MUST place libnet.a ahead of libcm.a because libnet depends on libcm.a
 ifeq ($(PLATFORM), x86)
 LIBS = $(PROJBASE)/dpe/lib/libdpe.a $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a

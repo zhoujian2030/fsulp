@@ -14,9 +14,10 @@ extern "C" {
 
 #include "lteCommon.h"
 
-#define LTE_ULP_DATA_IND_HEAD_LEHGTH    4
-#define LTE_UE_ID_IND_MSG_HEAD_LEHGTH   4
-#define LTE_OAM_DATA_REQ_HEAD_LEHGTH    4
+#define LTE_ULP_DATA_IND_HEAD_LEHGTH        4
+#define LTE_UE_ID_IND_MSG_HEAD_LEHGTH       4
+#define LTE_OAM_DATA_REQ_HEAD_LEHGTH        4
+#define LTE_UE_ESTAB_IND_MSG_HEAD_LEHGTH    4
 
 #define MAX_NUM_UE_INFO_REPORT  32
 
@@ -34,6 +35,18 @@ typedef struct {
 } UeIdentity;
 
 typedef struct {
+    UInt64 timestamp;
+    Int32 prbPower;
+    UInt16 rnti;
+    Int16 ta;
+} UeEstablishInfo;
+
+typedef struct {
+    UInt32 count;
+    UeEstablishInfo ueEstabInfoArray[MAX_NUM_UE_INFO_REPORT];
+} UeEstablishIndMsg;
+
+typedef struct {
     UInt32 count;
     UeIdentity ueIdentityArray[MAX_NUM_UE_INFO_REPORT];
 } UeIdentityIndMsg;
@@ -43,17 +56,19 @@ typedef struct {
 } HeartbeatRespMsg;
 
 typedef enum {
-    MSG_ULP_HEARTBEAT_REQ   = 0x80,
-    MSG_ULP_HEARTBEAT_RESP  = 0x81,
-    MSG_ULP_UE_IDENTITY_IND = 0x82
+    MSG_ULP_HEARTBEAT_REQ       = 0x80,
+    MSG_ULP_HEARTBEAT_RESP      = 0x81,
+    MSG_ULP_UE_IDENTITY_IND     = 0x82,
+    MSG_ULP_UE_ESTABLISH_IND    = 0x83
 } E_UlpOamIndMsgType;
 
 typedef struct {
     unsigned short msgType;
     unsigned short length;
     union {
-        HeartbeatRespMsg heartbeatResp;
-        UeIdentityIndMsg ueIdentityInd;
+        HeartbeatRespMsg    heartbeatResp;
+        UeIdentityIndMsg    ueIdentityInd;
+        UeEstablishIndMsg   ueEstablishInd;
     } u;
 } LteUlpDataInd;
 

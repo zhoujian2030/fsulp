@@ -20,7 +20,7 @@ extern "C" {
 
 
 int SocketClose(int fd);
-void SocketGetSockaddrByIpAndPort(struct sockaddr_in* sockaddr, char* ip, unsigned short port);
+void SocketGetSockaddrByIpAndPort(struct sockaddr_in* sockaddr, const char* ip, unsigned short port);
 int SocketBind(unsigned short port, char* localIp);
 
 // Init IPV4 UDP socket
