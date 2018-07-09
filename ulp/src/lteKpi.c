@@ -78,7 +78,7 @@ void* LteKpiEntryFunc(void* p)
 // ---------------------------------
 static void ReportKpiToFile()
 {
-    char kpiData[8192];
+    char kpiData[10240];
     int sumLength = 0;
     int varLength = 0;
 
@@ -140,6 +140,28 @@ static void ReportKpiToFile()
 
 #ifdef HEARTBEAT_DEBUG
     varLength = sprintf(kpiData + sumLength, "Heartbeat       %10d  %8d\n", gLteKpi.heartbeatResp, gLteKpi.heartbeatResp - prevLteKpi.heartbeatResp);
+    sumLength += varLength;
+#endif
+
+#ifdef PHY_DEBUG
+    unsigned int i;
+    varLength = sprintf(kpiData + sumLength, "----------------------------\n");
+    sumLength += varLength;
+    for (i=0; i<10; i++) {
+        if (gLteKpi.rrcSetupComplRbNum[i] > 0) {
+            varLength = sprintf(kpiData + sumLength, "RRC Setup Compl RB %02d  %5d  %3d\n", i+1, 
+                gLteKpi.rrcSetupComplRbNum[i], gLteKpi.rrcSetupComplRbNum[i] - prevLteKpi.rrcSetupComplRbNum[i]);
+            sumLength += varLength;
+        }
+    }
+    for (i=0; i<10; i++) {
+        if (gLteKpi.idRespRbNum[i] > 0) {
+            varLength = sprintf(kpiData + sumLength, "Identity Resp   RB %02d  %5d  %3d\n", i+1, 
+                gLteKpi.idRespRbNum[i], gLteKpi.idRespRbNum[i] - prevLteKpi.idRespRbNum[i]);
+            sumLength += varLength;
+        }
+    }
+    varLength = sprintf(kpiData + sumLength, "----------------------------\n");
     sumLength += varLength;
 #endif
 

@@ -14,6 +14,8 @@
 #include "lteKpi.h"
 #include "lteCommon.h"
 
+List gMacUeContext;
+
 void MacProcessUlSchPdu(UlSchPdu* pPdu);
 void MacProcessMacLcId(UInt8 startPaddingFlag,
     UInt8 extnFlag,
@@ -83,7 +85,51 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
 // ---------------------------
 void InitMacLayer()
 {
+    ListInit(&gMacUeContext, 1);
     // TODO
+}
+
+// ---------------------------
+MacUeContext* MacCreateUeContext(unsigned short rnti)
+{
+    MacUeContext* pUeCtx = (MacUeContext*)MemAlloc(sizeof(MacUeContext));
+    if (pUeCtx == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "fail to allocate memory for rrc ue context\n");
+        return 0;
+    }
+    pUeCtx->rnti = rnti;
+    pUeCtx->rbNum = 0;
+    pUeCtx->prbPower = 0;
+
+    ListPushNode(&gMacUeContext, &pUeCtx->node);
+
+    return pUeCtx;
+}
+
+// ---------------------------
+MacUeContext* MacGetUeContext(unsigned short rnti)
+{
+    MacUeContext* pUeCtx = (MacUeContext*)ListGetFirstNode(&gMacUeContext);
+    while (pUeCtx != 0) {
+        if (pUeCtx->rnti == rnti) {
+            return pUeCtx;
+        } else {
+            pUeCtx = (MacUeContext*)ListGetNextNode(&pUeCtx->node);
+        }
+    }
+
+    LOG_TRACE(ULP_LOGGER_NAME, "UE context NOT exists, rnti = %d\n", rnti);
+    return 0;       
+}
+
+// ---------------------------
+void MacDeleteUeContext(MacUeContext* pMacUeCtx)
+{
+    if (pMacUeCtx != 0) {
+        LOG_DBG(ULP_LOGGER_NAME, "pMacUeCtx = %p, rnti = %d\n", pMacUeCtx, pMacUeCtx->rnti);
+        ListDeleteNode(&gMacUeContext, &pMacUeCtx->node);
+        MemFree(pMacUeCtx);
+    }        
 }
 
 // ---------------------------
@@ -146,11 +192,23 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
                 LOG_TRACE(ULP_LOGGER_NAME, "sfn = %d, sf = %d, numOfPDUs = %d, numPdu = %d\n", pUlIndHead->sfn, pUlIndHead->sf, pUlIndHead->numOfPDUs, numPdu);
                 gLteKpi.crcCorrect++;
 
+                MacUeContext* pUeCtx = MacGetUeContext(pUlSchPduHead->RNTI);
+                if (pUeCtx == 0) {
+                    pUeCtx = MacCreateUeContext(pUlSchPduHead->RNTI);
+                }
+                if (pUeCtx != 0) {
+                    pUeCtx->rbNum = pUlSchPduHead->rbNum;
+                    pUeCtx->prbPower = pUlSchPduHead->prbPower;
+                }
+
 				ulSchPdu.rnti = pUlSchPduHead->RNTI;
 				ulSchPdu.length = (pUlSchPduHead->bitLen + 7) >> 3;
 				ulSchPdu.buffer = pBuffer + tempLen;
 
 				MacProcessUlSchPdu(&ulSchPdu);
+
+                // for test
+                MacDeleteUeContext(pUeCtx);
 			} else {
 		    	//LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
                 gLteKpi.crcError++;

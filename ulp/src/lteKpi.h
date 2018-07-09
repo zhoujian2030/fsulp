@@ -33,8 +33,10 @@ typedef struct
     unsigned int macInd;
     unsigned int rlcInd;
     unsigned int pdcpInd;
-#ifdef HEARTBEAT_DEBUG
+#if (defined HEARTBEAT_DEBUG) || (defined PHY_DEBUG)
     unsigned int heartbeatResp;
+    unsigned int rrcSetupComplRbNum[10];
+    unsigned int idRespRbNum[10];
 #endif
 } LteKpi;
 

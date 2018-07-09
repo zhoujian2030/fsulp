@@ -44,7 +44,7 @@ UInt8 gUlRRcMsgName[17][50] = {
     "Spare1",
     "N Items"};
 
-void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
+void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList);
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff);
 RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi);
@@ -126,7 +126,7 @@ void RrcUpdateUeContextTime(RrcUeContext* pRrcUeCtx, unsigned int value)
 }
 
 // --------------------------------
-void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
+void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size, UlReportInfoList* pUlRptInfoList)
 {
     if ((pData == 0) || (size == 0)) {
         LOG_ERROR(ULP_LOGGER_NAME, "pData = %p, rnti = %d, lcId = %d, data size = %d\n", pData, rnti, lcId, size);
@@ -137,14 +137,14 @@ void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* p
     LOG_BUFFER(pData, size);
 
     if (lcId > 0) {
-        RrcParseUlDcchMsg(rnti, pData, size);
+        RrcParseUlDcchMsg(rnti, pData, size, pUlRptInfoList);
     } else {
         RrcParseUlCcchMsg(rnti, pData, size);
     }
 }
 
 // --------------------------------
-void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
+void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "rnti = %d, data size = %d\n", rnti, size);
 
@@ -159,6 +159,16 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
             if (ASN1_SUCCES == Asn1ParseUlInfoTransMsg(pData, size, pUlInfoTransMsg)) {
                 if (pUlInfoTransMsg->dedicated_info_type == LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS) {
                     nasMsgType = RrcParseNasMsg(rnti, &pUlInfoTransMsg->dedicated_info);
+#ifdef PHY_DEBUG
+                    if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
+                        unsigned int i; 
+                        for (i=0; i<pUlRptInfoList->count; i++) {
+                            if (pUlRptInfoList->ulRptInfo[i].rbNum <= 10) {
+                                gLteKpi.idRespRbNum[pUlRptInfoList->ulRptInfo[i].rbNum - 1]++;
+                            }
+                        }
+                    }
+#endif
                 } else {
                     LOG_WARN(ULP_LOGGER_NAME, "dedicated_info_type = %d, rnti = %d\n", pUlInfoTransMsg->dedicated_info_type, rnti);
                 }
@@ -177,6 +187,14 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
                 LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: RRC Conn Setup Compl (%d)\n", rnti);
                 gLteKpi.rrcSetupCompl++;
                 nasMsgType = RrcParseNasMsg(rnti, &pRrcSetupComplMsg->dedicated_info_nas);
+#ifdef PHY_DEBUG
+                unsigned int i;
+                for (i=0; i<pUlRptInfoList->count; i++) {
+                    if (pUlRptInfoList->ulRptInfo[i].rbNum <= 10) {
+                        gLteKpi.rrcSetupComplRbNum[pUlRptInfoList->ulRptInfo[i].rbNum - 1]++;
+                    }
+                }
+#endif
             } else {
                 LOG_ERROR(ULP_LOGGER_NAME, "Asn1ParseRrcSetupComplMsg error, rnti = %d\n", rnti);
             }  

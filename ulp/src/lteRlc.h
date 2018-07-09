@@ -14,6 +14,7 @@ extern "C" {
 
 #include "list.h"
 #include "sync.h"
+#include "lteCommon.h"
 
 #define RLC_MAX_PDU_LENGTH 18844
 
@@ -111,6 +112,8 @@ typedef struct {
     unsigned short rnti;
     unsigned char lcId;
     Ring amdPduRing;
+
+    UlReportInfoList ulRptInfoList;
 
     RlcAmRawSdu rxRawSdu;
 } RxAMEntity;

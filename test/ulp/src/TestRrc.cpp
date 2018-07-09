@@ -20,8 +20,11 @@
 #include "asn1.h"
 #include "list.h"
 #include "lteLogger.h"
+#include "lteCommon.h"
 
 using namespace std;
+
+extern LteKpi gLteKpi;
 
 extern List gRrcUeContextList;
 extern List gReadyRrcUeContextList;
@@ -54,7 +57,12 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+    ulRptInfoList.count = 2;
+    ulRptInfoList.ulRptInfo[0].rbNum = 1;
+    ulRptInfoList.ulRptInfo[1].rbNum = 4;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -71,6 +79,10 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
     ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
     ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr, 15) == 0);
+#ifdef PHY_DEBUG
+    ASSERT_TRUE(gLteKpi.idRespRbNum[0] == 1);
+    ASSERT_TRUE(gLteKpi.idRespRbNum[3] == 1);
+#endif
     RrcDeleteUeContext(pRrcUeCtx);
     KpiRefresh();
     ASSERT_EQ(RrcGetUeContextCount(), 0);
@@ -139,7 +151,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Detach) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -224,7 +238,12 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+    ulRptInfoList.count = 2;
+    ulRptInfoList.ulRptInfo[0].rbNum = 2;
+    ulRptInfoList.ulRptInfo[1].rbNum = 6;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -241,6 +260,10 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
     ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 1);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsi, 0xd0cc7151);
+#ifdef PHY_DEBUG
+    ASSERT_EQ(1, (int)gLteKpi.rrcSetupComplRbNum[1]);
+    ASSERT_EQ(1, (int)gLteKpi.rrcSetupComplRbNum[5]);
+#endif
     RrcDeleteUeContext(pRrcUeCtx);
     KpiRefresh();
     ASSERT_EQ(RrcGetUeContextCount(), 0);
@@ -331,7 +354,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ExtServReq) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -537,7 +562,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
 
@@ -600,7 +627,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -649,7 +678,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -676,7 +707,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -744,7 +775,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Same_Imsi) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -771,7 +804,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Same_Imsi) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -830,7 +863,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi_Prev_Deleting
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -858,7 +893,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Update_Diff_Imsi_Prev_Deleting
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 2); // 1 rrc ctx, 1 pPdcpDataInd
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -911,7 +946,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Invalid_Rrc_Msg) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -928,7 +965,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Invalid_Rrc_Msg) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1); // 1 pPdcpDataInd
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
@@ -965,7 +1002,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_SMS) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+
+    PdcpUeSrbDataInd(rnti, lcId, pPdcpDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);

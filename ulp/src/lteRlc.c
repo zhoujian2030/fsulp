@@ -14,6 +14,7 @@
 #include "lteIntegrationPoint.h"
 #include "lteKpi.h"
 #include "sync.h"
+#include "lteMac.h"
 #include <string.h>
 
 RxAMEntity* RlcGetRxAmEntity(RlcUeContext* pUeCtx, UInt16 lcId);
@@ -840,6 +841,8 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
     RlcAmBuffer *pCurrBuffer = &(pAmdDfe->buffer);
     UInt8* pTmpBuffer = 0;
 
+    MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
+
     if (isSNEqual(sn, pRawSdu->sn + 1) || isSNEqual(sn, pRawSdu->sn)) {
         switch(pAmdDfe->status) {
             case AM_PDU_MAP_SDU_END:
@@ -855,10 +858,17 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                 pPrevBuffer->size += pCurrBuffer->size;
                 pPrevBuffer->pData = pTmpBuffer;
 
+                if (pMacUeCtx) {
+                    if (pRxAmEntity->ulRptInfoList.count < 10) {
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
+                    }
+                }
+
                 RlcDeliverAmSduToPdcp(pRxAmEntity, pPrevBuffer);
+                pRxAmEntity->ulRptInfoList.count = 0;
 
                 pPrevBuffer->pData = 0;
-                pPrevBuffer->size = 0;
+                pPrevBuffer->size = 0;                
 
                 break;
             }
@@ -877,6 +887,12 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                     pPrevBuffer->size += pCurrBuffer->size;
                     pPrevBuffer->pData = pTmpBuffer;
                     pRawSdu->sn = sn;
+
+                    if (pMacUeCtx) {
+                        if (pRxAmEntity->ulRptInfoList.count < 10) {
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
+                        }
+                    }
                 } else {
                     LOG_WARN(ULP_LOGGER_NAME, "sn is the same with previous sn, might be retransmit segment, drop it, sn = %d, pRawSdu->sn = %d, rnti = %d, status = %d\n",
                         sn, pRawSdu->sn, pRxAmEntity->rnti, pAmdDfe->status);
@@ -893,7 +909,13 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
                 pPrevBuffer->pData = 0;
                 pPrevBuffer->size = 0;
 
+                if (pMacUeCtx) {
+                    pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                    pRxAmEntity->ulRptInfoList.count = 1;
+                }
+
                 RlcDeliverAmSduToPdcp(pRxAmEntity, pCurrBuffer);
+                pRxAmEntity->ulRptInfoList.count = 0;
 
                 break;
             }
@@ -933,10 +955,17 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 {
     LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
 
+    MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
+
     switch(pAmdDfe->status) {
         case AM_PDU_MAP_SDU_FULL:
         {
+            if (pMacUeCtx) {
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                pRxAmEntity->ulRptInfoList.count = 1;
+            }
             RlcDeliverAmSduToPdcp(pRxAmEntity, &pAmdDfe->buffer);
+            pRxAmEntity->ulRptInfoList.count = 0;
             break;
         }
 
@@ -948,6 +977,11 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
             pRawSdu->rawSdu.pData = pAmdDfe->buffer.pData;
             pAmdDfe->buffer.size = 0;
             pAmdDfe->buffer.pData = 0;
+
+            if (pMacUeCtx) {
+                pRxAmEntity->ulRptInfoList.ulRptInfo[0].rbNum = pMacUeCtx->rbNum;
+                pRxAmEntity->ulRptInfoList.count = 1;
+            }
             break;
         }
 
@@ -965,11 +999,11 @@ void RlcDeliverAmSduToPdcp(RxAMEntity* pRxAmEntity, RlcAmBuffer* pAmBuffer)
 {
     LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, lcId = %d, data size = %d\n", pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->size);
 
-    if (!IP_RLC_DATA_IND(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size)) {
+    if (!IP_RLC_DATA_IND(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size, &pRxAmEntity->ulRptInfoList)) {
         return;
     }
     
-    RlcUeDataInd(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size);
+    RlcUeDataInd(pRxAmEntity->rnti, pRxAmEntity->lcId, pAmBuffer->pData, pAmBuffer->size, &pRxAmEntity->ulRptInfoList);
 
     pAmBuffer->pData = 0;
     pAmBuffer->size = 0;

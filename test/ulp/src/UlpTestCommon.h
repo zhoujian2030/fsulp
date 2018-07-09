@@ -15,11 +15,13 @@
 #include "asn1.h"
 #include "lteRlcMacInterface.h"
 #include "lteRrc.h"
+#include "lteCommon.h"
 
 typedef struct {
     unsigned short rnti;
     unsigned short lcId;
     unsigned short size;
+    UlReportInfoList ulRptInfoList;
     unsigned char* pData;
 } RlcPdcpUeDataInd_test;
 

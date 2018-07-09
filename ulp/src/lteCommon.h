@@ -65,6 +65,16 @@ extern void UpdateSystemTime();
 extern void UpdateSfnSf(UInt16 sfn, UInt8 sf);
 extern void GetSfnAndSf(UInt16* pSfn, UInt8* pSf);
 
+typedef struct  {
+    unsigned char rbNum;
+    int prbPower;
+} UlReportInfo;
+
+typedef struct {
+    unsigned char count;
+    UlReportInfo  ulRptInfo[10];
+} UlReportInfoList;
+
 #ifdef __cplusplus
 }
 #endif

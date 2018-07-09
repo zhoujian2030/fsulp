@@ -12,7 +12,9 @@
 extern "C" {
 #endif
 
-extern void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size);
+#include "lteCommon.h"
+
+extern void RlcUeDataInd(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size, UlReportInfoList* pUlRptInfoList);
 
 #ifdef __cplusplus
 }

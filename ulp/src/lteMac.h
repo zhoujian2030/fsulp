@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+#include "list.h"
+
 #define MAX_NUM_CHANNELS      17
 
 #define MAC_UL_CCCH_LCH     0
@@ -66,8 +68,19 @@ typedef struct {
     unsigned int  length; /*Data length for this logical channel id*/
 } DemuxDataBase;
 
+typedef struct {
+    ListNode node;
+    unsigned short rnti;
+    unsigned char rbNum;
+    int prbPower;
+} MacUeContext;
+
 void InitMacLayer();
 void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length); 
+
+MacUeContext* MacCreateUeContext(unsigned short rnti);
+MacUeContext* MacGetUeContext(unsigned short rnti);
+void MacDeleteUeContext(MacUeContext* pMacUeCtx);
 
 #ifdef __cplusplus
 }

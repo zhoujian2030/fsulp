@@ -67,7 +67,7 @@ int IP_Call_Mac_Data_Ind(void* pData)
 }
 
 // -----------------------
-int IP_Call_Rlc_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size)
+int IP_Call_Rlc_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char* pData, unsigned short size, void* ulRptInfoList)
 {
     // printf("IP_Call_Rlc_Data_Ind, rnti = %d, lcId = %d, pData = %p, size = %d\n", rnti, lcId, pData, size);
 
@@ -80,6 +80,9 @@ int IP_Call_Rlc_Data_Ind(unsigned short rnti, unsigned short lcId, unsigned char
     pRlcUeInd->rnti = rnti;
     pRlcUeInd->lcId = lcId;
     pRlcUeInd->size = size;
+    if (ulRptInfoList) {
+        memcpy((void*)&pRlcUeInd->ulRptInfoList, ulRptInfoList, sizeof(UlReportInfoList));
+    }
     pRlcUeInd->pData = new unsigned char[size];
     memcpy(pRlcUeInd->pData, pData, size);
 

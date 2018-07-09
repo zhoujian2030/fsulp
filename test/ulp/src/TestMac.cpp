@@ -86,7 +86,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
 
     // Pre-check status
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); // 10 for mempool + 1 for MAC context
     ASSERT_EQ((int)gLteKpi.mem, 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
@@ -95,7 +95,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
 
     // check before notify
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
     ASSERT_EQ((int)gLteKpi.mem, 2);
     ASSERT_EQ(gMacUeDataInd.numUe, 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 1);
@@ -110,7 +110,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Async_One_BSR_Two_LcId1_One_Padding) {
         0xC8, 0x02, 0x26, 0x80, 0xF2, 0x4E, 0x80, 0x00, 0x00, 0x00, 
         0x00};     
     KpiRefresh();   
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
     ASSERT_EQ((int)gLteKpi.mem, 4); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 2 for pMacUeDataInd->rlcData->rlcDataArray[0]&[1]
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 2);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
@@ -175,7 +175,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
 
     // Pre-check status
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); // 10 for mempool + 1 for MAC ue context list
     ASSERT_EQ((int)gLteKpi.mem, 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
@@ -183,7 +183,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_No_LcId_One_To_Ten) {
 
     // check after
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
     ASSERT_EQ((int)gLteKpi.mem, 1); // 1 for MacUeDataInd_t
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
@@ -232,7 +232,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
 
     // Pre-check status
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); // 10 for mempool + 1 for MAC UE context list
     ASSERT_EQ((int)gLteKpi.mem, 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
@@ -244,7 +244,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_Only_LcId_1_In_Mac_Pdu_IdResp) {
         0xa8, 0x21, 0x40, 0xea, 0xc1, 0x09, 0x20, 0xc4, 0x05, 0x28,
         0x06, 0xea, 0x26, 0x20, 0x00, 0x00, 0x00, 0x00}; 
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
     ASSERT_EQ((int)gLteKpi.mem, 3); // 1 for MacUeDataInd_t, 1 for pMacUeDataInd->rlcData, 1 for pMacUeDataInd->rlcData->rlcDataArray[0]
     ASSERT_EQ((int)gLteKpi.lcIdArray[1], 1);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
@@ -300,7 +300,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_LcId_0) {
 
     // Pre-check status
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); // 10 for mempool
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); // 10 for mempool + 1 for MAC UE context list
     ASSERT_EQ((int)gLteKpi.mem, 0);
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);
 
@@ -308,7 +308,7 @@ TEST_F(TestMac, Interface_PhyUlDataInd_LcId_0) {
 
     // check after
     KpiRefresh();
-    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE); 
+    ASSERT_EQ((int)gLteKpi.semLock, MAX_NUM_POOL_SIZE + 1); 
     ASSERT_EQ((int)gLteKpi.mem, 1); // 1 for MacUeDataInd_t
     ASSERT_EQ((int)gLteKpi.lcIdArray[0], 1); 
     ASSERT_EQ((int)ListCount(&gRecvdPhyDataList), 0);

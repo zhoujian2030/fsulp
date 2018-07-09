@@ -47,7 +47,11 @@ TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_1_Normal) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+    ulRptInfoList.count = 1;
+    ulRptInfoList.ulRptInfo[0].rbNum = 2;
+
+    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gPdcpUeDataInd.numUe, 1);
@@ -89,7 +93,11 @@ TEST_F(TestPdcp, Interface_RlcUeDataInd_SRB_2_Normal) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+    ulRptInfoList.count = 1;
+    ulRptInfoList.ulRptInfo[0].rbNum = 2;
+
+    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gPdcpUeDataInd.numUe, 0);
@@ -122,7 +130,11 @@ TEST_F(TestPdcp, Interface_RlcUeDataInd_DRB_Normal) {
     KpiRefresh();
     ASSERT_EQ((int)gLteKpi.mem, 1);
 
-    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize);
+    UlReportInfoList ulRptInfoList;
+    ulRptInfoList.count = 1;
+    ulRptInfoList.ulRptInfo[0].rbNum = 2;
+
+    RlcUeDataInd(rnti, lcId, pRlcDataInd, dataSize, &ulRptInfoList);
 
     KpiRefresh();
     ASSERT_EQ(gPdcpUeDataInd.numUe, 0);
