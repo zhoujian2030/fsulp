@@ -168,9 +168,13 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                         }
                     }
 #endif
-                    // if (0xff != nasMsgType) {
-                    //    TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
-                    // }
+                    if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
+                        RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
+                        if (pUeCtx != 0 && pUeCtx->rrcSetupComplRecvdFlag == 0) {
+                            LOG_DBG(ULP_LOGGER_NAME, "recv identity resp but miss rrc setup complte, rnti = %d\n", rnti);
+                            TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+                        }
+                    }
                 } else {
                     LOG_WARN(ULP_LOGGER_NAME, "dedicated_info_type = %d, rnti = %d\n", pUlInfoTransMsg->dedicated_info_type, rnti);
                 }
@@ -197,8 +201,22 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                     }
                 }
 #endif
+                // for find target
                 if (0xff != nasMsgType) {
-                    TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+                    RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
+                    if (pUeCtx == 0) {
+                        pUeCtx = RrcCreateUeContext(rnti);
+                        if (pUeCtx != 0) {
+                            pUeCtx->rrcSetupComplRecvdFlag = 1;
+                        } else {
+                            LOG_ERROR(ULP_LOGGER_NAME, "fail to create ue context, rnti = %d\n", rnti);
+                        }
+                    }
+                    if (LIBLTE_MME_SECURITY_HDR_TYPE_SERVICE_REQUEST == nasMsgType ||
+                        NAS_MSG_TYPE_EXTENDED_SERVICE_REQUEST == nasMsgType) 
+                    {                    
+                        TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+                    }
                 }
 
             } else {

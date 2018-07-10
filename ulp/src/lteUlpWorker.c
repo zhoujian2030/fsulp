@@ -318,11 +318,15 @@ void UlpRecvAndHandleOamData()
                     || (pRrcUeCtx->idleCount >= gMaxRrcCtxIdleCount)) 
                 {
                     pRrcUeCtx->deleteFlag = 1;
-                    memcpy((void*)&pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
-                    pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
-                    pUlpDataInd->length += sizeof(UeIdentity);
+
+                    if (pRrcUeCtx->ueIdentity.imsiPresent || pRrcUeCtx->ueIdentity.mTmsiPresent) {
+                        memcpy((void*)&pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex], (void*)&pRrcUeCtx->ueIdentity, sizeof(UeIdentity));
+                        pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pRrcUeCtx->rnti;
+                        pUlpDataInd->length += sizeof(UeIdentity);
+                        ueIndex++;
+                    }
+
                     RrcDeleteUeContext(pRrcUeCtx);
-                    ueIndex++;
                 }
             } else {
                 LOG_INFO(ULP_LOGGER_NAME, "2 reach max report UE count: %d\n", ueIndex);

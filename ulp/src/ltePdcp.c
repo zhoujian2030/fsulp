@@ -12,6 +12,7 @@
 #include "mempool.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
+#include "target.h"
 
 void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList);
 void PdcpProcessRxDrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList);
@@ -56,6 +57,12 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size, UlRep
     } else {
         // data is ciphered
         LOG_TRACE(ULP_LOGGER_NAME, "TODO, data is ciphered ??\n");
+
+        if (lcId == 2 && size == 19) {
+            LOG_DBG(ULP_LOGGER_NAME, "could be CP_ACK\n");
+            TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
+        }
+
         if (pData != 0) {
             MemFree(pData);
         }

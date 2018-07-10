@@ -38,6 +38,7 @@ namespace dpe {
 
         unsigned int m_currentTargetId;
         std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
+        unsigned int m_missCount;
         std::vector<UeEstablishInfo> m_targetVect;
 
         void saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg);
