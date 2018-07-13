@@ -35,8 +35,8 @@ typedef struct
     unsigned int pdcpInd;
 #if (defined HEARTBEAT_DEBUG) || (defined PHY_DEBUG)
     unsigned int heartbeatResp;
-    unsigned int rrcSetupComplRbNum[10];
-    unsigned int idRespRbNum[10];
+    unsigned int rrcSetupComplRbNum[20];
+    unsigned int idRespRbNum[20];
 #endif
 } LteKpi;
 

@@ -6,6 +6,8 @@
  */
 
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include "lteTrigger.h"
 #include "lteLogger.h"
 #include "thread.h"
@@ -20,10 +22,14 @@ void* LteTriggerEntryFunc(void* p)
     LOG_TRACE(ULP_LOGGER_NAME, "Entry\n");
 
     unsigned int usleepTime = gLteConfig.pollingInterval * 1000;
+    // struct timeval timeout;
+    // timeout.tv_sec = gLteConfig.pollingInterval/1000;
+    // timeout.tv_usec = (gLteConfig.pollingInterval % 1000) * 1000;
 
     while (1) {
         UlpOneMilliSecondIsr();
         usleep(usleepTime);
+        // select(0, 0, 0, 0, &timeout);
     }
 
     return 0;

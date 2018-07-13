@@ -22,7 +22,9 @@ DpEngineConfig::DpEngineConfig()
   m_engineServerIp("127.0.0.1"),
   m_engineServerPort(6070),
   m_oamServerIp("127.0.0.1"),
-  m_oamServerPort(55012)
+  m_oamServerPort(55012),
+  m_targetAccTimeInterval(20000),
+  m_targetAccTimeMargin(1200)
 {
     
 }
@@ -118,12 +120,32 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
-    printf("m_mobileIdDbName:   %s\n", m_mobileIdDbName.c_str());
-    printf("m_userDbname:       %s\n", m_userDbname.c_str());
-    printf("ImsiServerIp:       %s\n", m_imsiServerIp.c_str());
-    printf("ImsiServerPort:     %d\n", m_imsiServerPort);
-    printf("EngineServerIp:     %s\n", m_engineServerIp.c_str());
-    printf("EngineServerPort:   %d\n", m_engineServerPort);
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "TargetAccTimeInterval");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            m_targetAccTimeInterval = jsonItem->valueint;
+        } else {
+            printf("Invalid config for TargetAccTimeInterval\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "TargetAccTimeMargin");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            m_targetAccTimeMargin = jsonItem->valueint;
+        } else {
+            printf("Invalid config for TargetAccTimeMargin\n");
+        }
+    }
+
+    printf("m_mobileIdDbName:           %s\n", m_mobileIdDbName.c_str());
+    printf("m_userDbname:               %s\n", m_userDbname.c_str());
+    printf("ImsiServerIp:               %s\n", m_imsiServerIp.c_str());
+    printf("ImsiServerPort:             %d\n", m_imsiServerPort);
+    printf("EngineServerIp:             %s\n", m_engineServerIp.c_str());
+    printf("EngineServerPort:           %d\n", m_engineServerPort);
+    printf("TargetAccTimeInterval:      %d\n", m_targetAccTimeInterval);
+    printf("TargetAccTimeMargin:        %d\n", m_targetAccTimeMargin);
 
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "LoggerConfig");
     if (jsonItem != 0) {

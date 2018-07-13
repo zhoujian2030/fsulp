@@ -162,7 +162,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                     if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
                         unsigned int i; 
                         for (i=0; i<pUlRptInfoList->count; i++) {
-                            if (pUlRptInfoList->ulRptInfo[i].rbNum <= 10) {
+                            if (pUlRptInfoList->ulRptInfo[i].rbNum <= 19) {
                                 gLteKpi.idRespRbNum[pUlRptInfoList->ulRptInfo[i].rbNum - 1]++;
                             }
                         }
@@ -196,7 +196,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
 #ifdef PHY_DEBUG
                 unsigned int i;
                 for (i=0; i<pUlRptInfoList->count; i++) {
-                    if (pUlRptInfoList->ulRptInfo[i].rbNum <= 10) {
+                    if (pUlRptInfoList->ulRptInfo[i].rbNum <= 19) {
                         gLteKpi.rrcSetupComplRbNum[pUlRptInfoList->ulRptInfo[i].rbNum - 1]++;
                     }
                 }

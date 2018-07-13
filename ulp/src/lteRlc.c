@@ -835,13 +835,14 @@ void RlcReassembleAmdDfeQ(UInt16 sn, RxAMEntity* pRxAmEntity, AmdPduSegment* pAm
 // --------------------------------
 void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
-
     RlcAmBuffer *pPrevBuffer = &(pRawSdu->rawSdu);
     RlcAmBuffer *pCurrBuffer = &(pAmdDfe->buffer);
     UInt8* pTmpBuffer = 0;
 
     MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
+
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d, rbNum = %d, prbPower = %d\n", 
+        sn, pRxAmEntity->rnti, pAmdDfe->status, pMacUeCtx->rbNum, pMacUeCtx->prbPower);
 
     if (isSNEqual(sn, pRawSdu->sn + 1) || isSNEqual(sn, pRawSdu->sn)) {
         switch(pAmdDfe->status) {
@@ -860,9 +861,10 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
                 if (pMacUeCtx) {
                     if (pRxAmEntity->ulRptInfoList.count < MAX_RLC_SEGMENTS_NUM) {
-                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
-                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].prbPower = pMacUeCtx->prbPower;
-                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].ta = pMacUeCtx->ta;
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].rbNum = pMacUeCtx->rbNum;
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].prbPower = pMacUeCtx->prbPower;
+                        pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].ta = pMacUeCtx->ta;
+                        pRxAmEntity->ulRptInfoList.count++;
                     }
                 }
 
@@ -892,9 +894,10 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
                     if (pMacUeCtx) {
                         if (pRxAmEntity->ulRptInfoList.count < MAX_RLC_SEGMENTS_NUM) {
-                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].rbNum = pMacUeCtx->rbNum;
-                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].prbPower = pMacUeCtx->prbPower;
-                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count++].ta = pMacUeCtx->ta;
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].rbNum = pMacUeCtx->rbNum;
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].prbPower = pMacUeCtx->prbPower;
+                            pRxAmEntity->ulRptInfoList.ulRptInfo[pRxAmEntity->ulRptInfoList.count].ta = pMacUeCtx->ta;
+                            pRxAmEntity->ulRptInfoList.count++;
                         }
                     }
                 } else {
@@ -959,9 +962,9 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 // --------------------------------
 void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pRawSdu, AmdDFE* pAmdDfe)
 {
-    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
-
     MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
+
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d, rbNum = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status, pMacUeCtx->rbNum);
 
     switch(pAmdDfe->status) {
         case AM_PDU_MAP_SDU_FULL:

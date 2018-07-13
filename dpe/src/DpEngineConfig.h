@@ -29,8 +29,12 @@ namespace dpe {
         std::string m_engineServerIp;
         unsigned short m_engineServerPort;
 
+        // for target handling
         std::string m_oamServerIp;
         unsigned short m_oamServerPort;
+
+        unsigned int m_targetAccTimeInterval;
+        unsigned int m_targetAccTimeMargin;
     };
 
 }

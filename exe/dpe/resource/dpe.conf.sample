@@ -11,6 +11,10 @@
 
     "EngineServerPort"      : 6070,
 
+    "TargetAccTimeInterval" : 20000,
+
+    "TargetAccTimeMargin"   : 1200,
+
     "LoggerConfig" : 
     {
         "LogLevel"          : "TRACE",

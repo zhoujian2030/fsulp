@@ -44,7 +44,9 @@ namespace dpe {
         struct sockaddr_in m_oamAddr;
         unsigned int m_currentTargetId;
         unsigned int m_missCount;
-        unsigned long m_prevTimestamp;
+        unsigned int m_reportCount;
+        int m_maxTargetAccTimeInterval;
+        int m_minTargetAccTimeInterval;
         std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
         std::vector<UeEstablishInfo> m_targetVect;
 

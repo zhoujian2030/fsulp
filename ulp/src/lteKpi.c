@@ -147,14 +147,14 @@ static void ReportKpiToFile()
     unsigned int i;
     varLength = sprintf(kpiData + sumLength, "----------------------------\n");
     sumLength += varLength;
-    for (i=0; i<10; i++) {
+    for (i=0; i<19; i++) {
         if (gLteKpi.rrcSetupComplRbNum[i] > 0) {
             varLength = sprintf(kpiData + sumLength, "RRC Setup Compl RB %02d  %5d  %3d\n", i+1, 
                 gLteKpi.rrcSetupComplRbNum[i], gLteKpi.rrcSetupComplRbNum[i] - prevLteKpi.rrcSetupComplRbNum[i]);
             sumLength += varLength;
         }
     }
-    for (i=0; i<10; i++) {
+    for (i=0; i<19; i++) {
         if (gLteKpi.idRespRbNum[i] > 0) {
             varLength = sprintf(kpiData + sumLength, "Identity Resp   RB %02d  %5d  %3d\n", i+1, 
                 gLteKpi.idRespRbNum[i], gLteKpi.idRespRbNum[i] - prevLteKpi.idRespRbNum[i]);
