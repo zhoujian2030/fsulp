@@ -23,33 +23,26 @@ CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UISSUE_DEBUG -DDPE -DHEARTBEAT_DEBUG -D
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX
-LIBS += $(PROJBASE)/cm/extlib/libnetcp.a
+endif
+
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
 endif
 
 ifeq ($(GTEST_SUPPORT), TRUE)
 CFLAGS += -DUNIT_TEST
+else
+CFLAGS += -UUNIT_TEST
 endif
 
 all: $(LIBA)
-ifeq ($(PLATFORM), arm)
-$(LIBA): buildrepo $(OBJS)
-	$(AR) x $(LIBS) 
-	@mv *.o $(OBJDIR)
-	@mv *.ov7A $(OBJDIR)
-	$(AR) q $@ $(OBJDIR)/*.*
-	@mkdir -p $(LIBDIR)
-	@mv $(LIBA) $(LIBDIR)
-	@mkdir -p $(INCDIR)
-	@cp $(SRCDIR)/*.h $(INCDIR)
-	@sh ./postbuild.sh libulp
-else
 $(LIBA): buildrepo $(OBJS)
 	$(AR) q $@ $(OBJS)
 	@mkdir -p $(LIBDIR)
 	@mv $(LIBA) $(LIBDIR)
 	@mkdir -p $(INCDIR)
 	@cp $(SRCDIR)/*.h $(INCDIR)
-endif
+	@sh ./postbuild.sh libulp
 
 clean:
 	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o

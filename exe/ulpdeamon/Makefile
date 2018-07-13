@@ -18,11 +18,14 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
 include $(PROJBASE)/cm/global.mk
+CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
 
 ifeq ($(PLATFORM), arm)
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST -DARM_LINUX
-else
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
+CFLAGS += -DARM_LINUX
+endif
+
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
 endif
 
 all: $(TARGET)

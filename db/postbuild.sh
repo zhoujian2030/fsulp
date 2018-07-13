@@ -11,5 +11,7 @@ fi
 
 if [ "$PLATFORM" == "arm" ]; then
     cp lib/${libname}.a lib/${libname}_arm.a
+elif [ "$PLATFORM" == "ppc" ]; then
+    cp lib/${libname}.a lib/${libname}_ppc.a
 fi
 

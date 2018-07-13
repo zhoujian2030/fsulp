@@ -18,6 +18,7 @@
 namespace dpe {
 
     class DpEngineConfig;
+    class EventIndicator;
 
     typedef LteUlpDataInd UeLoginInfo;
     #define MAX_UDP_RECV_BUFFER_LENGTH      MAX_UDP_OAM_DATA_BUFFER 
@@ -28,21 +29,30 @@ namespace dpe {
         UeLoginInfoReceiver(DpEngineConfig* pDpeConfig);
         virtual ~UeLoginInfoReceiver();
 
+        void notify();
+
     protected:
         virtual unsigned long run();
 
     private:
+        EventIndicator* m_pEvent;
+
         DpEngineConfig* m_pConfig;
         int m_udpSocketFd;
         DbConnection m_dbConn;
 
+        struct sockaddr_in m_oamAddr;
         unsigned int m_currentTargetId;
-        std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
         unsigned int m_missCount;
+        unsigned long m_prevTimestamp;
+        std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
         std::vector<UeEstablishInfo> m_targetVect;
 
         void saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg);
         void processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg);
+        void checkTarget();
+
+        void reportTargetUe(int prbPower);
     };
 
 }

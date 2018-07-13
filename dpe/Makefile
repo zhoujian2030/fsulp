@@ -18,18 +18,23 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -Wno-write-strings
+CFLAGS += -Wno-write-strings -DOS_LINUX
 
 ifeq ($(PLATFORM), arm)
-CFLAGS += -DOS_LINUX -UUNIT_TEST -DARM_LINUX
-LIBS += $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/cm/lib/libcm_arm.a
+CFLAGS += -DARM_LINUX
+endif
+
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
+endif
+
+ifeq ($(GTEST_SUPPORT), TRUE)
+CFLAGS += -DUNIT_TEST
 else
-CFLAGS += -DOS_LINUX -UUNIT_TEST
-LIBS += $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a 
+CFLAGS += -UUNIT_TEST
 endif
 
 all: $(LIBA)
-ifeq ($(PLATFORM), arm)
 $(LIBA): buildrepo $(OBJS)
 	$(AR) q $@ $(OBJS)
 	@mkdir -p $(LIBDIR)
@@ -37,14 +42,6 @@ $(LIBA): buildrepo $(OBJS)
 	@mkdir -p $(INCDIR)
 	@cp $(SRCDIR)/*.h $(INCDIR)
 	@sh ./postbuild.sh libdpe
-else
-$(LIBA): buildrepo $(OBJS)
-	$(AR) q $@ $(OBJS)
-	@mkdir -p $(LIBDIR)
-	@mv $(LIBA) $(LIBDIR)
-	@mkdir -p $(INCDIR)
-	@cp $(SRCDIR)/*.h $(INCDIR)
-endif
 
 clean:
 	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o

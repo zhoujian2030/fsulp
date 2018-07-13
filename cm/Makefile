@@ -26,8 +26,14 @@ ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX
 endif
 
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
+endif
+
 ifeq ($(GTEST_SUPPORT), TRUE)
 CFLAGS += -DUNIT_TEST
+else
+CFLAGS += -UUNIT_TEST
 endif
 
 all: $(LIBA)

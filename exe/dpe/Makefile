@@ -23,8 +23,13 @@ ifeq ($(PLATFORM), arm)
 CFLAGS += -DOS_LINUX -UUNIT_TEST -DARM_LINUX
 LIBS += $(PROJBASE)/dpe/lib/libdpe_arm.a $(PROJBASE)/db/lib/libdb_arm.a $(PROJBASE)/cm/lib/libcm_arm.a 
 else
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DOS_LINUX -UUNIT_TEST -DPPC_LINUX
+LIBS += $(PROJBASE)/dpe/lib/libdpe_ppc.a $(PROJBASE)/db/lib/libdb_ppc.a $(PROJBASE)/cm/lib/libcm_ppc.a 
+else
 CFLAGS += -DOS_LINUX -UUNIT_TEST
 LIBS += $(PROJBASE)/dpe/lib/libdpe.a $(PROJBASE)/db/lib/libdb.a $(PROJBASE)/cm/lib/libcm.a
+endif
 endif
 
 all: $(TARGET)

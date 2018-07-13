@@ -20,7 +20,9 @@ DpEngineConfig::DpEngineConfig()
   m_imsiServerIp("127.0.0.1"),
   m_imsiServerPort(3737),
   m_engineServerIp("127.0.0.1"),
-  m_engineServerPort(6070)
+  m_engineServerPort(6070),
+  m_oamServerIp("127.0.0.1"),
+  m_oamServerPort(55012)
 {
     
 }

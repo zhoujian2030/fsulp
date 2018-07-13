@@ -55,7 +55,12 @@ int main(int argc, char* argv[]) {
     UeLoginInfoReceiver* pUeInfoReceiver = new UeLoginInfoReceiver(pDpeConfig);
     pUeInfoReceiver->start();
 
-    pUeInfoReceiver->wait();
+    // pUeInfoReceiver->wait();
+    unsigned int usleepTime = 100 * 1000;
+    while (true) {
+        usleep(usleepTime);
+        pUeInfoReceiver->notify();
+    }
 
     return 1; 
 }

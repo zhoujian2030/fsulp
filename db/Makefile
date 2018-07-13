@@ -27,12 +27,17 @@ ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX
 endif
 
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
+endif
+
 ifeq ($(GTEST_SUPPORT), TRUE)
 CFLAGS += -DUNIT_TEST
+else
+CFLAGS += -UUNIT_TEST
 endif
 
 all: $(LIBA)
-ifeq ($(PLATFORM), arm)
 $(LIBA): buildrepo $(OBJS)
 	$(AR) q $@ $(OBJS)
 	@mkdir -p $(LIBDIR)
@@ -40,14 +45,6 @@ $(LIBA): buildrepo $(OBJS)
 	@mkdir -p $(INCDIR)
 	@cp $(SRCDIR)/*.h $(INCDIR)
 	@sh ./postbuild.sh libdb
-else
-$(LIBA): buildrepo $(OBJS)
-	$(AR) q $@ $(OBJS)
-	@mkdir -p $(LIBDIR)
-	@mv $(LIBA) $(LIBDIR)
-	@mkdir -p $(INCDIR)
-	@cp $(SRCDIR)/*.h $(INCDIR)
-endif
 
 clean:
 	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o

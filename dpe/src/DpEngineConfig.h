@@ -28,6 +28,9 @@ namespace dpe {
 
         std::string m_engineServerIp;
         unsigned short m_engineServerPort;
+
+        std::string m_oamServerIp;
+        unsigned short m_oamServerPort;
     };
 
 }
