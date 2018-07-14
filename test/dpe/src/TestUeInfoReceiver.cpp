@@ -24,13 +24,13 @@ TEST_F(TestUeInfoReceiver, processUeEstablishInfo)
     LoggerSetlevel(TRACE);
 
     DpEngineConfig* pDpeConfig = new DpEngineConfig();
-    pDpeConfig->m_imsiServerIp = "127.0.0.1";
-    pDpeConfig->m_imsiServerPort = 6666;
+    pDpeConfig->m_ueDataServerIp = "127.0.0.1";
+    pDpeConfig->m_ueDataServerPort = 6666;
     UeLoginInfoReceiver* pUeInfoReceiver = new UeLoginInfoReceiver(pDpeConfig);
     pUeInfoReceiver->start();
     int socket = SocketUdpInit();
     sockaddr_in serverAddr;
-    SocketGetSockaddrByIpAndPort(&serverAddr, pDpeConfig->m_imsiServerIp.c_str(), pDpeConfig->m_imsiServerPort);
+    SocketGetSockaddrByIpAndPort(&serverAddr, pDpeConfig->m_ueDataServerIp.c_str(), pDpeConfig->m_ueDataServerPort);
 
     usleep(100);
 

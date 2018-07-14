@@ -23,8 +23,8 @@ namespace dpe {
         std::string m_mobileIdDbName;
         std::string m_userDbname;  
 
-        std::string m_imsiServerIp;
-        unsigned short m_imsiServerPort;    
+        std::string m_ueDataServerIp;
+        unsigned short m_ueDataServerPort;    
 
         std::string m_engineServerIp;
         unsigned short m_engineServerPort;

@@ -21,10 +21,12 @@ using namespace dpe;
 UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDpeConfig) 
 : Thread("UE Info Receiver"), m_pConfig(pDpeConfig), m_udpSocketFd(-1)
 {
-    m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_imsiServerPort, (char*)m_pConfig->m_imsiServerIp.c_str());
+    m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_ueDataServerPort, (char*)m_pConfig->m_ueDataServerIp.c_str());
     SocketGetSockaddrByIpAndPort(&m_oamAddr, m_pConfig->m_oamServerIp.c_str(), m_pConfig->m_oamServerPort);
     SocketMakeNonBlocking(m_udpSocketFd);
-    // DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());
+#ifdef COLLECT_IMSI
+    DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());
+#endif
     m_maxTargetAccTimeInterval = m_pConfig->m_targetAccTimeInterval + m_pConfig->m_targetAccTimeMargin;
     m_minTargetAccTimeInterval = m_pConfig->m_targetAccTimeInterval - m_pConfig->m_targetAccTimeMargin;
     m_currentTargetId = 0;
@@ -50,11 +52,12 @@ unsigned long UeLoginInfoReceiver::run()
 {
     LOG_MSG(LOGGER_MODULE_DPE, TRACE, "starting...\n");
 
-    UeLoginInfo* pUeLoginInfo;
     struct sockaddr_in remoteAddr;
     int byteRecvd;
-    char recvBuffer[MAX_UDP_RECV_BUFFER_LENGTH];
-    pUeLoginInfo = (UeLoginInfo*)recvBuffer;
+    unsigned short msgType = 0;
+    char buffer[MAX_UDP_RECV_BUFFER_LENGTH];
+    UeDataInd* pUeDataInd = (UeDataInd*)buffer;
+    DpeDataInd* pDpeDataInd = (DpeDataInd*)buffer;
 
     m_pEvent->reset();
 
@@ -63,19 +66,24 @@ unsigned long UeLoginInfoReceiver::run()
 
         checkTarget();
 
-        byteRecvd = SocketUdpRecv(m_udpSocketFd, recvBuffer, MAX_UDP_RECV_BUFFER_LENGTH, &remoteAddr);
-        if (byteRecvd > (int)MIN_UE_ULP_IND_MSG_LENGTH) {
-            if (pUeLoginInfo->msgType == MSG_ULP_UE_IDENTITY_IND) {
-                // LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv MSG_ULP_UE_IDENTITY_IND, byteRecvd = %d\n", byteRecvd);
-                saveUeIdentity(&pUeLoginInfo->u.ueIdentityInd);
-            } else if (pUeLoginInfo->msgType == MSG_ULP_UE_ESTABLISH_IND) {
+        byteRecvd = SocketUdpRecv(m_udpSocketFd, buffer, MAX_UDP_RECV_BUFFER_LENGTH, &remoteAddr);
+        if (byteRecvd >= (int)LTE_ULP_DATA_IND_HEAD_LEHGTH) {
+            msgType = *(unsigned short*)buffer;
+            if (msgType == MSG_ULP_UE_IDENTITY_IND) {
+                saveUeIdentity(&pUeDataInd->u.ueIdentityInd);
+            } else if (msgType == MSG_ULP_UE_ESTABLISH_IND) {
                 LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv MSG_ULP_UE_ESTABLISH_IND, byteRecvd = %d\n", byteRecvd);
-                processUeEstablishInfo(&pUeLoginInfo->u.ueEstablishInd);
+                processUeEstablishInfo(&pUeDataInd->u.ueEstablishInd, string(inet_ntoa(remoteAddr.sin_addr)));
+            } else if (msgType == MSG_ULP_HEARTBEAT_REQ) {
+                pDpeDataInd->msgType = MSG_ULP_HEARTBEAT_RESP;
+                pDpeDataInd->length = LTE_ULP_DATA_IND_HEAD_LEHGTH;
+                SocketUdpSend(m_udpSocketFd, buffer, sizeof(DpeDataInd), &remoteAddr);  
+                // LOG_MSG(LOGGER_MODULE_DPE, TRACE, "Send heartbeat response\n");
             } else {
-                LOG_MSG(LOGGER_MODULE_DPE, ERROR, "invalid msgType = %d\n", pUeLoginInfo->msgType);
-                LOG_MEM(ERROR, recvBuffer, byteRecvd);
-            }
-        } 
+                LOG_MSG(LOGGER_MODULE_DPE, ERROR, "invalid msgType = %d\n", pUeDataInd->msgType);
+                LOG_MEM(ERROR, buffer, byteRecvd);
+            } 
+        }
     }
 
     return 0;
@@ -97,18 +105,26 @@ void UeLoginInfoReceiver::saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg)
         if (pUeIdentity->imsiPresent && !pUeIdentity->mTmsiPresent) {
             pUeIdentity->imsi[15] = '\0';
             LOG_MSG(LOGGER_MODULE_DPE, TRACE, "imsi = %s\n", pUeIdentity->imsi);
-            // DbInsertLoginImsi(&m_dbConn, (const char*)pUeIdentity->imsi);
+#ifdef COLLECT_IMSI
+            DbInsertLoginImsi(&m_dbConn, (const char*)pUeIdentity->imsi);
+#endif
         }
     }
 }
 
 // -------------------------------
-void UeLoginInfoReceiver::reportTargetUe(int prbPower)
+void UeLoginInfoReceiver::reportTargetUe(int prbPower, string remoteIp)
 {
     LOG_MSG(LOGGER_MODULE_DPE, INFO, "************** prbPower = %d **************\n", prbPower);
     LteUlpDataInd targetUeInfo;
     targetUeInfo.msgType = MSG_ULP_TARGET_UE_INFO;
     targetUeInfo.u.targetUeInfoInd.prbPower = prbPower;
+#ifdef PPC_LINUX
+    LOG_MSG(LOGGER_MODULE_DPE, TRACE, "remoteIp = %s\n", remoteIp.c_str());
+    if (remoteIp.length() < 16) {
+        memcpy(targetUeInfo.u.targetUeInfoInd.ip, remoteIp.c_str(), remoteIp.length());
+    }
+#endif
     targetUeInfo.length = sizeof(LteUlpDataInd);
 
     SocketUdpSend(m_udpSocketFd, (char*)&targetUeInfo, targetUeInfo.length, &m_oamAddr);
@@ -135,7 +151,7 @@ void UeLoginInfoReceiver::checkTarget()
 
             if ((m_missCount > (m_targetVect.size()/2)) || ((timeDiff > maxTimeDiff) && (m_missCount > 2))) {
                 LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************lost target, timeDiff = %ld, m_missCount = %d\n", timeDiff, m_missCount);  
-                reportTargetUe(0xffffffff);
+                reportTargetUe(0xffffffff, m_remoteIp);
                 m_missCount = 0;
                 m_targetVect.clear();
                 map<unsigned int, vector<UeEstablishInfo> >::iterator mapIt = m_potentialTargetMap.begin();
@@ -145,13 +161,13 @@ void UeLoginInfoReceiver::checkTarget()
                 }
             } else {
                 LOG_MSG(LOGGER_MODULE_DPE, TRACE, "miss target, timeDiff = %ld, m_missCount = %d\n", timeDiff, m_missCount);
-                reportTargetUe(((*it).prbPower - 5*m_missCount));
+                reportTargetUe(((*it).prbPower - 5*m_missCount), m_remoteIp);
             }
         } else {
             if (m_reportCount % 20 == 0) {
                 srand(timestamp);
                 randomVal = 5 - (rand() % 10);
-                reportTargetUe((*it).prbPower + randomVal);
+                reportTargetUe((*it).prbPower + randomVal, m_remoteIp);
             }
         }
     }
@@ -159,11 +175,13 @@ void UeLoginInfoReceiver::checkTarget()
 
 
 // -------------------------------
-void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg)
+void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg, string remoteIp)
 {
     if (pUeEstabInfoMsg == 0 || pUeEstabInfoMsg->count == 0) {
         return;
     }
+
+    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv from IP: %s\n", remoteIp.c_str());
 
     UeEstablishInfo* pUeEstabInfo;
     map<unsigned int, vector<UeEstablishInfo> >::iterator mapIt;
@@ -188,10 +206,11 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                 if (pUeEstabInfo->prbPower != 0) {
                     pUeEstabInfo->timestamp = (*vectIt).timestamp + (m_missCount + 1) * m_pConfig->m_targetAccTimeInterval;
                     m_missCount = 0;
+                    m_remoteIp = remoteIp;
                     m_targetVect.push_back(*pUeEstabInfo);
                     LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************target: rnti = %d, prbPower = %d, ta = %d, timeDiff = %ld, size = %d\n", 
                         pUeEstabInfo->rnti, pUeEstabInfo->prbPower, pUeEstabInfo->ta, timeDiff, m_targetVect.size());
-                    reportTargetUe(pUeEstabInfo->prbPower);
+                    reportTargetUe(pUeEstabInfo->prbPower, m_remoteIp);
                 } else {
                     LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "drop this one, rnti = %d, timeDiff = %ld, taDiff = %d, prbPower = %d\n", 
                         pUeEstabInfo->rnti, timeDiff, taDiff, pUeEstabInfo->prbPower);
@@ -213,10 +232,10 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                         (mapIt->second).clear();
                         m_potentialTargetMap.erase(mapIt++);
                     }
-                    reportTargetUe(0xffffffff);
+                    reportTargetUe(0xffffffff, m_remoteIp);
                 } else {
                     LOG_MSG(LOGGER_MODULE_DPE, TRACE, "drop this one, rnti = %d, timeDiff = %ld, m_missCount = %d\n", pUeEstabInfo->rnti, timeDiff, m_missCount);
-                    reportTargetUe(((*vectIt).prbPower - 5*m_missCount));
+                    reportTargetUe(((*vectIt).prbPower - 5*m_missCount), m_remoteIp);
                     continue;
                 }
             }
@@ -237,7 +256,8 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                     // find target
                     if ((mapIt->second).size() == 3) {
                         findTarget = true;
-                        m_missCount = 0;                        
+                        m_missCount = 0;              
+                        m_remoteIp = remoteIp;          
                         m_targetVect.clear();
                         vectIt = (mapIt->second).begin();
                         LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************find target, size = 3, timeDiff = %lu, first timestamp = %lu, last timestamp = %lu\n", 
@@ -247,7 +267,7 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                             m_targetVect.push_back(*vectIt);
                             vectIt++;
                         }
-                        reportTargetUe(pUeEstabInfo->prbPower);
+                        reportTargetUe(pUeEstabInfo->prbPower, m_remoteIp);
                     }
                     break;
                 } else {

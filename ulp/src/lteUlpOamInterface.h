@@ -48,6 +48,9 @@ typedef struct {
 
 typedef struct {
     Int32 prbPower;
+#ifdef PPC_LINUX
+    char ip[16];
+#endif
 } TargetUeInfoMsg;
 
 typedef struct {

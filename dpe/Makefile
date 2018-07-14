@@ -18,7 +18,7 @@ OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -Wno-write-strings -DOS_LINUX
+CFLAGS += -Wno-write-strings -DOS_LINUX -UCOLLECT_IMSI
 
 ifeq ($(PLATFORM), arm)
 CFLAGS += -DARM_LINUX

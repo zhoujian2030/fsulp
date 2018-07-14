@@ -20,7 +20,8 @@ namespace dpe {
     class DpEngineConfig;
     class EventIndicator;
 
-    typedef LteUlpDataInd UeLoginInfo;
+    typedef LteUlpDataInd UeDataInd;
+    typedef LteUlpDataInd DpeDataInd;
     #define MAX_UDP_RECV_BUFFER_LENGTH      MAX_UDP_OAM_DATA_BUFFER 
     #define MIN_UE_ULP_IND_MSG_LENGTH       (LTE_ULP_DATA_IND_HEAD_LEHGTH + LTE_UE_ID_IND_MSG_HEAD_LEHGTH)
 
@@ -45,16 +46,17 @@ namespace dpe {
         unsigned int m_currentTargetId;
         unsigned int m_missCount;
         unsigned int m_reportCount;
+        std::string m_remoteIp;
         int m_maxTargetAccTimeInterval;
         int m_minTargetAccTimeInterval;
         std::map<unsigned int, std::vector<UeEstablishInfo> > m_potentialTargetMap;
         std::vector<UeEstablishInfo> m_targetVect;
 
         void saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg);
-        void processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg);
+        void processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfoMsg, std::string remoteIp);
         void checkTarget();
 
-        void reportTargetUe(int prbPower);
+        void reportTargetUe(int prbPower, std::string remoteIp);
     };
 
 }

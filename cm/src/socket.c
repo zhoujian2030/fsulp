@@ -34,7 +34,6 @@ void SocketGetSockaddrByIpAndPort(struct sockaddr_in* sockaddr, const char* ip, 
     sockaddr->sin_family = AF_INET;
     sockaddr->sin_addr.s_addr = inet_addr(ip);
     sockaddr->sin_port = htons(port);
-
 }
 
 // ---------------------------------

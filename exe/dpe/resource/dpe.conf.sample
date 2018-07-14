@@ -3,13 +3,17 @@
 
     "UserDBName"            : "/home/zj/nb-ulp/exe/dpe/resource/eq5_user.db",
 
-    "ImsiServerIp"          : "192.168.64.155",
+    "UeDataServerIp"        : "192.168.64.155",
 
-    "ImsiServerPort"        : 3737,
+    "UeDataServerPort"      : 3737,
 
     "EngineServerIp"        : "192.168.64.155",
 
     "EngineServerPort"      : 6070,
+
+    "OamServerIp"           : "127.0.0.1",
+
+    "OamServerPort"         : 55012,
 
     "TargetAccTimeInterval" : 20000,
 

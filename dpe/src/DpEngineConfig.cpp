@@ -17,8 +17,8 @@ using namespace dpe;
 DpEngineConfig::DpEngineConfig() 
 : m_mobileIdDbName("/tmp/eq5_mobile_id.db"),
   m_userDbname("/tmp/eq5_user.db"),
-  m_imsiServerIp("127.0.0.1"),
-  m_imsiServerPort(3737),
+  m_ueDataServerIp("0.0.0.0"),
+  m_ueDataServerPort(55010),
   m_engineServerIp("127.0.0.1"),
   m_engineServerPort(6070),
   m_oamServerIp("127.0.0.1"),
@@ -84,21 +84,21 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ImsiServerIp");
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "UeDataServerIp");
     if (jsonItem != 0) {
         if (jsonItem->type == cJSON_String) {      
-            m_imsiServerIp = string(jsonItem->valuestring);     
+            m_ueDataServerIp = string(jsonItem->valuestring);     
         } else {
-            printf("Invalid config for ImsiServerIp\n");
+            printf("Invalid config for UeDataServerIp\n");
         }
     }
 
-    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "ImsiServerPort");
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "UeDataServerPort");
     if (jsonItem != 0) {
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
-            m_imsiServerPort = jsonItem->valueint;
+            m_ueDataServerPort = jsonItem->valueint;
         } else {
-            printf("Invalid config for ImsiServerPort\n");
+            printf("Invalid config for UeDataServerPort\n");
         }
     }
 
@@ -120,6 +120,24 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "OamServerIp");
+    if (jsonItem != 0) {
+        if (jsonItem->type == cJSON_String) {      
+            m_oamServerIp = string(jsonItem->valuestring);     
+        } else {
+            printf("Invalid config for OamServerIp\n");
+        }
+    }
+
+    jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "OamServerPort");
+    if (jsonItem != 0) {
+        if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
+            m_oamServerPort = jsonItem->valueint;
+        } else {
+            printf("Invalid config for OamServerPort\n");
+        }
+    }
+
     jsonItem = cJSON_GetObjectItemCaseSensitive(jsonRoot, "TargetAccTimeInterval");
     if (jsonItem != 0) {
         if ((jsonItem->type == cJSON_Number) && (jsonItem->valueint > 0)) {
@@ -138,12 +156,16 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
+#ifdef COLLECT_IMSI
     printf("m_mobileIdDbName:           %s\n", m_mobileIdDbName.c_str());
     printf("m_userDbname:               %s\n", m_userDbname.c_str());
-    printf("ImsiServerIp:               %s\n", m_imsiServerIp.c_str());
-    printf("ImsiServerPort:             %d\n", m_imsiServerPort);
     printf("EngineServerIp:             %s\n", m_engineServerIp.c_str());
     printf("EngineServerPort:           %d\n", m_engineServerPort);
+#endif
+    printf("UeDataServerIp:             %s\n", m_ueDataServerIp.c_str());
+    printf("UeDataServerPort:           %d\n", m_ueDataServerPort);
+    printf("OamServerIp:                %s\n", m_oamServerIp.c_str());
+    printf("OamServerPort:              %d\n", m_oamServerPort);
     printf("TargetAccTimeInterval:      %d\n", m_targetAccTimeInterval);
     printf("TargetAccTimeMargin:        %d\n", m_targetAccTimeMargin);
 
@@ -151,21 +173,21 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
     if (jsonItem != 0) {
         LoggerConfig loggerConfig;
         LoggerParseConfig(jsonItem, &loggerConfig);
-        printf("logLevel:               %d\n", loggerConfig.logLevel);
-        printf("logType:                %d\n", loggerConfig.logType);
-        printf("logToConsoleFlag:       %d\n", loggerConfig.logToConsoleFlag);
-        printf("logToFileFlag:          %d\n", loggerConfig.logToFileFlag);
-        printf("maxLogFileSize:         %d\n", loggerConfig.maxLogFileSize);
-        printf("logFilePath:            %s\n", loggerConfig.logFilePath);
-        printf("logToSocketFlag:        %d\n", loggerConfig.logToSocketFlag);
-        printf("logServerIp:            %s\n", loggerConfig.logServerIp);
-        printf("logServerPort:          %d\n", loggerConfig.logServerPort);
-        printf("logModuleNameFlag:      %d\n", loggerConfig.logModuleNameFlag);
-        printf("logFileNameFlag:        %d\n", loggerConfig.logFileNameFlag);
-        printf("logFuncNameFlag:        %d\n", loggerConfig.logFuncNameFlag);
-        printf("logThreadIdFlag:        %d\n", loggerConfig.logThreadIdFlag);
-        printf("asyncWaitTime:          %d\n", loggerConfig.asyncWaitTime);
-        printf("logBufferingSize:       %d\n", loggerConfig.logBufferingSize);
+        printf("logLevel:                   %d\n", loggerConfig.logLevel);
+        printf("logType:                    %d\n", loggerConfig.logType);
+        printf("logToConsoleFlag:           %d\n", loggerConfig.logToConsoleFlag);
+        printf("logToFileFlag:              %d\n", loggerConfig.logToFileFlag);
+        printf("maxLogFileSize:             %d\n", loggerConfig.maxLogFileSize);
+        printf("logFilePath:                %s\n", loggerConfig.logFilePath);
+        printf("logToSocketFlag:            %d\n", loggerConfig.logToSocketFlag);
+        printf("logServerIp:                %s\n", loggerConfig.logServerIp);
+        printf("logServerPort:              %d\n", loggerConfig.logServerPort);
+        printf("logModuleNameFlag:          %d\n", loggerConfig.logModuleNameFlag);
+        printf("logFileNameFlag:            %d\n", loggerConfig.logFileNameFlag);
+        printf("logFuncNameFlag:            %d\n", loggerConfig.logFuncNameFlag);
+        printf("logThreadIdFlag:            %d\n", loggerConfig.logThreadIdFlag);
+        printf("asyncWaitTime:              %d\n", loggerConfig.asyncWaitTime);
+        printf("logBufferingSize:           %d\n", loggerConfig.logBufferingSize);
         LoggerInit(&loggerConfig);
     }
 
