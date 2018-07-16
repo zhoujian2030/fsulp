@@ -164,7 +164,7 @@ void UeLoginInfoReceiver::checkTarget()
                 reportTargetUe(((*it).prbPower - 5*m_missCount), m_remoteIp);
             }
         } else {
-            if (m_reportCount % 20 == 0) {
+            if (m_reportCount % 200 == 0) {
                 srand(timestamp);
                 randomVal = 5 - (rand() % 10);
                 reportTargetUe((*it).prbPower + randomVal, m_remoteIp);
@@ -183,6 +183,9 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
 
     LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv from IP: %s\n", remoteIp.c_str());
 
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+    UInt64 timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;
     UeEstablishInfo* pUeEstabInfo;
     map<unsigned int, vector<UeEstablishInfo> >::iterator mapIt;
     vector<UeEstablishInfo>::iterator vectIt;
@@ -194,6 +197,7 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
 
     for (unsigned int i=0; i<pUeEstabInfoMsg->count; i++) {
         pUeEstabInfo = &pUeEstabInfoMsg->ueEstabInfoArray[i];
+        pUeEstabInfo->timestamp = timestamp;
 
         if (!m_targetVect.empty()) {
             int maxTimeDiff = m_maxTargetAccTimeInterval + m_missCount * (m_pConfig->m_targetAccTimeInterval + m_pConfig->m_targetAccTimeMargin/4);

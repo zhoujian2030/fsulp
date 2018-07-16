@@ -277,8 +277,10 @@ void UlpRecvAndHandleOamData()
     // TODO in DSP
 #endif
 
+#ifdef DPE 
     // handle UE estabilsh
     TgtSendUeEstablishInd(gOamUdpFd, &gDpeAddress);
+#endif
 
     // handle UE identity
     int ueIndex = 0;

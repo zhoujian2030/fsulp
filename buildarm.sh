@@ -26,6 +26,7 @@ else
     cp exe/ulp/resource/ulp.conf /mnt/hgfs/c/share/ 
     cp exe/dpe/obj/dpe /mnt/hgfs/c/share/ 
     cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
+    cp exe/dpe/resource/dpe_init.sh /mnt/hgfs/c/share/ 
     cp exe/ulpdeamon/obj/ulpdeamon /mnt/hgfs/c/share/ 
 fi
 

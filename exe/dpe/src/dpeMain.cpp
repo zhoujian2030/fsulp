@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     pUeInfoReceiver->start();
 
     // pUeInfoReceiver->wait();
-    unsigned int usleepTime = 100 * 1000;
+    unsigned int usleepTime = 10 * 1000;
     while (true) {
         usleep(usleepTime);
         pUeInfoReceiver->notify();
