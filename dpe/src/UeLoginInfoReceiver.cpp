@@ -8,6 +8,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 #include "dpeCommon.h"
 #include "UeLoginInfoReceiver.h"
 #include "DpEngineConfig.h"
@@ -16,6 +17,14 @@
 
 using namespace std;
 using namespace dpe;
+
+#ifdef ENDIAN_CONVERT
+#define CONVERT_INT16_ENDIAN(value) (((value & 0x00ff) << 8) | ((value & 0xff00) >> 8))
+#define CONVERT_INT32_ENDIAN(value) (((value & 0xff000000) >> 24) | ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8) | ((value & 0xff) << 24))
+#else
+#define CONVERT_INT16_ENDIAN(value) (value)
+#define CONVERT_INT32_ENDIAN(value) (value)
+#endif
 
 // -------------------------------
 UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDpeConfig) 
@@ -68,7 +77,7 @@ unsigned long UeLoginInfoReceiver::run()
 
         byteRecvd = SocketUdpRecv(m_udpSocketFd, buffer, MAX_UDP_RECV_BUFFER_LENGTH, &remoteAddr);
         if (byteRecvd >= (int)LTE_ULP_DATA_IND_HEAD_LEHGTH) {
-            msgType = *(unsigned short*)buffer;
+            msgType = CONVERT_INT16_ENDIAN(*(unsigned short*)buffer);
             if (msgType == MSG_ULP_UE_IDENTITY_IND) {
                 saveUeIdentity(&pUeDataInd->u.ueIdentityInd);
             } else if (msgType == MSG_ULP_UE_ESTABLISH_IND) {
@@ -104,9 +113,10 @@ void UeLoginInfoReceiver::saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg)
 
         if (pUeIdentity->imsiPresent && !pUeIdentity->mTmsiPresent) {
             pUeIdentity->imsi[15] = '\0';
-            LOG_MSG(LOGGER_MODULE_DPE, TRACE, "imsi = %s\n", pUeIdentity->imsi);
 #ifdef COLLECT_IMSI
             DbInsertLoginImsi(&m_dbConn, (const char*)pUeIdentity->imsi);
+#else             
+            LOG_MSG(LOGGER_MODULE_DPE, TRACE, "imsi = %s\n", pUeIdentity->imsi);
 #endif
         }
     }
@@ -181,7 +191,9 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
         return;
     }
 
-    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv from IP: %s\n", remoteIp.c_str());
+    pUeEstabInfoMsg->count = CONVERT_INT32_ENDIAN(pUeEstabInfoMsg->count);
+
+    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "Recv from IP: %s, count = %d\n", remoteIp.c_str(), pUeEstabInfoMsg->count);
 
     struct timeval tv;
     gettimeofday(&tv, 0);
@@ -198,6 +210,10 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
     for (unsigned int i=0; i<pUeEstabInfoMsg->count; i++) {
         pUeEstabInfo = &pUeEstabInfoMsg->ueEstabInfoArray[i];
         pUeEstabInfo->timestamp = timestamp;
+
+        pUeEstabInfo->prbPower = CONVERT_INT32_ENDIAN(pUeEstabInfo->prbPower);
+        pUeEstabInfo->rnti = CONVERT_INT16_ENDIAN(pUeEstabInfo->rnti);
+        pUeEstabInfo->ta = CONVERT_INT16_ENDIAN(pUeEstabInfo->ta);
 
         if (!m_targetVect.empty()) {
             int maxTimeDiff = m_maxTargetAccTimeInterval + m_missCount * (m_pConfig->m_targetAccTimeInterval + m_pConfig->m_targetAccTimeMargin/4);

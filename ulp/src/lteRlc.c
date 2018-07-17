@@ -841,8 +841,10 @@ void RlcReassembleInCmpAMSdu(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSdu *pR
 
     MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
 
-    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d, rbNum = %d, prbPower = %d\n", 
-        sn, pRxAmEntity->rnti, pAmdDfe->status, pMacUeCtx->rbNum, pMacUeCtx->prbPower);
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
+    if (pMacUeCtx) {
+        LOG_TRACE(ULP_LOGGER_NAME, "rbNum = %d, prbPower = %d\n", pMacUeCtx->rbNum, pMacUeCtx->prbPower);
+    }
 
     if (isSNEqual(sn, pRawSdu->sn + 1) || isSNEqual(sn, pRawSdu->sn)) {
         switch(pAmdDfe->status) {
@@ -964,7 +966,10 @@ void RlcReassembleFirstSduSegment(UInt16 sn, RxAMEntity* pRxAmEntity, RlcAmRawSd
 {
     MacUeContext* pMacUeCtx = MacGetUeContext(pRxAmEntity->rnti);
 
-    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d, rbNum = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status, pMacUeCtx->rbNum);
+    LOG_TRACE(ULP_LOGGER_NAME, "sn = %d, rnti = %d, pAmdDfe->status = %d\n", sn, pRxAmEntity->rnti, pAmdDfe->status);
+    if (pMacUeCtx) {
+        LOG_TRACE(ULP_LOGGER_NAME, "rbNum = %d, prbPower = %d\n", pMacUeCtx->rbNum, pMacUeCtx->prbPower);
+    }
 
     switch(pAmdDfe->status) {
         case AM_PDU_MAP_SDU_FULL:

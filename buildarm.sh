@@ -10,11 +10,16 @@ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include
 export GTEST_SUPPORT=FALSE
 export SCTP_SUPPORT=FALSE
 export DB_SUPPORT=FALSE
+export BUILD_TARGET=all
 
 export PROJBASE=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 echo "Current directory: $PROJBASE"
 
 COMMAND=$1
+
+if [[ $COMMAND = "--nodpe" ]]; then
+    export BUILD_TARGET=nodpe
+fi
 
 if [[ $COMMAND = "clean" ]]; then
     make clean
@@ -24,9 +29,11 @@ else
     make
     cp exe/ulp/obj/ulp /mnt/hgfs/c/share/ 
     cp exe/ulp/resource/ulp.conf /mnt/hgfs/c/share/ 
-    cp exe/dpe/obj/dpe /mnt/hgfs/c/share/ 
-    cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
-    cp exe/dpe/resource/dpe_init.sh /mnt/hgfs/c/share/ 
+    if [[ $COMMAND != "--nodpe" ]]; then
+        cp exe/dpe/obj/dpe /mnt/hgfs/c/share/ 
+        cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
+        cp exe/dpe/resource/initdpe.sh /mnt/hgfs/c/share/ 
+    fi
     cp exe/ulpdeamon/obj/ulpdeamon /mnt/hgfs/c/share/ 
 fi
 

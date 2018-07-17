@@ -122,7 +122,9 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
     SocketMakeNonBlocking(gOamUdpFd);
     SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
 #ifdef DPE 
-    SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
+    if (gLteConfig.reportToDpeFlag) {
+        SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
+    }
 #endif
 
 #ifdef HEARTBEAT_DEBUG

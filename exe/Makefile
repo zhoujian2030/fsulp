@@ -1,7 +1,18 @@
+ifeq ($(PLATFORM), arm)
+ifeq ($(BUILD_TARGET), nodpe)
+SUBDIRS = ulp \
+	ulpdeamon \
+	hbt
+else 
 SUBDIRS = ulp \
 	ulpdeamon \
 	dpe \
 	hbt
+endif
+else 
+SUBDIRS = dpe \
+	hbt
+endif
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)
