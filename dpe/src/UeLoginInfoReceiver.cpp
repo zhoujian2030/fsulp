@@ -76,6 +76,7 @@ unsigned long UeLoginInfoReceiver::run()
         checkTarget();
 
         byteRecvd = SocketUdpRecv(m_udpSocketFd, buffer, MAX_UDP_RECV_BUFFER_LENGTH, &remoteAddr);
+        // LOG_MEM(ERROR, buffer, byteRecvd);
         if (byteRecvd >= (int)LTE_ULP_DATA_IND_HEAD_LEHGTH) {
             msgType = CONVERT_INT16_ENDIAN(*(unsigned short*)buffer);
             if (msgType == MSG_ULP_UE_IDENTITY_IND) {
@@ -146,8 +147,8 @@ void UeLoginInfoReceiver::checkTarget()
     vector<UeEstablishInfo>::iterator it;
     struct timeval tv;
     gettimeofday(&tv, 0);
-    unsigned long timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-    long timeDiff = 0;
+    unsigned long long timestamp = (unsigned long long)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    int timeDiff = 0;
     int randomVal;
 
     if (!m_targetVect.empty()) {
@@ -160,7 +161,7 @@ void UeLoginInfoReceiver::checkTarget()
             m_missCount++;
 
             if ((m_missCount > (m_targetVect.size()/2)) || ((timeDiff > maxTimeDiff) && (m_missCount > 2))) {
-                LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************lost target, timeDiff = %ld, m_missCount = %d\n", timeDiff, m_missCount);  
+                LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************lost target, timeDiff = %d, m_missCount = %d\n", timeDiff, m_missCount);  
                 reportTargetUe(0xffffffff, m_remoteIp);
                 m_missCount = 0;
                 m_targetVect.clear();
@@ -170,7 +171,7 @@ void UeLoginInfoReceiver::checkTarget()
                     m_potentialTargetMap.erase(mapIt++);
                 }
             } else {
-                LOG_MSG(LOGGER_MODULE_DPE, TRACE, "miss target, timeDiff = %ld, m_missCount = %d\n", timeDiff, m_missCount);
+                LOG_MSG(LOGGER_MODULE_DPE, TRACE, "miss target, timeDiff = %d, m_missCount = %d\n", timeDiff, m_missCount);
                 reportTargetUe(((*it).prbPower - 5*m_missCount), m_remoteIp);
             }
         } else {
@@ -197,11 +198,11 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
 
     struct timeval tv;
     gettimeofday(&tv, 0);
-    UInt64 timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    unsigned long long timestamp = (unsigned long long)tv.tv_sec * 1000 + tv.tv_usec / 1000;
     UeEstablishInfo* pUeEstabInfo;
     map<unsigned int, vector<UeEstablishInfo> >::iterator mapIt;
     vector<UeEstablishInfo>::iterator vectIt;
-    long timeDiff = 0;
+    int timeDiff = 0;
     // bool findPotentailTarget = false;
     bool findTarget = false;
     short taDiff = 0;
@@ -228,23 +229,23 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                     m_missCount = 0;
                     m_remoteIp = remoteIp;
                     m_targetVect.push_back(*pUeEstabInfo);
-                    LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************target: rnti = %d, prbPower = %d, ta = %d, timeDiff = %ld, size = %d\n", 
+                    LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************target: rnti = %d, prbPower = %d, ta = %d, timeDiff = %d, size = %d\n", 
                         pUeEstabInfo->rnti, pUeEstabInfo->prbPower, pUeEstabInfo->ta, timeDiff, m_targetVect.size());
                     reportTargetUe(pUeEstabInfo->prbPower, m_remoteIp);
                 } else {
-                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "drop this one, rnti = %d, timeDiff = %ld, taDiff = %d, prbPower = %d\n", 
+                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "drop this one, rnti = %d, timeDiff = %d, taDiff = %d, prbPower = %d\n", 
                         pUeEstabInfo->rnti, timeDiff, taDiff, pUeEstabInfo->prbPower);
                     continue;
                 }
                 break;
             } else if (timeDiff < minTimeDiff) {
-                LOG_MSG(LOGGER_MODULE_DPE, TRACE, "drop this one, rnti= %d, timeDiff = %ld\n", pUeEstabInfo->rnti, timeDiff);
+                LOG_MSG(LOGGER_MODULE_DPE, TRACE, "drop this one, rnti= %d, timeDiff = %d\n", pUeEstabInfo->rnti, timeDiff);
                 continue;
             } else {
                 m_missCount++;
                 if ((m_missCount > (m_targetVect.size()/2)) || (m_missCount > 2)) {
                     // clear state for next calc
-                    LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************lost target, timeDiff = %ld, m_missCount = %d\n", timeDiff, m_missCount);  
+                    LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************lost target, timeDiff = %d, m_missCount = %d\n", timeDiff, m_missCount);  
                     m_missCount = 0;
                     m_targetVect.clear();
                     mapIt = m_potentialTargetMap.begin();
@@ -254,7 +255,7 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                     }
                     reportTargetUe(0xffffffff, m_remoteIp);
                 } else {
-                    LOG_MSG(LOGGER_MODULE_DPE, TRACE, "drop this one, rnti = %d, timeDiff = %ld, m_missCount = %d\n", pUeEstabInfo->rnti, timeDiff, m_missCount);
+                    LOG_MSG(LOGGER_MODULE_DPE, TRACE, "drop this one, rnti = %d, timeDiff = %d, m_missCount = %d\n", pUeEstabInfo->rnti, timeDiff, m_missCount);
                     reportTargetUe(((*vectIt).prbPower - 5*m_missCount), m_remoteIp);
                     continue;
                 }
@@ -268,8 +269,8 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                 taDiff = pUeEstabInfo->ta - (*vectIt).ta;
                 prbPowerDiff = pUeEstabInfo->prbPower - (*vectIt).prbPower;
                 if ((taDiff >= -1) && (taDiff <= 1) && (prbPowerDiff >= -20) && (prbPowerDiff <= 20)) {
-                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "potential target: rnti = %d, prbPower = %d, ta = %d\n", 
-                        pUeEstabInfo->rnti, pUeEstabInfo->prbPower, pUeEstabInfo->ta);
+                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "potential target: rnti = %d, prbPower = %d, ta = %d, timeDiff = %d\n", 
+                        pUeEstabInfo->rnti, pUeEstabInfo->prbPower, pUeEstabInfo->ta, timeDiff);
                     pUeEstabInfo->timestamp = (*vectIt).timestamp + m_pConfig->m_targetAccTimeInterval;
                     (mapIt->second).push_back(*pUeEstabInfo);
 
@@ -280,7 +281,7 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                         m_remoteIp = remoteIp;          
                         m_targetVect.clear();
                         vectIt = (mapIt->second).begin();
-                        LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************find target, size = 3, timeDiff = %lu, first timestamp = %lu, last timestamp = %lu\n", 
+                        LOG_MSG(LOGGER_MODULE_DPE, INFO, "*****************find target, size = 3, timeDiff = %d, first timestamp = %llu, last timestamp = %llu\n", 
                             timeDiff, (*vectIt).timestamp, pUeEstabInfo->timestamp);
                         while (vectIt != (mapIt->second).end()) {
                             LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "prbPower = %d, ta = %d\n", (*vectIt).prbPower, (*vectIt).ta);
@@ -291,13 +292,13 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
                     }
                     break;
                 } else {
-                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "timeDiff = %ld, taDiff = %d, prbPowerDiff = %d, compare next one\n", timeDiff, taDiff, prbPowerDiff);
+                    LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "timeDiff = %d, taDiff = %d, prbPowerDiff = %d, compare next one\n", timeDiff, taDiff, prbPowerDiff);
                 }
             }            
         }
 
         if (findTarget) {            
-            LOG_MSG(LOGGER_MODULE_DPE, INFO, "clear m_potentialTargetMap, timeDiff = %ld\n", timeDiff);
+            LOG_MSG(LOGGER_MODULE_DPE, INFO, "clear m_potentialTargetMap, timeDiff = %d\n", timeDiff);
             mapIt = m_potentialTargetMap.begin();
             while (mapIt != m_potentialTargetMap.end()) {
                 (mapIt->second).clear();
@@ -306,12 +307,12 @@ void UeLoginInfoReceiver::processUeEstablishInfo(UeEstablishIndMsg* pUeEstabInfo
             break;
         } else {
             m_currentTargetId++; 
-            LOG_MSG(LOGGER_MODULE_DPE, TRACE, "rnti = %d, prbPower = %d, ta = %d, id = %d, timeDiff = %ld\n", 
+            LOG_MSG(LOGGER_MODULE_DPE, TRACE, "rnti = %d, prbPower = %d, ta = %d, id = %d, timeDiff = %d\n", 
                 pUeEstabInfo->rnti, pUeEstabInfo->prbPower, pUeEstabInfo->ta, m_currentTargetId, timeDiff);
 
             // clear m_potentialTargetMap
             if (timeDiff > m_maxTargetAccTimeInterval) {
-                LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "clear m_potentialTargetMap as all data timeout, timeDiff = %ld\n", timeDiff);
+                LOG_MSG(LOGGER_MODULE_DPE, DEBUG, "clear m_potentialTargetMap as all data timeout, timeDiff = %d\n", timeDiff);
                 mapIt = m_potentialTargetMap.begin();
                 while (mapIt != m_potentialTargetMap.end()) {
                     (mapIt->second).clear();

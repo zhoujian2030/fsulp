@@ -61,7 +61,7 @@ void TgtProcessUeEstablishInfo(UInt16 rnti, UlReportInfoList* pUlRptInfoList)
     UeEstablishInfo* pUeEstabInfo = &pUeEstabIndMsg->ueEstabInfoArray[pUeEstabIndMsg->count++];
     struct timeval tv;
     gettimeofday(&tv, 0);
-    // pUeEstabInfo->timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    // pUeEstabInfo->timestamp = (UInt64)tv.tv_sec * 1000 + tv.tv_usec / 1000;
     pUeEstabInfo->rnti = CONVERT_INT16_ENDIAN(rnti);
     pUeEstabInfo->prbPower = CONVERT_INT32_ENDIAN(pUlRptInfoList->ulRptInfo[pUlRptInfoList->count - 1].prbPower); // take the prbPower of last RLC segment
     pUeEstabInfo->ta = CONVERT_INT16_ENDIAN(pUlRptInfoList->ulRptInfo[pUlRptInfoList->count - 1].ta);

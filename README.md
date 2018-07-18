@@ -26,6 +26,6 @@ Note: make sure gtest lib is already comiled
 
 - run in linux VM
 ```
-./build.sh clean
+./build.sh --disabletest clean
 ./build.sh --disabletest
 ```

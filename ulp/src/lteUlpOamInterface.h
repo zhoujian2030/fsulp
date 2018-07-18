@@ -21,6 +21,8 @@ extern "C" {
 
 #define MAX_NUM_UE_INFO_REPORT  32
 
+#pragma pack(4)
+
 typedef struct {
     UInt16 rnti;
     BOOL   imsiPresent;

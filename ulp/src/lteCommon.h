@@ -23,11 +23,12 @@ typedef unsigned char   BOOL;
 typedef signed int      SInt32;
 
 #else
+#include <stdint.h>
 
 typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;
-typedef unsigned long   UInt64;
+typedef uint64_t        UInt64;
 typedef unsigned long   ULong32;
 typedef unsigned char   UChar8;
 typedef signed char   	SInt8;

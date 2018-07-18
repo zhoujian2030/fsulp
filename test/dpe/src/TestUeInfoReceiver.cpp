@@ -34,175 +34,175 @@ TEST_F(TestUeInfoReceiver, processUeEstablishInfo)
 
     usleep(100);
 
-    UeLoginInfo ueLoginInfo;
+    UeDataInd ueDataInd;
     unsigned long timestamp = 0;
     struct timeval tv;
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 100;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 65;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 100;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 65;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
     
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 101;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 66;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 101;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 66;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(7);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(3);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(2);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(7);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(1);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(4);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 
     gettimeofday(&tv, 0);
     timestamp = tv.tv_sec * 1000 + tv.tv_usec / 1000;    
-    ueLoginInfo.msgType = MSG_ULP_UE_ESTABLISH_IND;
-    ueLoginInfo.u.ueEstablishInd.count = 1;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
-    ueLoginInfo.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
-    ueLoginInfo.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
+    ueDataInd.msgType = MSG_ULP_UE_ESTABLISH_IND;
+    ueDataInd.u.ueEstablishInd.count = 1;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].rnti = 102;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].prbPower = 67;
+    ueDataInd.u.ueEstablishInd.ueEstabInfoArray[0].timestamp = timestamp;
+    ueDataInd.length = MIN_UE_ULP_IND_MSG_LENGTH + sizeof(UeEstablishInfo);
     
-    SocketUdpSend(socket, (char*)&ueLoginInfo, ueLoginInfo.length, &serverAddr);
+    SocketUdpSend(socket, (char*)&ueDataInd, ueDataInd.length, &serverAddr);
 
     sleep(5);
 }
