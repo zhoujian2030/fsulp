@@ -34,7 +34,7 @@ else
         cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
         cp exe/dpe/resource/initdpe.sh /mnt/hgfs/c/share/ 
     fi
-    cp exe/ulpdeamon/obj/ulpdeamon /mnt/hgfs/c/share/ 
+    cp exe/deamon/obj/deamon /mnt/hgfs/c/share/
 fi
 
 

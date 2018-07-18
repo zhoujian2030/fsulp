@@ -1,16 +1,17 @@
 ifeq ($(PLATFORM), arm)
 ifeq ($(BUILD_TARGET), nodpe)
 SUBDIRS = ulp \
-	ulpdeamon \
+	deamon \
 	hbt
 else 
 SUBDIRS = ulp \
-	ulpdeamon \
+	deamon \
 	dpe \
 	hbt
 endif
 else 
 SUBDIRS = dpe \
+	deamon \
 	hbt
 endif
 

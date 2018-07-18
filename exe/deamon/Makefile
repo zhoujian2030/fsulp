@@ -1,5 +1,5 @@
 # Target  name
-TARGET = ulpdeamon
+TARGET = deamon
 
 # Directories
 OBJDIR = obj
