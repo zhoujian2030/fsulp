@@ -375,7 +375,7 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
                 pLogInfoNode->u.logMsgInfo.funcName = (char*)funcName;
                 pLogInfoNode->u.logMsgInfo.threadId = pthread_self();
                 int length = strlen(fmt);
-                int i = 0, n = 0, s = 0;
+                int i = 0, n = 0, s = 0, ld=0;
                 while (i < length) {
                     if (fmt[i++] == '%') {
                         n++;
@@ -386,11 +386,14 @@ void LoggerWriteMsg(char* moduleId, unsigned int logLevel, const char *fileName,
                         if (fmt[i++] == 's') {
                             s++;
                             break;
+                        } else if (fmt[i++] == 'l') {
+                            ld++;
+                            break;
                         }
                     }
                 }
 
-                if ((n > MAX_LOG_ARGS_NUM) || (s > 0)) {
+                if ((n > MAX_LOG_ARGS_NUM) || (s > 0) || (ld > 0)) {
                     vsnprintf(pLogInfoNode->u.logMsgInfo.logContent, MAX_LOG_CONTENT_LENGTH, fmt, args);
                     pLogInfoNode->u.logMsgInfo.logContentFlag = 1;
                     // printf("logContentFlag = 1\n");
