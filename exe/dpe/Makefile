@@ -6,14 +6,18 @@ OBJDIR = obj
 SRCDIR = src
 INCDIR = inc
 LIBDIR = lib
+DEPDIR = .d
+
+$(shell mkdir -p $(DEPDIR) >/dev/null)
 
 # Libraries
-INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/db/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/ulp/inc
+INC += -I$(INCDIR) -I$(PROJBASE)/cm/inc -I$(PROJBASE)/db/inc -I$(PROJBASE)/dpe/inc -I$(PROJBASE)/ulp/inc
 LIBS = 
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
+DEPS := $(subst $(SRCDIR)/, $(DEPDIR)/, $(SRCS:.cpp=.d))
 
 #DEPOBJS := $(PROJBASE)/cm/obj/*.o
 
@@ -39,8 +43,10 @@ $(TARGET): buildrepo $(OBJS)
 	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBS) -ldl
 	@mv $(TARGET) $(OBJDIR)
 
+-include $(DEPS)
+
 clean:
-	rm -rf $(LIBDIR) $(INCDIR) $(OBJDIR) $(SRCDIR)/*.o
+	rm -rf $(LIBDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)
 	
 install:
 	# nothing to do

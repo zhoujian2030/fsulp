@@ -10,9 +10,16 @@ SUBDIRS = ulp \
 	hbt
 endif
 else 
+ifeq ($(PLATFORM), x86)
+SUBDIRS = ulp \
+	dpe \
+	deamon \
+	hbt
+else
 SUBDIRS = dpe \
 	deamon \
 	hbt
+endif
 endif
 
 BUILDDIRS = $(SUBDIRS:%=build-%)

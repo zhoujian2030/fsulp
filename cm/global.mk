@@ -9,21 +9,24 @@ CFLAGS = -Wall -g -O3 -fPIC
 
 LFLAGS = -lrt
 
-.%.d: %.cpp
-	$(CXX) $(INC) -MM $< > $@
-	@$(CXX) $(INC) -MM $< | sed s/"^"/"\."/  |  sed s/"^\. "/" "/  | \
-                sed s/"\.o"/"\.d"/  >> $@
+$(DEPDIR)/%.d: $(SRCDIR)/%.cpp
+	@set -e; rm -f $@; $(CC) -MM $< $(INC) > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(INC) $(CFLAGS) -c $< -o $@
 
-.%.d: %.c
-	$(CC) $(INC) -MM $< > $@
-	@$(CC) $(INC) -MM $< | sed s/"^"/"\."/  |  sed s/"^\. "/" "/  | \
-                sed s/"\.o"/"\.d"/  >> $@
+$(DEPDIR)/%.d: $(SRCDIR)/%.c
+	@set -e; rm -f $@; $(CC) -MM $< $(INC) > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
                 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(INC) $(CFLAGS)  -c $< -o $@
 	
 %.o: %.cc
 	$(CXX) $(INC) $(CFLAGS)  -c $<
+
+-include $(SRC_MK)
+
