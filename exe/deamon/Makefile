@@ -1,4 +1,4 @@
-# Target  name
+# Target name
 TARGET = deamon
 
 # Directories
@@ -8,53 +8,18 @@ INCDIR = inc
 LIBDIR = lib
 DEPDIR = .d
 
-$(shell mkdir -p $(DEPDIR) >/dev/null)
-
-# Libraries
-INC += -I$(INCDIR)
-LIBS =
-
-# Files and folders
-SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
-OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
-DEPS := $(subst $(SRCDIR)/, $(DEPDIR)/, $(SRCS:.cpp=.d))
-
-#DEPOBJS := $(PROJBASE)/cm/obj/*.o
-
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX -UMAC_PHY_INTF_NEW -UUNIT_TEST
+include $(PROJBASE)/cm/filter_code.mk
+include $(PROJBASE)/cm/bin_rules.mk
 
-ifeq ($(PLATFORM), arm)
-CFLAGS += -DARM_LINUX
-endif
+# include
+INC += -I$(INCDIR)
 
-ifeq ($(PLATFORM), ppc)
-CFLAGS += -DPPC_LINUX
-endif
+# compile flags
+CFLAGS += -UMAC_PHY_INTF_NEW -UUNIT_TEST
 
-all: $(TARGET)
-
-# Targets
-$(TARGET): buildrepo $(OBJS)
-	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBS)
-	@mv $(TARGET) $(OBJDIR)
-
--include $(DEPS)
-
-clean:
-	rm -rf $(LIBDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)
+# link flags
+LDFLAGS += -pthread
 	
-install:
-	# nothing to do
-	
-buildrepo:
-	@$(call make-repo)
-
-# Create obj directory structure
-define make-repo
-	mkdir -p $(OBJDIR)
-	for dir in $(SRCDIRS); \
-	do \
-		mkdir -p $(OBJDIR)/$$dir; \
-	done
-endef
+# link c or cpp target
+LD := $(CXX)

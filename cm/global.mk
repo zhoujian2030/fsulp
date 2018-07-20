@@ -2,12 +2,22 @@
 CC = $(PLATFORM_CC)
 CXX = $(PLATFORM_CXX)
 AR = $(PLATFORM_AR)
+LD = $(CC)
+
+$(shell mkdir -p $(OBJDIR) >/dev/null)
+$(shell mkdir -p $(DEPDIR) >/dev/null)
 
 # For debug load, DON'T define NDEBUG 
 #CFLAGS = -Wall -g -O2 -DNDEBUG -fPIC
-CFLAGS = -Wall -g -O3 -fPIC
+CFLAGS = -Wall -g -O3 -fPIC -DOS_LINUX
+ifeq ($(PLATFORM), arm)
+CFLAGS += -DARM_LINUX
+endif
+ifeq ($(PLATFORM), ppc)
+CFLAGS += -DPPC_LINUX
+endif
 
-LFLAGS = -lrt
+LDFLAGS = -lrt
 
 $(DEPDIR)/%.d: $(SRCDIR)/%.cpp
 	@set -e; rm -f $@; $(CC) -MM $< $(INC) > $@.$$$$; \
@@ -27,6 +37,4 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	
 %.o: %.cc
 	$(CXX) $(INC) $(CFLAGS)  -c $<
-
--include $(SRC_MK)
 

@@ -1,10 +1,10 @@
 #!/bin/sh
 
-echo "build in platform " $PLATFORM
+echo "build in platform" $PLATFORM
 
 if [ $# == 1 ]; then
     libname="$1"
-    echo "lib name is " $libname
+    echo "lib name is" $libname
 else
     libname=libdpe
 fi

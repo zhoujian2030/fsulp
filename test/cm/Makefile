@@ -1,4 +1,4 @@
-# Target  name
+# Target name
 TARGET = cm
 
 # Directories
@@ -9,54 +9,28 @@ DEPDIR = dep
 BINDIR = bin
 DEPDIR = .d
 
-$(shell mkdir -p $(DEPDIR) >/dev/null)
+include $(PROJBASE)/cm/global.mk
+include $(PROJBASE)/cm/filter_code.mk
+include $(PROJBASE)/cm/bin_rules.mk
+include $(PROJBASE)/test/gtest_rules.mk
 
-# Libraries
-# gtest include
-INCGTEST = -I$(PROJBASE)/test/lib/gtest/include
+# include
 INC += -I$(INCDIR) $(INCGTEST) -I$(PROJBASE)/cm/inc
-# MUST place libnet.a ahead of libcm.a because libnet depends on libcm.a
+
+# platform libs dependency 
 ifeq ($(PLATFORM), x86)
 LIBS = $(PROJBASE)/cm/lib/libcm.a
 else
 LIBS = $(PROJBASE)/cm/lib/libcm_arm.a
 endif
+LIBS += $(LIBAGTEST)
 
-LIBAGTEST = $(PROJBASE)/test/lib/gtest/lib/libgtest.a $(PROJBASE)/test/lib/gtest/lib/libgtest_main.a
-LIBSOGTEST = -L$(PROJBASE)/test/lib/gtest/lib -lgtest -lgtest_main
+# compile flags
+CFLAGS += -Wno-write-strings -UMAC_PHY_INTF_NEW -DUNIT_TEST
 
-# Files and folders
-SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
-OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
-DEPS := $(subst $(SRCDIR)/, $(DEPDIR)/, $(SRCS:.cpp=.d))
+# link flags
+LDFLAGS += -pthread
 
-include $(PROJBASE)/cm/global.mk
-CFLAGS += -Wno-write-strings -DOS_LINUX -UMAC_PHY_INTF_NEW -DUNIT_TEST
+# link c or cpp target
+LD := $(CXX)
 
-all: $(TARGET)
-
-# Targets
-$(TARGET): buildrepo $(OBJS)
-	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBAGTEST) $(LIBS)
-	@mv $(TARGET) $(OBJDIR)
-
--include $(DEPS)
-
-clean:
-	rm -rf $(BINDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)
-
-install:
-	mkdir -p $(BINDIR)
-	cp $(OBJDIR)/$(TARGET) $(BINDIR)
-	
-buildrepo:
-	@$(call make-repo)
-
-# Create obj directory structure
-define make-repo
-	mkdir -p $(OBJDIR)
-	for dir in $(SRCDIRS); \
-	do \
-		mkdir -p $(OBJDIR)/$$dir; \
-	done
-endef

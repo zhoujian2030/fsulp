@@ -168,6 +168,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                         }
                     }
 #endif
+#ifdef DPE
                     if (NAS_MSG_TYPE_IDENTITY_RESPONSE == nasMsgType) {
                         RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
                         if (pUeCtx != 0 && pUeCtx->rrcSetupComplRecvdFlag == 0) {
@@ -175,6 +176,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                             TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
                         }
                     }
+#endif
                 } else {
                     LOG_WARN(ULP_LOGGER_NAME, "dedicated_info_type = %d, rnti = %d\n", pUlInfoTransMsg->dedicated_info_type, rnti);
                 }
@@ -201,6 +203,8 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                     }
                 }
 #endif
+
+#ifdef DPE
                 // for find target
                 if (0xff != nasMsgType) {
                     RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
@@ -218,7 +222,7 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
                         TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
                     }
                 }
-
+#endif
             } else {
                 LOG_ERROR(ULP_LOGGER_NAME, "Asn1ParseRrcSetupComplMsg error, rnti = %d\n", rnti);
             }  

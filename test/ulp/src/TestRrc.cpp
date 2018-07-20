@@ -633,7 +633,11 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
 
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+#ifdef DPE
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+#else
     ASSERT_EQ((int)gLteKpi.mem, 0);
+#endif
     pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
     ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
     ASSERT_EQ((int)pRrcUeDataInd->rrcMsgType, RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE);

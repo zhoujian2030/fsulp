@@ -75,3 +75,4 @@ TEST_F(TestJson, Parse_Json_File)
 
     cJSON_Delete(jsonRoot);
 }
+

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export PLATFORM=arm
+export CROSS_COMPILE=arm-linux-
 export PATH=$PATH:/omap/eldk/usr/bin/
 export PLATFORM_CXX=arm-linux-g++
 export PLATFORM_CC=arm-linux-gcc

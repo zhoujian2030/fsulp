@@ -18,6 +18,7 @@
 using namespace std;
 using namespace dpe;
 
+#if 0
 // -------------------------------
 TEST_F(TestUeInfoReceiver, processUeEstablishInfo)
 {
@@ -206,3 +207,4 @@ TEST_F(TestUeInfoReceiver, processUeEstablishInfo)
 
     sleep(5);
 }
+#endif
