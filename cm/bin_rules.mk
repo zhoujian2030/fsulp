@@ -3,7 +3,8 @@ all: $(TARGET)
 # Targets
 $(TARGET): $(OBJS)
 	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
-	@mv $(TARGET) $(OBJDIR)
+	@echo $(TARGET): $(OBJS) $(LIBS) > $(DEPDIR)/$(TARGET).d
+	
 
 clean:
 	rm -rf $(TARGET) $(LIBDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)
@@ -13,4 +14,5 @@ install:
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
+-include $(DEPDIR)/$(TARGET).d
 endif

@@ -28,14 +28,14 @@ elif [[ $COMMAND = "install" ]]; then
     make install
 else
     make
-    cp exe/ulp/obj/ulp /mnt/hgfs/c/share/ 
+    cp exe/ulp/ulp /mnt/hgfs/c/share/ 
     cp exe/ulp/resource/ulp.conf /mnt/hgfs/c/share/ 
     if [[ $COMMAND != "--nodpe" ]]; then
-        cp exe/dpe/obj/dpe /mnt/hgfs/c/share/ 
+        cp exe/dpe/dpe /mnt/hgfs/c/share/ 
         cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
         cp exe/dpe/resource/initdpe.sh /mnt/hgfs/c/share/ 
     fi
-    cp exe/deamon/obj/deamon /mnt/hgfs/c/share/
+    cp exe/deamon/deamon /mnt/hgfs/c/share/
 fi
 
 

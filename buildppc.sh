@@ -23,7 +23,7 @@ elif [[ $COMMAND = "install" ]]; then
     make install
 else
     make
-    cp exe/dpe/obj/dpe /mnt/hgfs/c/share/ 
+    cp exe/dpe/dpe /mnt/hgfs/c/share/ 
     cp exe/dpe/resource/dpe.conf /mnt/hgfs/c/share/ 
     cp exe/dpe/resource/initdpe.sh /mnt/hgfs/c/share/ 
 fi
