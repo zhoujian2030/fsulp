@@ -33,7 +33,7 @@ UeLoginInfoReceiver::UeLoginInfoReceiver(DpEngineConfig* pDpeConfig)
     m_udpSocketFd = SocketUdpInitAndBind(m_pConfig->m_ueDataServerPort, (char*)m_pConfig->m_ueDataServerIp.c_str());
     SocketGetSockaddrByIpAndPort(&m_oamAddr, m_pConfig->m_oamServerIp.c_str(), m_pConfig->m_oamServerPort);
     SocketMakeNonBlocking(m_udpSocketFd);
-#ifdef COLLECT_IMSI
+#ifdef TARGET_ANALYSIS
     DbGetConnection(&m_dbConn, m_pConfig->m_mobileIdDbName.c_str());
 #endif
     m_maxTargetAccTimeInterval = m_pConfig->m_targetAccTimeInterval + m_pConfig->m_targetAccTimeMargin;
@@ -114,7 +114,7 @@ void UeLoginInfoReceiver::saveUeIdentity(UeIdentityIndMsg* pUeIdentityMsg)
 
         if (pUeIdentity->imsiPresent && !pUeIdentity->mTmsiPresent) {
             pUeIdentity->imsi[15] = '\0';
-#ifdef COLLECT_IMSI
+#ifdef TARGET_ANALYSIS
             DbInsertLoginImsi(&m_dbConn, (const char*)pUeIdentity->imsi);
 #else             
             LOG_MSG(LOGGER_MODULE_DPE, TRACE, "imsi = %s\n", pUeIdentity->imsi);

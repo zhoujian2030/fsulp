@@ -58,11 +58,14 @@ void PdcpProcessRxSrb(UInt16 rnti, UInt16 lcId, UInt8* pData, UInt16 size, UlRep
         // data is ciphered
         LOG_TRACE(ULP_LOGGER_NAME, "TODO, data is ciphered ??\n");
 
+#ifdef DPE
+#ifdef TARGET_LOCATION
         if (lcId == 2 && size == 19) {
             LOG_DBG(ULP_LOGGER_NAME, "could be CP_ACK\n");
             TgtProcessUeEstablishInfo(rnti, pUlRptInfoList);
         }
-
+#endif
+#endif
         if (pData != 0) {
             MemFree(pData);
         }

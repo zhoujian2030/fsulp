@@ -16,7 +16,7 @@ include $(PROJBASE)/cm/lib_rules.mk
 INC += -I$(INCDIR) -I$(PROJBASE)/cm/inc -I$(PROJBASE)/db/inc -I$(PROJBASE)/ulp/inc
 
 # compile flags
-CFLAGS += -Wno-write-strings -UCOLLECT_IMSI -UENDIAN_CONVERT
+CFLAGS += -Wno-write-strings -UENDIAN_CONVERT
 
 ifeq ($(GTEST_SUPPORT), TRUE)
 CFLAGS += -DUNIT_TEST

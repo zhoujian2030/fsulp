@@ -29,3 +29,9 @@ Note: make sure gtest lib is already comiled
 ./build.sh --disabletest clean
 ./build.sh --disabletest
 ```
+
+# Build macro
+---
+1. Define *DPE* and *TARGET_LOCATION* in global.mk to support location special target
+2. Define *DPE* and *TARGET_ANALYSIS* in global.mk to support collect IMSI and analysis user behavior in DPE
+3. Define *PHY_DEBUG* in global.mk to support collect rb information in kpi

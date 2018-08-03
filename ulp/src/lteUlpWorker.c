@@ -280,8 +280,10 @@ void UlpRecvAndHandleOamData()
 #endif
 
 #ifdef DPE 
+#ifdef TARGET_LOCATION
     // handle UE estabilsh
     TgtSendUeEstablishInd(gOamUdpFd, &gDpeAddress);
+#endif
 #endif
 
     // handle UE identity
@@ -348,7 +350,9 @@ void UlpRecvAndHandleOamData()
 #ifdef OS_LINUX
             SocketUdpSend(gOamUdpFd, buffer, sizeof(LteUlpDataInd), &gOamAddress);  
 #ifdef DPE 
+#ifdef TARGET_ANALYSIS
             SocketUdpSend(gOamUdpFd, buffer, pUlpDataInd->length, &gDpeAddress);  
+#endif
 #endif
 #endif
         }

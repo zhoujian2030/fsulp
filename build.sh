@@ -31,6 +31,11 @@ else
             make
         fi
     else
+        if [ ! -d "$PROJBASE/test/lib/gtest/lib/" ]; then  
+            cd $PROJBASE/test/lib/gtest
+            sh ./build.sh
+            cd -
+        fi
         make
     fi
 fi

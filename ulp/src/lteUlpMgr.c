@@ -28,7 +28,9 @@ void InitUlpLayer(unsigned char startUlpWorkerFlag, unsigned char startResCleane
     InitMacLayer();
     InitRlcLayer();
     InitRrcLayer();
+#ifdef TARGET_LOCATION
     TgtInit();
+#endif
     InitUlpWorker(startUlpWorkerFlag);
     InitResCleaner(startResCleanerFlag);
 }

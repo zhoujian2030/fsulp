@@ -156,7 +156,7 @@ void DpEngineConfig::parseJsonConfig(std::string configFileName)
         }
     }
 
-#ifdef COLLECT_IMSI
+#ifdef TARGET_ANALYSIS
     printf("m_mobileIdDbName:           %s\n", m_mobileIdDbName.c_str());
     printf("m_userDbname:               %s\n", m_userDbname.c_str());
     printf("EngineServerIp:             %s\n", m_engineServerIp.c_str());

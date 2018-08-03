@@ -634,7 +634,9 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
     KpiRefresh();
     ASSERT_EQ(gRrcUeDataInd.numUe, 1);
 #ifdef DPE
+#ifdef TARGET_LOCATION
     ASSERT_EQ((int)gLteKpi.mem, 1);
+#endif
 #else
     ASSERT_EQ((int)gLteKpi.mem, 0);
 #endif
