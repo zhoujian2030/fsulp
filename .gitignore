@@ -33,6 +33,5 @@
 .vscode
  *.png
 
-inc
 obj
 bin
