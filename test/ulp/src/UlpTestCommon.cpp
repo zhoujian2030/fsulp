@@ -22,11 +22,13 @@ unsigned char gMsgBuffer[2048];
 // RrcUeDataInd_test gRrcUeDataInd = {0};
 
 MacUeDataInd_Test_Array gMacUeDataInd = {0};
+MacCcchDataInd_Test_Array gMacUeCcchDataInd = {0};
 RlcPdcpUeDataInd_Test_Array gRlcUeDataInd = {0};
 RlcPdcpUeDataInd_Test_Array gPdcpUeDataInd = {0};
 RrcUeDataInd_Test_Array gRrcUeDataInd = {0};
 
 unsigned int gCallMacDataInd = 1;
+unsigned int gCallMacCcchDataInd = 1;
 unsigned int gCallRlcDataInd = 1;
 unsigned int gCallPdcpDataInd = 1;
 unsigned int gCallRrcDataInd = 1;
@@ -64,6 +66,25 @@ int IP_Call_Mac_Data_Ind(void* pData)
     }
 
     return gCallMacDataInd;
+}
+
+// -----------------------
+int IP_Call_Mac_Ccch_Data_Ind(unsigned short rnti, void* pData, unsigned short size)
+{
+    if (pData == 0) {
+        return gCallMacCcchDataInd;
+    }
+
+    MacUeCcchInd* pCcchInd = &gMacUeCcchDataInd.ccchDataIndArray[gMacUeCcchDataInd.numUe];
+    gMacUeCcchDataInd.numUe++;
+    printf("gMacUeCcchDataInd.numUe = %d\n", gMacUeCcchDataInd.numUe);
+    
+    pCcchInd->rnti = rnti;
+    pCcchInd->length = size;
+    pCcchInd->pData = new unsigned char[size];
+    memcpy(pCcchInd->pData, pData, size);
+
+    return gCallMacCcchDataInd;
 }
 
 // -----------------------

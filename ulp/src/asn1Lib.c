@@ -1289,3 +1289,52 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_tau_request_msg(LIBLTE_SIMPLE_BYTE_MSG_STRUC
 
     return(err);   
 }
+
+// -------------------------------------------
+LIBLTE_ERROR_ENUM liblte_rrc_unpack_s_tmsi_ie(uint8 **ie_ptr, LIBLTE_RRC_S_TMSI_STRUCT  *s_tmsi)
+{
+    LIBLTE_ERROR_ENUM err = LIBLTE_ERROR_INVALID_INPUTS;
+
+    if(ie_ptr != NULL && s_tmsi != NULL)
+    {
+        liblte_rrc_unpack_mmec_ie(ie_ptr, &s_tmsi->mmec);
+        s_tmsi->m_tmsi = liblte_bits_2_value(ie_ptr, 32);
+
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);
+}
+
+// -------------------------------------------
+LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_request_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_CONNECTION_REQUEST_STRUCT *con_req)
+{
+    LIBLTE_ERROR_ENUM  err     = LIBLTE_ERROR_INVALID_INPUTS;
+    uint8             *msg_ptr = msg->msg;
+
+    if(msg != NULL && con_req != NULL)
+    {
+        // Extension Choice
+        uint8 ext = liblte_bits_2_value(&msg_ptr, 1);
+        
+        // UE Identity Type
+        con_req->ue_id_type = (LIBLTE_RRC_CON_REQ_UE_ID_TYPE_ENUM)liblte_bits_2_value(&msg_ptr, 1);
+
+        // UE Identity
+        if(LIBLTE_RRC_CON_REQ_UE_ID_TYPE_S_TMSI == con_req->ue_id_type) {
+            liblte_rrc_unpack_s_tmsi_ie(&msg_ptr, (LIBLTE_RRC_S_TMSI_STRUCT *)&con_req->ue_id);
+        } else {
+            con_req->ue_id.random = (uint64)liblte_bits_2_value(&msg_ptr, 8) << 32;
+            con_req->ue_id.random |= liblte_bits_2_value(&msg_ptr, 32);
+        }
+
+        // Establishment Cause
+        con_req->cause = (LIBLTE_RRC_CON_REQ_EST_CAUSE_ENUM)liblte_bits_2_value(&msg_ptr, 3);
+
+        liblte_rrc_consume_noncrit_extension(ext, __func__, &msg_ptr);
+        
+        err = LIBLTE_SUCCESS;
+    }
+
+    return(err);    
+}

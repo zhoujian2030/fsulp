@@ -15,6 +15,7 @@
 #include "mempool.h"
 #include "lteIntegrationPoint.h"
 #include "lteRrcPdcpInterface.h"
+#include "lteRrcMacInterface.h"
 #include "UlpTestCommon.h"
 #include "lteKpi.h"
 #include "asn1.h"
@@ -1022,4 +1023,69 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_SMS) {
     ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_UPLINK_NAS_TRANSPORT);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+}
+
+
+// -------------------------------
+TEST_F(TestRrc, Interface_MacUeCcchDataInd_Rrc_Request) {
+    LteLoggerSetLogLevel(0);
+    gCallRrcDataInd = 0;
+    KpiInit();
+    InitRrcLayer();
+    InitMemPool();
+
+    unsigned short rnti = 102;
+    // RRCConnectionRequest
+    // Type: UL_CCCH
+    // Direction: Uplink
+    // Computer Timestamp: 11:45:15.897
+    // UE Timestamp: 54482 (ms)
+    // Radio Technology: LTE
+    //   UL-CCCH-Message
+    //     message
+    //       c1
+    //         rrcConnectionRequest
+    //           criticalExtensions
+    //             rrcConnectionRequest-r8
+    //               ue-Identity
+    //                 s-TMSI
+    //                   mmec: 0xD2
+    //                   m-TMSI: 0xD0C7EE09
+    //               establishmentCause: (4) mo-Data
+    //               spare: 0x0
+    unsigned char rrcMsg[] = {
+        0x4d, 0x2d, 0x0c, 0x7e, 0xe0, 0x98
+    };
+
+    RrcUeDataInd_test* pRrcUeDataInd;
+    RrcUeContext* pRrcUeCtx;
+
+    unsigned short dataSize = sizeof(rrcMsg);
+    unsigned char* pCcchDataInd = (unsigned char*)MemAlloc(dataSize);
+    memcpy(pCcchDataInd, rrcMsg, dataSize);
+
+    KpiRefresh();
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+
+    MacUeCcchDataInd(rnti, pCcchDataInd, dataSize, 0);
+
+    KpiRefresh();
+    ASSERT_EQ(gRrcUeDataInd.numUe, 1);
+    ASSERT_EQ((int)gLteKpi.mem, 1);
+    pRrcUeDataInd = &gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(pRrcUeDataInd->rnti, rnti);
+    ASSERT_EQ((int)pRrcUeDataInd->rrcMsgType, LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ);
+    ASSERT_EQ(pRrcUeDataInd->nasMsgType, 0xff);
+    memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+
+    ASSERT_EQ(RrcGetUeContextCount(), 1);
+    pRrcUeCtx = RrcGetUeContext(rnti);
+    ASSERT_TRUE(pRrcUeCtx != 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsi, 0xD0C7EE09);
+    RrcDeleteUeContext(pRrcUeCtx);
+    KpiRefresh();
+    ASSERT_EQ(RrcGetUeContextCount(), 0);
+    ASSERT_EQ((int)gLteKpi.mem, 0);
 }

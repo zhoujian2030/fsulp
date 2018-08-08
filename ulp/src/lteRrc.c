@@ -9,6 +9,7 @@
 #include "lteRrc.h"
 #include "lteCommon.h"
 #include "lteRrcPdcpInterface.h"
+#include "lteRrcPdcpInterface.h"
 #include "mempool.h"
 #include "asn1.h"
 #include "lteLogger.h"
@@ -143,6 +144,17 @@ void PdcpUeSrbDataInd(unsigned short rnti, unsigned short lcId, unsigned char* p
 }
 
 // --------------------------------
+void MacUeCcchDataInd(unsigned short rnti, unsigned char* pData, unsigned short size, UlReportInfoList* pUlRptInfoList)
+{
+    if ((pData == 0) || (size == 0)) {
+        LOG_ERROR(ULP_LOGGER_NAME, "pData = %p, rnti = %d, data size = %d\n", pData, rnti, size);
+        return;
+    }
+
+    RrcParseUlCcchMsg(rnti, pData, size);
+}
+
+// --------------------------------
 void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList)
 {
     LOG_TRACE(ULP_LOGGER_NAME, "rnti = %d, data size = %d\n", rnti, size);
@@ -248,11 +260,53 @@ void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList*
 // --------------------------------
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
 {
-    LOG_WARN(ULP_LOGGER_NAME, "TODO, rnti = %d, data size = %d\n", rnti, size);
-
-    if (pData != 0) {
-        MemFree(pData);
+    if (pData == 0 || size == 0) {
+        LOG_ERROR(ULP_LOGGER_NAME, "pData = %p, rnti = %d, data size = %d\n", pData, rnti, size);
+        return;
     }
+
+    LOG_TRACE(ULP_LOGGER_NAME, "rnti = %d, data size = %d\n", rnti, size);
+    LOG_BUFFER(pData, size);
+
+    UInt8 rrcCcchMsgType = (*pData >> 6) & 0x01;
+    if (rrcCcchMsgType == LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ) { 
+        LIBLTE_RRC_CONNECTION_REQUEST_STRUCT* pRrcReqMsg = (LIBLTE_RRC_CONNECTION_REQUEST_STRUCT*)MemAlloc(sizeof(LIBLTE_RRC_CONNECTION_REQUEST_STRUCT));
+        if (pRrcReqMsg != 0) {
+            if (ASN1_SUCCES == Asn1ParseRrcConnReqMsg(pData, size, pRrcReqMsg)) {
+                gLteKpi.rrcConnReq++;
+
+                LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: RRC Conn Req (%d)\n", rnti);
+
+                if (pRrcReqMsg->ue_id_type == LIBLTE_RRC_CON_REQ_UE_ID_TYPE_S_TMSI) {
+                    LOG_INFO(ULP_LOGGER_NAME, "M-TMSI = 0x%x\n", pRrcReqMsg->ue_id.s_tmsi.m_tmsi);
+                    RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
+                    if (pUeCtx == 0) {
+                        pUeCtx = RrcCreateUeContext(rnti);
+                        if (pUeCtx == 0) {
+                            LOG_ERROR(ULP_LOGGER_NAME, "fail to create ue context, rnti = %d\n", rnti);
+                            MemFree(pRrcReqMsg);
+                            return;
+                        }
+                    }
+
+                    pUeCtx = RrcUpdateMTmsi(pUeCtx, pRrcReqMsg->ue_id.s_tmsi.m_tmsi);
+                    RrcUeDataInd(pUeCtx);
+                } else {
+                    LOG_DBG(ULP_LOGGER_NAME, "random value = %llu\n", pRrcReqMsg->ue_id.random);
+                }
+            } else {
+                LOG_ERROR(ULP_LOGGER_NAME, "Asn1ParseRrcConnReqMsg error, rnti = %d\n", rnti);
+            }
+
+            MemFree(pRrcReqMsg);
+        }
+    } else {
+        LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: RRC Conn Reestablish Req (%d)\n", rnti);
+    }
+
+    IP_RRC_DECODE_RESULT(rnti, rrcCcchMsgType, 0xff, 0);
+
+    MemFree(pData);
 }
 
 // --------------------------------

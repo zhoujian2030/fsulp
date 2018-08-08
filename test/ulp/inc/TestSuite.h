@@ -10,6 +10,7 @@
 
 #include "gtest/gtest.h"
 #include <iostream>
+#include "UlpTestCommon.h"
 
 class TestSuite : public ::testing::Test {
 protected:

@@ -19,6 +19,7 @@
 #include "list.h"
 #include "lteRrc.h"
 #include "lteLogger.h"
+#include "lteKpi.h"
 
 using namespace std;
 
@@ -362,4 +363,69 @@ TEST_F(TestUlp, Rlc_Reassamble_2_SDU_Segment) {
     ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr, 15) == 0);
     RrcDeleteUeContext(pRrcUeCtx);
     ASSERT_EQ(RrcGetUeContextCount(), 0);
+}
+
+TEST_F(TestUlp, Rrc_Request) {
+    gCallMacDataInd = 1;
+    gCallRrcDataInd = 1;
+    gCallMacCcchDataInd = 1;
+    InitUlpLayer(0, 0);
+    LteLoggerSetLogLevel(0);
+
+    unsigned char macPdu[] = {     
+        0x3d, 0x20, 0x06, 0x1f, 0x00, 0x53, 0xbe, 0x68, 0x92, 0xb8, 
+        0x36, 0xdb, 0x63, 0x1c, 0xd6, 0x2b, 0x8f, 0x30
+    };
+
+    unsigned short length = 0;
+    unsigned short rnti = 124;
+
+    S_PhyHlMsgHead* pPhyMsgHead = (S_PhyHlMsgHead*)gMsgBuffer;
+    pPhyMsgHead->opc = RX_ULSCH_INDICATION;
+    length += sizeof(S_PhyHlMsgHead);
+
+    S_UlIndHead* pUlIndHead = (S_UlIndHead*)(gMsgBuffer + length);
+    length += sizeof(S_UlIndHead);
+    pUlIndHead->sfn = 501;
+    pUlIndHead->sf = 7;
+    pUlIndHead->numOfPDUs = 1;
+
+    S_RxUlschIndHeadPdu* pUlSchPduHead = (S_RxUlschIndHeadPdu*)(gMsgBuffer + length);
+    length += sizeof(S_RxUlschIndHeadPdu);
+    pUlSchPduHead->RNTI = rnti;
+    pUlSchPduHead->CRCFlag = 1;
+    pUlSchPduHead->wordLen = (sizeof(macPdu) + 3) >> 2;
+    pUlSchPduHead->bitLen = sizeof(macPdu) << 3;
+    memcpy(gMsgBuffer + length, macPdu, sizeof(macPdu));    
+    length += (pUlSchPduHead->wordLen << 2);
+
+    PhyUlDataInd(gMsgBuffer, length);
+
+    unsigned char expectedRrcMsg[] = {
+        0x53, 0xbe, 0x68, 0x92, 0xb8, 0x36
+    };
+
+    ASSERT_EQ(1, gMacUeCcchDataInd.numUe);
+    MacUeCcchInd* pCcchInd = (MacUeCcchInd*)&gMacUeCcchDataInd.ccchDataIndArray[0];
+    ASSERT_EQ(rnti, pCcchInd->rnti);
+    ASSERT_EQ(sizeof(expectedRrcMsg), pCcchInd->length);
+    ASSERT_EQ(0, memcmp((void*)expectedRrcMsg, pCcchInd->pData, 0));
+    memset((void*)&gMacUeCcchDataInd, 0, sizeof(MacCcchDataInd_Test_Array));
+
+    ASSERT_EQ(1, gMacUeDataInd.numUe);
+    MacUeDataInd_t* pMacUeDataInd = (MacUeDataInd_t*)&gMacUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(rnti, pMacUeDataInd->rnti);
+    ASSERT_TRUE(pMacUeDataInd->rlcData == 0);
+    memset((void*)&gMacUeDataInd, 0, sizeof(MacUeDataInd_Test_Array));
+
+    ASSERT_EQ(1, gRrcUeDataInd.numUe);
+    RrcUeDataInd_test* pRrcInd = (RrcUeDataInd_test*)&gRrcUeDataInd.ueDataIndArray[0];
+    ASSERT_EQ(rnti, pRrcInd->rnti);
+    ASSERT_EQ(pRrcInd->rrcMsgType, LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ);
+    ASSERT_EQ(pRrcInd->nasMsgType, 0xff);
+    // memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
+
+    KpiRefresh();
+    ASSERT_EQ(0, (int)gLteKpi.mem);
+    ASSERT_EQ(1, (int)gLteKpi.lcIdArray[0]);
 }

@@ -15,6 +15,7 @@ class TestPdcp : public TestSuite {
 protected:
     virtual void SetUp() {
         std::cout << "TestPdcp::SetUp()" << std::endl;
+        memset((void*)&gPdcpUeDataInd, 0, sizeof(RlcPdcpUeDataInd_Test_Array));
     }
     
     virtual void TearDown() {

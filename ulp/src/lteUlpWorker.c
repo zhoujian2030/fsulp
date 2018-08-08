@@ -101,6 +101,21 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
         threadParams.stackSize = 0;
         ThreadCreate((void*)UlpWorkerEntryFunc, &threadHandle, &threadParams);
         LOG_DBG(ULP_LOGGER_NAME, "Create ulp handler task\n");
+
+        gOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
+        SocketMakeNonBlocking(gOamUdpFd);
+        SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
+#ifdef DPE 
+        if (gLteConfig.reportToDpeFlag) {
+            SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
+        }
+#endif
+
+#ifdef HEARTBEAT_DEBUG
+        gHeartbeatUdpFd = SocketUdpInitAndBind(6000, "0.0.0.0");
+        SocketGetSockaddrByIpAndPort(&gTestOamAddress, "127.0.0.1", 6002);
+        SocketMakeNonBlocking(gHeartbeatUdpFd);
+#endif
 #else 
         ThreadHandle threadHandle;
         ThreadParams threadParams;
@@ -110,29 +125,12 @@ void InitUlpWorker(unsigned char startUlpWorkerFlag)
         ThreadCreate((void*)UlpWorkerEntryFunc, &threadHandle, &threadParams);
         LOG_DBG(ULP_LOGGER_NAME, "Create ulp handler task\n");
 #endif 
-    }
 
-    gMaxRrcCtxIdleCount = gLteConfig.ueIdentityWaitTime / gLteConfig.pollingInterval;
-    if (gMaxRrcCtxIdleCount == 0) {
-        gMaxRrcCtxIdleCount = 200;
+        gMaxRrcCtxIdleCount = gLteConfig.ueIdentityWaitTime / gLteConfig.pollingInterval;
+        if (gMaxRrcCtxIdleCount == 0) {
+            gMaxRrcCtxIdleCount = 200;
+        }
     }
-
-#ifdef OS_LINUX
-    gOamUdpFd = SocketUdpInitAndBind(gLteConfig.oamUdpPort - 2, "0.0.0.0");
-    SocketMakeNonBlocking(gOamUdpFd);
-    SocketGetSockaddrByIpAndPort(&gOamAddress, gLteConfig.oamIp, gLteConfig.oamUdpPort);
-#ifdef DPE 
-    if (gLteConfig.reportToDpeFlag) {
-        SocketGetSockaddrByIpAndPort(&gDpeAddress, gLteConfig.dpeIp, gLteConfig.dpeUdpPort);
-    }
-#endif
-
-#ifdef HEARTBEAT_DEBUG
-    gHeartbeatUdpFd = SocketUdpInitAndBind(6000, "0.0.0.0");
-    SocketGetSockaddrByIpAndPort(&gTestOamAddress, "127.0.0.1", 6002);
-    SocketMakeNonBlocking(gHeartbeatUdpFd);
-#endif
-#endif
 }
 
 //---------------------------------

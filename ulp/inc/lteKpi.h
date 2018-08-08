@@ -17,6 +17,7 @@ typedef struct
     unsigned int imsi;
     unsigned int mTmsi;
     unsigned int idResp;
+    unsigned int rrcConnReq;
     unsigned int rrcSetupCompl;
     unsigned int attachReq; 
     unsigned int tauReq;

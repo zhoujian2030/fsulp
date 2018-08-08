@@ -107,3 +107,25 @@ int Asn1ParseRrcSetupComplMsg(unsigned char *msgBuf, unsigned int length, LIBLTE
 	return err;
 }
 
+int Asn1ParseRrcConnReqMsg(unsigned char *msgBuf, unsigned int length, LIBLTE_RRC_CONNECTION_REQUEST_STRUCT* pRrcConnReq)
+{
+	int err = ASN1_ERROR;
+
+	gMsgBitBuffer.msg = gMsgBitBuffer.buff;
+	unsigned int bitLen = length << 3;
+    if (bitLen > LIBLTE_MAX_MSG_SIZE_BITS) {
+        return err;
+    }
+
+    convert_bytes_to_bits_vector(gMsgBitBuffer.msg, msgBuf, bitLen);
+	// remove 2 bits RRC msg type
+	gMsgBitBuffer.msg += 2;
+	gMsgBitBuffer.N_bits = bitLen - 2;
+
+	err = liblte_rrc_unpack_rrc_connection_request_msg(&gMsgBitBuffer, pRrcConnReq);
+
+	memset(gMsgBitBuffer.buff, 0, bitLen);
+
+	return err;
+}
+

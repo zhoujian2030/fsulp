@@ -104,6 +104,8 @@ static void ReportKpiToFile()
     sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "RRC Setup Compl %10d  %8d\n", gLteKpi.rrcSetupCompl, gLteKpi.rrcSetupCompl - prevLteKpi.rrcSetupCompl);
     sumLength += varLength;
+    varLength = sprintf(kpiData + sumLength, "RRC Conn Req    %10d  %8d\n", gLteKpi.rrcConnReq, gLteKpi.rrcConnReq - prevLteKpi.rrcConnReq);
+    sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "Attach Request  %10d  %8d\n", gLteKpi.attachReq, gLteKpi.attachReq - prevLteKpi.attachReq);
     sumLength += varLength;
     varLength = sprintf(kpiData + sumLength, "TAU Request     %10d  %8d\n", gLteKpi.tauReq, gLteKpi.tauReq - prevLteKpi.tauReq);

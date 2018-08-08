@@ -482,10 +482,51 @@ typedef struct {
     LIBLTE_MME_EPS_MOBILE_ID_STRUCT  eps_mobile_id;
 } LIBLTE_MME_TAU_REQ_STRUCT;
 
+typedef struct{
+    uint32 m_tmsi;
+    uint8  mmec;
+}LIBLTE_RRC_S_TMSI_STRUCT;
+
+typedef union{
+    LIBLTE_RRC_S_TMSI_STRUCT s_tmsi;
+    uint64                   random;
+}LIBLTE_RRC_CON_REQ_UE_ID_UNION;
+
+typedef enum{
+    LIBLTE_RRC_CON_REQ_UE_ID_TYPE_S_TMSI = 0,
+    LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE,
+    LIBLTE_RRC_CON_REQ_UE_ID_TYPE_N_ITEMS,
+}LIBLTE_RRC_CON_REQ_UE_ID_TYPE_ENUM;
+
+typedef enum{
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_EMERGENCY = 0,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_HIGH_PRIO_ACCESS,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_MT_ACCESS,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_SIGNALLING,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_DATA,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_SPARE3,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_SPARE2,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_SPARE1,
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_N_ITEMS,
+}LIBLTE_RRC_CON_REQ_EST_CAUSE_ENUM;
+
+typedef enum{
+    LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REEST_REQ = 0,
+    LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ,
+    LIBLTE_RRC_UL_CCCH_MSG_TYPE_N_ITEMS,
+}LIBLTE_RRC_UL_CCCH_MSG_TYPE_ENUM;
+
+typedef struct{
+    LIBLTE_RRC_CON_REQ_UE_ID_UNION     ue_id;
+    LIBLTE_RRC_CON_REQ_UE_ID_TYPE_ENUM ue_id_type;
+    LIBLTE_RRC_CON_REQ_EST_CAUSE_ENUM  cause;
+}LIBLTE_RRC_CONNECTION_REQUEST_STRUCT;
+
 extern LIBLTE_ERROR_ENUM liblte_mme_parse_msg_header(LIBLTE_SIMPLE_BYTE_MSG_STRUCT *msg, uint8 *pd, uint8 *msg_type);
 extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_ul_information_transfer_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_UL_INFORMATION_TRANSFER_STRUCT *ul_info_transfer);
 
 extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_setup_complete_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_CONNECTION_SETUP_COMPLETE_STRUCT *con_setup_complete);
+extern LIBLTE_ERROR_ENUM liblte_rrc_unpack_rrc_connection_request_msg(LIBLTE_BIT_MSG_STRUCT *msg, LIBLTE_RRC_CONNECTION_REQUEST_STRUCT *con_req);
 
 extern void convert_int_to_bits_vector(uint8 **bits, uint32 value, uint32 num_bits);
 extern void convert_bytes_to_bits_vector(uint8 *bit_vector, uint8 *byte_buf, uint32 num_bits);

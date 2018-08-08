@@ -15,6 +15,7 @@ class TestRrc : public TestSuite {
 protected:
     virtual void SetUp() {
         std::cout << "TestRrc::SetUp()" << std::endl;
+        memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
     }
     
     virtual void TearDown() {

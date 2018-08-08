@@ -8,6 +8,7 @@
 #include "lteMac.h"
 #include "lteMacPhyInterface.h"
 #include "lteRlcMacInterface.h"
+#include "lteRrcMacInterface.h"
 #include "mempool.h"
 #include "lteLogger.h"
 #include "lteIntegrationPoint.h"
@@ -679,7 +680,16 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
         switch(lchId) {
             case MAC_UL_CCCH_LCH:
             {
-                LOG_DBG(ULP_LOGGER_NAME, "TODO, MAC_UL_CCCH_LCH\n");
+                LOG_DBG(ULP_LOGGER_NAME, "MAC_UL_CCCH_LCH\n");
+                UInt8* pCcchData = MemAlloc(lcIdSduLen);
+                if (pCcchData != 0) {
+                    memcpy(pCcchData, dataPtr_p, lcIdSduLen);
+                    if(IP_MAC_CCCH_DATA_IND(recvdRNTI, pCcchData, lcIdSduLen)) {
+                        MacUeCcchDataInd(recvdRNTI, pCcchData, lcIdSduLen, 0);
+                    }
+                } else {
+                    LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for CCCH data\n");
+                }
                 gLteKpi.lcIdArray[lchId]++;
                 break;
             }
