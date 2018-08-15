@@ -690,6 +690,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                 } else {
                     LOG_ERROR(ULP_LOGGER_NAME, "fail to alloc memory for CCCH data\n");
                 }
+                dataPtr_p += lcIdSduLen;
                 gLteKpi.lcIdArray[lchId]++;
                 break;
             }
@@ -713,6 +714,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                     &dataPtr_p,
                     &pMacUeDataInd->rlcData,
                     &ulDataReceivedFlag);
+                dataPtr_p += lcIdSduLen;
                 gLteKpi.lcIdArray[lchId]++;
                 break;
             }
@@ -724,8 +726,6 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                 UInt32 shortBSRLcgId = ((*dataPtr_p & 0xC0)>>6);
 
                 LOG_TRACE(ULP_LOGGER_NAME, "bsrVal = %d, shortBSRLcgId = %d\n", bsrVal, shortBSRLcgId);
-
-                dataPtrPos = dataPtrPos + lcIdSduLen;
                 /*increment data pointer to point to next SDU*/
                 dataPtr_p++;
                 break;
@@ -746,9 +746,7 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
                 UInt8 bsrVal3 = (*dataPtr_p & 0x3F);
                 dataPtr_p++;
 
-                LOG_TRACE(ULP_LOGGER_NAME, "bsrVal0 = %d, bsrVal1 = %d, bsrVal2 = %d, bsrVal3 = %d\n", bsrVal0, bsrVal1, bsrVal2, bsrVal3);
-
-                dataPtrPos = dataPtrPos + lcIdSduLen;      
+                LOG_TRACE(ULP_LOGGER_NAME, "bsrVal0 = %d, bsrVal1 = %d, bsrVal2 = %d, bsrVal3 = %d\n", bsrVal0, bsrVal1, bsrVal2, bsrVal3);    
                 break;
             }  
 
@@ -756,8 +754,6 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
             {
                 UInt8 ph = *dataPtr_p & 0x3F;
                 LOG_TRACE(ULP_LOGGER_NAME, "ph = %d\n", ph);
-
-                dataPtrPos = dataPtrPos + lcIdSduLen;
                 dataPtr_p++;
                 break;
             }
@@ -765,10 +761,11 @@ void MacDeMultiplexAndSend(DemuxDataBase *demuxData_p,
             default:
             {
                 dataPtr_p += lcIdSduLen;
-                dataPtrPos = dataPtrPos + lcIdSduLen;
                 break;
             }
         }
+        
+        dataPtrPos += lcIdSduLen;
     }
 
     if(!IP_MAC_DATA_IND(pMacUeDataInd)) {
@@ -823,11 +820,5 @@ void MacDemuxOneToTenLchMsg(UInt32 lchId,
         // LOG_BUFFER(rlcLCIdData_p->rlcdataBuffer, rlcLCIdData_p->length);
         
         *rlcFlag = TRUE;
-
-        /*increment dataPtr_p by len so that dataPtr_p reaches 
-        *to start of next RLC SDU.
-        */
-        (*dataPtr_p) += length;
-        *dataPtrPos += length;
     }
 }
