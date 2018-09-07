@@ -228,9 +228,7 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_identity_response_msg(LIBLTE_SIMPLE_BYTE_MSG
         msg_ptr++;
 
         // Mobile Identity
-        liblte_mme_unpack_mobile_id_ie(&msg_ptr, &id_resp->mobile_id);
-
-        err = LIBLTE_SUCCESS;
+        err = liblte_mme_unpack_mobile_id_ie(&msg_ptr, &id_resp->mobile_id);
     }
 
     return(err);
