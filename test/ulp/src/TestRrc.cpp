@@ -79,6 +79,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_IdResp) {
     ASSERT_TRUE(pRrcUeCtx != 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 1);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 0);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.msgType, 0);
     ASSERT_TRUE(memcmp(pRrcUeCtx->ueIdentity.imsi, expectImsiStr, 15) == 0);
 #ifdef PHY_DEBUG
     ASSERT_TRUE(gLteKpi.idRespRbNum[0] == 1);
@@ -170,7 +171,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_Detach) {
     ASSERT_TRUE(pRrcUeCtx != 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 1);
-    ASSERT_EQ(pRrcUeCtx->ueIdentity.detachFlag, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.msgType, DETACH_REQUEST);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsi, 0xf922f43b);
     RrcDeleteUeContext(pRrcUeCtx);
     KpiRefresh();
@@ -260,6 +261,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl) {
     ASSERT_TRUE(pRrcUeCtx != 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.imsiPresent, 0);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsiPresent, 1);
+    ASSERT_EQ(pRrcUeCtx->ueIdentity.msgType, ATTACH_REQUEST);
     ASSERT_EQ(pRrcUeCtx->ueIdentity.mTmsi, 0xd0cc7151);
 #ifdef PHY_DEBUG
     ASSERT_EQ(1, (int)gLteKpi.rrcSetupComplRbNum[1]);
@@ -368,6 +370,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ExtServReq) {
     ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_EXTENDED_SERVICE_REQUEST);    
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 1); 
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsi, 0xea69f853);
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.msgType, EXT_SERVICE_REQUEST);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }
@@ -577,6 +580,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_TAU_Req) {
     ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_MSG_TYPE_TRACKING_AREA_UPDATE_REQUEST);    
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 1); 
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsi, 0xc81b6259);
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.msgType, TAU_REQUEST);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }
@@ -647,6 +651,7 @@ TEST_F(TestRrc, Interface_PdcpUeSrbDataInd_LcId_1_RrcSetupCompl_ServReq) {
     ASSERT_EQ(pRrcUeDataInd->nasMsgType, NAS_SECURITY_HDR_TYPE_SERVICE_REQUEST);    
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.mTmsiPresent, 0); 
     ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.imsiPresent, 0);
+    ASSERT_EQ(pRrcUeDataInd->ueContext.ueIdentity.msgType, SERVICE_REQUEST);
     gRrcUeDataInd.numUe = 0;
     memset((void*)&gRrcUeDataInd, 0, sizeof(RrcUeDataInd_Test_Array));
 }

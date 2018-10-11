@@ -47,8 +47,8 @@ UInt8 gUlRRcMsgName[17][50] = {
 void RrcParseUlDcchMsg(UInt16 rnti, UInt8* pData, UInt16 size, UlReportInfoList* pUlRptInfoList);
 void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size);
 unsigned int RrcParseNasMsg(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff);
-RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi);
-RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi);
+RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi, UInt8 msgType);
+RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi, UInt8 msgType);
 
 // --------------------------------
 void InitRrcLayer()
@@ -87,6 +87,7 @@ RrcUeContext* RrcCreateUeContext(UInt16 rnti)
     // SemInit(&pUeCtx->lockOfCount, 1);
     pUeCtx->idleCount = 0;
     pUeCtx->deleteFlag = 0;
+    pUeCtx->ueIdentity.msgType = 0;
     ListPushNode(&gRrcUeContextList, &pUeCtx->node);
     // KpiCountRrcUeCtx(TRUE);
 
@@ -289,7 +290,7 @@ void RrcParseUlCcchMsg(UInt16 rnti, UInt8* pData, UInt16 size)
                         }
                     }
 
-                    pUeCtx = RrcUpdateMTmsi(pUeCtx, pRrcReqMsg->ue_id.s_tmsi.m_tmsi);
+                    pUeCtx = RrcUpdateMTmsi(pUeCtx, pRrcReqMsg->ue_id.s_tmsi.m_tmsi, SERVICE_REQUEST);  // TODO, must be SERVICE_REQUEST ?
                     RrcUeDataInd(pUeCtx);
                 } else {
                     LOG_DBG(ULP_LOGGER_NAME, "random value = %llu\n", pRrcReqMsg->ue_id.random);
@@ -333,7 +334,7 @@ void RrcDecodeIdentityResponse(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasM
                     return;
                 }
             }
-            pUeCtx = RrcUpdateImsi(pUeCtx, pIdResp->mobile_id.imsi);
+            pUeCtx = RrcUpdateImsi(pUeCtx, pIdResp->mobile_id.imsi, 0xff);
             if (pUeCtx == 0) {
                 MemFree(pIdResp);
                 return;
@@ -392,7 +393,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pAttachReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateMTmsi(pUeCtx, pAttachReq->eps_mobile_id.guti.m_tmsi);
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pAttachReq->eps_mobile_id.guti.m_tmsi, ATTACH_REQUEST);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pAttachReq->eps_mobile_id.guti.m_tmsi,
@@ -400,7 +401,7 @@ void RrcDecodeAttachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pAttachReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pAttachReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateImsi(pUeCtx, pAttachReq->eps_mobile_id.imsi);
+            pUeCtx = RrcUpdateImsi(pUeCtx, pAttachReq->eps_mobile_id.imsi, ATTACH_REQUEST);
             if (pUeCtx == 0) {
                 MemFree(pAttachReq);
                 return;
@@ -458,10 +459,8 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
             }
         }
 
-        pUeCtx->ueIdentity.detachFlag = TRUE;
-
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pDetachReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateMTmsi(pUeCtx, pDetachReq->eps_mobile_id.guti.m_tmsi);
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pDetachReq->eps_mobile_id.guti.m_tmsi, DETACH_REQUEST);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pDetachReq->eps_mobile_id.guti.m_tmsi,
@@ -469,7 +468,7 @@ void RrcDecodeDetachReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pDetachReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pDetachReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateImsi(pUeCtx, pDetachReq->eps_mobile_id.imsi);
+            pUeCtx = RrcUpdateImsi(pUeCtx, pDetachReq->eps_mobile_id.imsi, DETACH_REQUEST);
             if (pUeCtx == 0) {
                 MemFree(pDetachReq);
                 return;
@@ -530,12 +529,12 @@ void RrcDecodeExtServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgB
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_TMSI == pExtServReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateMTmsi(pUeCtx, pExtServReq->eps_mobile_id.m_tmsi);
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pExtServReq->eps_mobile_id.m_tmsi, EXT_SERVICE_REQUEST);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x\n", rnti, pExtServReq->eps_mobile_id.m_tmsi);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pExtServReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateImsi(pUeCtx, pExtServReq->eps_mobile_id.imsi);
+            pUeCtx = RrcUpdateImsi(pUeCtx, pExtServReq->eps_mobile_id.imsi, EXT_SERVICE_REQUEST);
             if (pUeCtx == 0) {
                 MemFree(pExtServReq);
                 return;
@@ -595,7 +594,7 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
         }
 
         if(LIBLTE_MME_EPS_MOBILE_ID_TYPE_GUTI == pTauReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateMTmsi(pUeCtx, pTauReq->eps_mobile_id.guti.m_tmsi);
+            pUeCtx = RrcUpdateMTmsi(pUeCtx, pTauReq->eps_mobile_id.guti.m_tmsi, TAU_REQUEST);
 
             LOG_INFO(ULP_LOGGER_NAME, "rnti = %d, m_tmsi = 0x%x, mcc = %d, mnc = %d\n", rnti, 
                 pTauReq->eps_mobile_id.guti.m_tmsi,
@@ -603,7 +602,7 @@ void RrcDecodeTauReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff)
                 pTauReq->eps_mobile_id.guti.mnc);
             
         } else if (LIBLTE_MME_EPS_MOBILE_ID_TYPE_IMSI == pTauReq->eps_mobile_id.type_of_id) {
-            pUeCtx = RrcUpdateImsi(pUeCtx, pTauReq->eps_mobile_id.imsi);
+            pUeCtx = RrcUpdateImsi(pUeCtx, pTauReq->eps_mobile_id.imsi, TAU_REQUEST);
             if (pUeCtx == 0) {
                 MemFree(pTauReq);
                 return;
@@ -644,6 +643,18 @@ void RrcDecodeServiceReq(UInt16 rnti, LIBLTE_SIMPLE_BYTE_MSG_STRUCT* pNasMsgBuff
     LOG_INFO(ULP_LOGGER_NAME, "UE ---> NB: Serv Req (%d)\n", rnti);
     LOG_BUFFER(pNasMsgBuff->msg, pNasMsgBuff->N_bytes);
     gLteKpi.servReq++;
+
+    RrcUeContext* pUeCtx = RrcGetUeContext(rnti);
+    if (pUeCtx == 0) {
+        pUeCtx = RrcCreateUeContext(rnti);
+        if (pUeCtx == 0) {        
+            LOG_ERROR(ULP_LOGGER_NAME, "fail to create ue context, rnti = %d\n", rnti);
+            return;
+        }
+    }
+    pUeCtx->ueIdentity.msgType = SERVICE_REQUEST;
+
+    IP_RRC_DATA_IND(pUeCtx);
 }
 
 // --------------------------------
@@ -715,9 +726,9 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
         return;
     }
 
-    LOG_DBG(ULP_LOGGER_NAME, "imsiPresent = %d, mTmsiPresent = %d, detachFlag = %d, rnti = %d\n", 
+    LOG_DBG(ULP_LOGGER_NAME, "imsiPresent = %d, mTmsiPresent = %d, msgType = %d, rnti = %d\n", 
         pRrcUeCtx->ueIdentity.imsiPresent, pRrcUeCtx->ueIdentity.mTmsiPresent, 
-        pRrcUeCtx->ueIdentity.detachFlag, pRrcUeCtx->rnti);
+        pRrcUeCtx->ueIdentity.msgType, pRrcUeCtx->rnti);
     
     if (!IP_RRC_DATA_IND(pRrcUeCtx)) {
         return;
@@ -728,7 +739,7 @@ void RrcUeDataInd(RrcUeContext* pRrcUeCtx)
 }
 
 // --------------------------------
-RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi)
+RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi, UInt8 msgType)
 {
     UInt32 i;
     UInt8 tmpImsi[16];
@@ -765,12 +776,15 @@ RrcUeContext* RrcUpdateImsi(RrcUeContext* pUeCtx, UInt8* imsi)
     gLteKpi.imsi++;
     pUeCtx->ueIdentity.imsiPresent = TRUE;
     memcpy(pUeCtx->ueIdentity.imsi, tmpImsi, 16);  
+    if (msgType != 0xff) {
+        pUeCtx->ueIdentity.msgType = msgType;
+    }
 
     return pUeCtx;
 }
 
 // --------------------------------
-RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi)
+RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi, UInt8 msgType)
 { 
     if (pUeCtx->deleteFlag) {
         LOG_WARN(ULP_LOGGER_NAME, "pUeCtx = %p is pending deletion, rnti = %d\n", pUeCtx, pUeCtx->rnti);
@@ -800,6 +814,9 @@ RrcUeContext* RrcUpdateMTmsi(RrcUeContext* pUeCtx, UInt32 mTmsi)
     gLteKpi.mTmsi++;
     pUeCtx->ueIdentity.mTmsiPresent = TRUE;
     pUeCtx->ueIdentity.mTmsi = mTmsi;
+    if (msgType != 0xff) {
+        pUeCtx->ueIdentity.msgType = msgType;
+    }
 
     return pUeCtx;
 }

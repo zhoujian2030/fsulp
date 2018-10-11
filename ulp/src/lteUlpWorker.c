@@ -331,6 +331,7 @@ void UlpRecvAndHandleOamData()
                     }
 
                     RrcDeleteUeContext(pRrcUeCtx);
+                    pRrcUeCtx = 0;
                 }
             } else {
                 LOG_INFO(ULP_LOGGER_NAME, "2 reach max report UE count: %d\n", ueIndex);

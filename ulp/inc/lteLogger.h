@@ -69,20 +69,21 @@ void LteLoggerSetLogLevel(unsigned int level);
                 unsigned int i=0;\
                 unsigned int nLine = length/5;\
                 unsigned int rest = 0;\
+                unsigned char *temp = (unsigned char *)pData;\
                 while(nLine--) {\
                         MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x %02x\n", \
-                                        pData[i], pData[i+1], pData[i+2], pData[i+3], pData[i+4]);\
+                                        temp[i], temp[i+1], temp[i+2], temp[i+3], temp[i+4]);\
                         i += 5;\
                 }\
                 rest = length - i;\
                 if (rest == 1) {\
-                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x\n", pData[i]);\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x\n", temp[i]);\
                 } else if (rest == 2) {\
-                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x\n", pData[i], pData[i+1]);\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x\n", temp[i], temp[i+1]);\
                 } else if (rest == 3) {\
-                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x\n", pData[i], pData[i+1], pData[i+2]);\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x\n", temp[i], temp[i+1], temp[i+2]);\
                 } else if (rest == 4) {\
-                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x\n", pData[i], pData[i+1], pData[i+2], pData[i+3]);\
+                        MyLogPrintf(gLogPrintfTypePtr, DEBUG, "%02x %02x %02x %02x\n", temp[i], temp[i+1], temp[i+2], temp[i+3]);\
                 }\
         }\
 	}

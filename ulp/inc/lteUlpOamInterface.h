@@ -23,12 +23,20 @@ extern "C" {
 
 #pragma pack(4)
 
+typedef enum {
+    ATTACH_REQUEST      = 1,
+    TAU_REQUEST         = 2,
+    SERVICE_REQUEST     = 3,
+    EXT_SERVICE_REQUEST = 4,
+    DETACH_REQUEST      = 5,
+} LteUeRrcEstabType;
+
 typedef struct {
     UInt16 rnti;
     BOOL   imsiPresent;
     BOOL   mTmsiPresent;
 
-    BOOL   detachFlag;
+    UInt8  msgType;
     UInt8  spare[3];
 
     UInt32 mTmsi;
