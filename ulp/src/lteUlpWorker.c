@@ -28,6 +28,8 @@
 extern List gRrcUeContextList;
 extern List gReadyRrcUeContextList;
 
+extern unsigned int gMaxIdleCount; // for both mac & rlc ue context
+
 // standlone configurations
 #ifndef OS_LINUX
 #pragma DATA_SECTION(gRecvdPhyDataList, ".ulpdata");
@@ -340,6 +342,38 @@ void UlpRecvAndHandleOamData()
             RrcUpdateUeContextTime(pRrcUeCtx, 1);
 
             pRrcUeCtx = pNextRrcUeCtx;
+        }
+    }
+
+    UInt32 macCtxCount = ListCount(&gMacUeContext);
+    MacUeContext *pMacUeCtx, *pNextMacUeCtx;
+
+    if (macCtxCount > 0) {
+        pMacUeCtx = (MacUeContext*)ListGetFirstNode(&gMacUeContext);
+        while (pMacUeCtx != 0) {
+            pNextMacUeCtx = (MacUeContext*)ListGetNextNode(&pMacUeCtx->node);
+
+            if (ueIndex < MAX_NUM_UE_INFO_REPORT) {     
+                if (pMacUeCtx->idleCount >= gMaxIdleCount) {
+                    LOG_DBG(ULP_LOGGER_NAME, "clean MAC UE context and send notification to OAM, rnti = %d\n", pMacUeCtx->rnti);                
+                    pMacUeCtx->deleteFlag = 1;
+#ifdef NOTIFY_CRNTI_ONLY
+                    pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].imsiPresent = FALSE;
+                    pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].mTmsiPresent = FALSE;
+                    pUlpDataInd->u.ueIdentityInd.ueIdentityArray[ueIndex].rnti = pMacUeCtx->rnti;
+                    pUlpDataInd->length += sizeof(UeIdentity);
+                    ueIndex++;
+#endif
+                    MacDeleteUeContext(pMacUeCtx);
+                    pRrcUeCtx = 0;
+                }
+            } else {
+                LOG_INFO(ULP_LOGGER_NAME, "3 reach max report UE count: %d\n", ueIndex);
+            }
+
+            MacUpdateUeContextTime(pMacUeCtx, 1); 
+            
+            pMacUeCtx = pNextMacUeCtx;
         }
     }
 

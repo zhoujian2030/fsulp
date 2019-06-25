@@ -37,5 +37,4 @@ else
     fi
     cp exe/deamon/deamon /mnt/hgfs/c/share/
 fi
-
-
+ 

@@ -99,8 +99,11 @@ MacUeContext* MacCreateUeContext(unsigned short rnti)
         return 0;
     }
     pUeCtx->rnti = rnti;
+    SemInit(&pUeCtx->lockOfCount, 1);
     pUeCtx->rbNum = 0;
     pUeCtx->prbPower = 0;
+    pUeCtx->idleCount = 0;
+    pUeCtx->deleteFlag = 0;
 
     ListPushNode(&gMacUeContext, &pUeCtx->node);
 
@@ -129,8 +132,23 @@ void MacDeleteUeContext(MacUeContext* pMacUeCtx)
     if (pMacUeCtx != 0) {
         LOG_DBG(ULP_LOGGER_NAME, "pMacUeCtx = %p, rnti = %d\n", pMacUeCtx, pMacUeCtx->rnti);
         ListDeleteNode(&gMacUeContext, &pMacUeCtx->node);
+        SemDestroy(&pMacUeCtx->lockOfCount); 
         MemFree(pMacUeCtx);
     }        
+}
+
+// -----------------------------------
+void MacUpdateUeContextTime(MacUeContext* pMacUeCtx, unsigned int value)
+{
+    if (pMacUeCtx != 0) {
+        SemWait(&pMacUeCtx->lockOfCount);
+        if (value == 0) {
+            pMacUeCtx->idleCount = 0;
+        } else {
+            pMacUeCtx->idleCount += value;
+        }
+        SemPost(&pMacUeCtx->lockOfCount);
+    }
 }
 
 // ---------------------------
@@ -208,9 +226,10 @@ void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length)
 				ulSchPdu.buffer = pBuffer + tempLen;
 
 				MacProcessUlSchPdu(&ulSchPdu);
-
+#if 0
                 // for test
                 MacDeleteUeContext(pUeCtx);
+#endif
 			} else {
 		    	//LOG_ERROR(ULP_LOGGER_NAME, "crc error, ignore it, rnti = %d\n", pUlSchPduHead->RNTI);
                 gLteKpi.crcError++;

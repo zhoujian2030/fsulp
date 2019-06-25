@@ -70,11 +70,16 @@ typedef struct {
 
 typedef struct {
     ListNode node;
+    unsigned int idleCount;
     unsigned short rnti;
     unsigned char rbNum;
+    unsigned char deleteFlag;
+    SEM_LOCK lockOfCount;
     int prbPower;
     short ta;
 } MacUeContext;
+
+extern List gMacUeContext;
 
 void InitMacLayer();
 void MacProcessPhyDataInd(unsigned char* pBuffer, unsigned short length); 
